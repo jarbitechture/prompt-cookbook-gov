@@ -1,0 +1,17 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/sp/v2/row-formatting.schema.json",
+  "sections": [
+    {
+      "displayname": "Content Details",
+      "fields": ["Title", "Description", "ContentType", "Categories"]
+    },
+    {
+      "displayname": "Schedule & Status",
+      "fields": ["Status", "DraftDueBy", "PublishBy", "Availability"]
+    },
+    {
+      "displayname": "Media & Links",
+      "fields": ["ContentImage", "PublishedLink", "Attachments"]
+    }
+  ]
+}
