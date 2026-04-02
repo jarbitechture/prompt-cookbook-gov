@@ -1,9 +1,5 @@
----
-title: MCG AI Prompt Cookbook
-emoji: "\U0001F373"
-colorFrom: yellow
-colorTo: green
-sdk: docker
-pinned: false
-app_port: 7860
----
+# Prompt Cookbook (Gov)
+
+Interactive AI prompt training app for county government staff — 30 chapters, 4 game modes, Azure DevOps ready.
+
+See [RUNBOOK.md](RUNBOOK.md) for installation and deployment instructions.

@@ -758,7 +758,7 @@ export const chapters: Chapter[] = [
     riskTier: "green",
     qualityScore: null,
     summary: "Every template in Part II was scored on 9 dimensions before approval. Here is how the scoring works and why it matters.",
-    source: "Manus-Chatbot Governance Registry: 9-Dimension Rubric (Feb 2026)",
+    source: "AI Governance Registry: 9-Dimension Rubric (Feb 2026)",
     persona: "Tom Bradley",
     personaRole: "Utilities Field Supervisor, Manatee County Utilities",
     content: [
@@ -800,7 +800,7 @@ export const chapters: Chapter[] = [
     riskTier: "yellow",
     qualityScore: null,
     summary: "PII redaction, prompt injection detection, toxicity checks, and bias detection — the four automated safety gates in the governance system.",
-    source: "Manus-Chatbot Governance: safety_gates.py, pii_redaction.py",
+    source: "AI Governance Registry",
     persona: "James Torres",
     personaRole: "IT Analyst, Manatee County Information Technology",
     content: [

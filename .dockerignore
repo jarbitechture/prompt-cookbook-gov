@@ -3,7 +3,6 @@ dist/
 .git/
 .env*
 .DS_Store
-.manus-logs/
 *.log
 .gitignore
 ideas.md
