@@ -14,6 +14,36 @@ npm start          # app runs on http://localhost:3000
 
 The app works immediately. All 30 chapters, game modes, and training content load without any configuration.
 
+**Note:** This project uses `pnpm` as its package manager. If `npm install` fails, use `pnpm install` instead.
+
+## Verify It Works
+
+After building, run these checks:
+
+```bash
+# Start the server
+npm start &
+
+# Health check
+curl http://localhost:3000/api/health
+# Expected: {"status":"ok"}
+
+# Homepage loads
+curl -o /dev/null -w "HTTP %{http_code}" http://localhost:3000/
+# Expected: HTTP 200
+
+# AI features return helpful message when key not set
+curl -X POST http://localhost:3000/api/try-it \
+  -H "Content-Type: application/json" \
+  -d '{"prompt":"test"}'
+# Expected: {"error":"Live AI features are not configured. Set COOKBOOK_LLM_API_KEY..."}
+
+# Stop the server
+kill %1
+```
+
+All three checks should pass without any environment variables configured.
+
 ## Deploy to Azure App Service
 
 ### Prerequisites
