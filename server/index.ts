@@ -161,24 +161,27 @@ async function startServer() {
     app.set("trust proxy", 1);
   }
 
-  // Security headers — allow SharePoint iframe embedding
+  // Security headers — CSP + SharePoint iframe embedding
   const SHAREPOINT_ORIGINS = (process.env.SHAREPOINT_ORIGINS || "").split(",").filter(Boolean);
-  app.use(helmet({
-    contentSecurityPolicy: false, // SPA manages its own CSP
-    frameguard: SHAREPOINT_ORIGINS.length > 0 ? false : undefined, // disable if SharePoint origins configured
-    crossOriginResourcePolicy: { policy: "cross-origin" }, // allow cross-origin resource loading in iframe
-  }));
+  const frameAncestors = SHAREPOINT_ORIGINS.length > 0
+    ? `'self' ${SHAREPOINT_ORIGINS.join(" ")} *.sharepoint.com *.office.com`
+    : "'self'";
 
-  // If SharePoint origins are configured, set frame-ancestors CSP instead of X-Frame-Options
-  if (SHAREPOINT_ORIGINS.length > 0) {
-    app.use((_req, res, next) => {
-      res.setHeader(
-        "Content-Security-Policy",
-        `frame-ancestors 'self' ${SHAREPOINT_ORIGINS.join(" ")} *.sharepoint.com *.office.com`
-      );
-      next();
-    });
-  }
+  app.use(helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'"],
+        styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+        fontSrc: ["'self'", "https://fonts.gstatic.com"],
+        imgSrc: ["'self'", "data:", "https://d2xsxph8kpxj0f.cloudfront.net"],
+        connectSrc: ["'self'", "https://*.logic.azure.com"],
+        frameAncestors: frameAncestors.split(" "),
+      },
+    },
+    frameguard: SHAREPOINT_ORIGINS.length > 0 ? false : undefined,
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+  }));
 
   // CORS — allow SharePoint origins in production
   app.use(cors({
