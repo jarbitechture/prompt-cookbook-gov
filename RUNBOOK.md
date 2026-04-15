@@ -71,6 +71,8 @@ In Azure Portal > App Service > Configuration > Application Settings:
 | `COOKBOOK_LLM_API_KEY` | No | API key for AI features (see below) |
 | `COOKBOOK_LLM_BASE_URL` | No | Custom endpoint URL (see below) |
 | `PORT` | No | Defaults to 3000 |
+| `TRUST_PROXY` | No | Set to `1` if behind reverse proxy / load balancer |
+| `SHAREPOINT_ORIGINS` | No | Comma-separated SharePoint origins for iframe embedding |
 
 ## AI Features (Optional)
 
@@ -137,3 +139,42 @@ Client (React/Vite)  →  Express Server  →  Azure OpenAI (optional)
 ```
 
 Single service. The Express server serves the built React app and handles the two API endpoints (`/api/try-it`, `/api/chat`). No database, no external dependencies beyond the optional LLM.
+
+## Security Headers
+
+The server sets a Content-Security-Policy via helmet:
+- **Scripts/default:** self only
+- **Styles:** self + inline + Google Fonts
+- **Fonts:** self + Google Fonts CDN
+- **Images:** self + data URIs + CloudFront hero image CDN
+- **API connections:** self + Azure Logic Apps (training form)
+- **Frame ancestors:** self (+ SharePoint origins when `SHAREPOINT_ORIGINS` is set)
+
+## Self-Hosted Deployment (Non-Azure)
+
+The app has no Azure-specific code. It runs on any server with Node 20.
+
+### Docker
+
+```bash
+docker build -t prompt-cookbook .
+docker run -p 3000:3000 \
+  -e COOKBOOK_LLM_API_KEY=sk-... \
+  -e COOKBOOK_LLM_BASE_URL=https://{resource}.openai.azure.com/... \
+  -e TRUST_PROXY=1 \
+  prompt-cookbook
+```
+
+### Direct (no Docker)
+
+```bash
+pnpm install --frozen-lockfile
+pnpm run build
+NODE_ENV=production COOKBOOK_LLM_API_KEY=sk-... node dist/index.js
+```
+
+### Reverse Proxy Requirements
+
+If behind nginx, IIS, or a load balancer:
+- Set `TRUST_PROXY=1` so rate limiting uses the real client IP
+- **Disable response buffering** for `/api/try-it` and `/api/chat` — these use Server-Sent Events (SSE). In nginx: `proxy_buffering off;`. In IIS: `responseBufferLimit="0"` on the handler

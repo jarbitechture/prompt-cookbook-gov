@@ -88,6 +88,26 @@ Client (React/Vite)  →  Express Server  →  Azure OpenAI (optional)
 
 Single service. Express serves the built React app and handles two API endpoints (`/api/try-it`, `/api/chat`). No database, no external dependencies beyond the optional LLM.
 
+## Security
+
+The server sets a Content-Security-Policy that restricts scripts, styles, fonts, images, and API connections to known sources. When `SHAREPOINT_ORIGINS` is set, the CSP also allows iframe embedding from those origins.
+
+## Self-Hosted Deployment
+
+The app runs anywhere Node 20 is available — no Azure dependency. Use Docker or run directly:
+
+```bash
+# Docker
+docker build -t prompt-cookbook .
+docker run -p 3000:3000 -e COOKBOOK_LLM_API_KEY=sk-... prompt-cookbook
+
+# Direct
+pnpm install && pnpm run build
+NODE_ENV=production COOKBOOK_LLM_API_KEY=sk-... node dist/index.js
+```
+
+If behind a reverse proxy (nginx, IIS, Azure App Gateway), set `TRUST_PROXY=1` and make sure **response buffering is off** for `/api/try-it` and `/api/chat` — these use Server-Sent Events for streaming.
+
 ## Environment Variables
 
 | Variable | Required | Description |
@@ -96,6 +116,7 @@ Single service. Express serves the built React app and handles two API endpoints
 | `COOKBOOK_LLM_BASE_URL` | No | Custom endpoint (Azure OpenAI, Ollama) |
 | `PORT` | No | Server port (default: 3000) |
 | `TRUST_PROXY` | No | Set to `1` if behind a load balancer |
+| `SHAREPOINT_ORIGINS` | No | Comma-separated SharePoint origins for iframe embedding |
 
 ## Tech Stack
 
