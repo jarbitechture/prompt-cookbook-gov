@@ -25,15 +25,28 @@ stages:
               versionSpec: $(nodeVersion)
             displayName: "Install Node.js"
 
-          - script: npm install
+          - script: corepack enable && corepack prepare pnpm@10.4.1 --activate
+            displayName: "Enable pnpm via corepack"
+
+          - script: pnpm install --frozen-lockfile
             displayName: "Install dependencies"
 
-          - script: npm run build
+          - script: pnpm run build
             displayName: "Build application"
+
+          - script: |
+              mkdir -p $(Build.ArtifactStagingDirectory)/app
+              cp -r dist $(Build.ArtifactStagingDirectory)/app/
+              cp package.json pnpm-lock.yaml $(Build.ArtifactStagingDirectory)/app/
+              cp -r patches $(Build.ArtifactStagingDirectory)/app/ 2>/dev/null || true
+              cd $(Build.ArtifactStagingDirectory)/app
+              corepack enable && corepack prepare pnpm@10.4.1 --activate
+              pnpm install --prod --frozen-lockfile --config.confirmModulesPurge=false
+            displayName: "Prepare production bundle"
 
           - task: ArchiveFiles@2
             inputs:
-              rootFolderOrFile: "$(System.DefaultWorkingDirectory)"
+              rootFolderOrFile: "$(Build.ArtifactStagingDirectory)/app"
               includeRootFolder: false
               archiveType: "zip"
               archiveFile: "$(Build.ArtifactStagingDirectory)/app.zip"
@@ -63,5 +76,5 @@ stages:
                     appName: $(APP_SERVICE_NAME)
                     package: "$(Pipeline.Workspace)/drop/app.zip"
                     runtimeStack: "NODE|20-lts"
-                    startUpCommand: "npm start"
+                    startUpCommand: "node dist/index.js"
                   displayName: "Deploy to App Service"
