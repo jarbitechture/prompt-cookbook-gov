@@ -1,6 +1,6 @@
 # Prompt Cookbook (Gov)
 
-Interactive AI prompt training app for county government staff. Teaches prompt engineering through 30 structured chapters, 4 game modes, and an optional AI coach — built for direct deployment to Azure App Service.
+Interactive AI prompt training app for county government staff. Teaches prompt engineering through 30 structured chapters, 4 game modes, and an optional AI coach.
 
 ## What's Inside
 
@@ -31,7 +31,7 @@ All 30 chapters, game modes, and training content work immediately with zero con
 
 Two features require an LLM API key: **Try It** and **Chat**. Without a key, the app runs normally — these features return a helpful configuration message.
 
-Set in Azure App Service Configuration or in a local `.env` file:
+Set in your deployment environment or in a local `.env` file:
 
 ```bash
 # Azure OpenAI (recommended for county)
@@ -46,17 +46,15 @@ COOKBOOK_LLM_API_KEY=ollama
 COOKBOOK_LLM_BASE_URL=http://localhost:11434/v1
 ```
 
-## Deploy to Azure App Service
+## CI/CD
 
-An `azure-pipelines.yml` is included for Azure DevOps CI/CD.
+An `azure-pipelines.yml` is included for Azure DevOps. It builds and validates the app on every push to `main`. The build artifact is published for deployment.
 
 1. Push this repo to an Azure DevOps Repo
 2. Create a Pipeline pointing to `azure-pipelines.yml`
-3. Set pipeline variables:
-   - `AZURE_SUBSCRIPTION` — Azure service connection name
-   - `APP_SERVICE_NAME` — App Service resource name
-   - `COOKBOOK_LLM_API_KEY` — (optional) LLM API key
-4. Push to `main` — pipeline builds and deploys automatically
+3. Push to `main` — pipeline installs, builds, bundles, and publishes the artifact
+
+Deployment to IIS is a separate step handled by your infrastructure team.
 
 ## Verify It Works
 
@@ -82,7 +80,7 @@ kill %1
 ## Architecture
 
 ```
-Client (React/Vite)  →  Express Server  →  Azure OpenAI (optional)
+Client (React/Vite)  →  Express Server  →  LLM (optional: Ollama, Azure OpenAI, OpenAI)
      port 3000              port 3000
 ```
 
@@ -94,7 +92,7 @@ The server sets a Content-Security-Policy that restricts scripts, styles, fonts,
 
 ## Self-Hosted Deployment
 
-The app runs anywhere Node 20 is available — no Azure dependency. Use Docker or run directly:
+The app runs anywhere Node 20 is available. Use Docker, IIS, or run directly:
 
 ```bash
 # Docker

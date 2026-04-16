@@ -44,30 +44,33 @@ kill %1
 
 All three checks should pass without any environment variables configured.
 
-## Deploy to Azure App Service
+## CI/CD (Azure DevOps)
 
 ### Prerequisites
 
 - Azure DevOps project with Repos and Pipelines enabled
-- Azure App Service (Linux, Node 20 LTS)
-- Azure service connection configured in DevOps
 
 ### Steps
 
 1. Push this repo to an Azure DevOps Repo
 2. Create a new Pipeline pointing to `azure-pipelines.yml`
-3. Set three Pipeline Variables in Azure DevOps:
-   - `AZURE_SUBSCRIPTION` — your Azure service connection name
-   - `APP_SERVICE_NAME` — your App Service resource name
-   - `COOKBOOK_LLM_API_KEY` — (optional, see below)
-4. Push to `main` — the pipeline builds and deploys automatically
+3. Push to `main` — the pipeline installs, builds, bundles, and publishes the artifact
 
-### App Service Configuration
+The pipeline validates the build on every push. Deployment to IIS is handled separately by IT ops.
 
-In Azure Portal > App Service > Configuration > Application Settings:
+### Governed LLM Integration
 
-| Setting | Required | Value |
-|---------|----------|-------|
+When deployed alongside the [Civic AI](https://github.com/jarbitechture/manatee-civic-ai) governed proxy, point the cookbook at the proxy instead of directly at an LLM. Every staff prompt then goes through PII redaction, safety gates, and audit logging — without changing the cookbook's code.
+
+```
+COOKBOOK_LLM_API_KEY=<civic-ai-api-key>
+COOKBOOK_LLM_BASE_URL=http://<civic-ai-server>:8100/v1
+```
+
+### Environment Variables
+
+| Variable | Required | Description |
+|----------|----------|-------------|
 | `COOKBOOK_LLM_API_KEY` | No | API key for AI features (see below) |
 | `COOKBOOK_LLM_BASE_URL` | No | Custom endpoint URL (see below) |
 | `PORT` | No | Defaults to 3000 |
@@ -78,16 +81,14 @@ In Azure Portal > App Service > Configuration > Application Settings:
 
 Two features require an LLM API key: **Try It** (test prompts live) and **Chat** (AI prompt coach). Without the key, the app runs normally — these two features return a message saying they need configuration.
 
-### Azure OpenAI (Recommended)
+### Azure OpenAI
 
-Set both variables in App Service Configuration:
+Set both variables:
 
 ```
 COOKBOOK_LLM_API_KEY=your-azure-openai-key
 COOKBOOK_LLM_BASE_URL=https://{resource-name}.openai.azure.com/openai/deployments/{deployment-name}
 ```
-
-Get the key from: Azure Portal > Azure OpenAI resource > Keys and Endpoint
 
 ### OpenAI Direct
 
@@ -125,16 +126,16 @@ Everything except Try It and Chat:
 | Problem | Fix |
 |---------|-----|
 | App won't start | Check Node version: `node --version` (needs 20+) |
-| Blank page after deploy | Verify `npm run build` succeeded in pipeline logs |
-| Try It returns 503 | Set `COOKBOOK_LLM_API_KEY` in App Service Configuration |
+| Blank page after deploy | Verify `pnpm run build` succeeded in pipeline logs |
+| Try It returns 503 | Set `COOKBOOK_LLM_API_KEY` in environment |
 | Chat returns 503 | Same as above |
-| Azure OpenAI 401 | Verify key and base URL match your Azure OpenAI resource |
-| Pipeline fails at Deploy stage | Check `AZURE_SUBSCRIPTION` matches your service connection name exactly |
+| LLM returns 401 | Verify key and base URL match your LLM provider |
+| Pipeline fails at build | Check Node version (needs 20+) and pnpm lockfile |
 
 ## Architecture
 
 ```
-Client (React/Vite)  →  Express Server  →  Azure OpenAI (optional)
+Client (React/Vite)  →  Express Server  →  LLM (optional: Ollama, Azure OpenAI, civic-ai proxy)
      port 3000              port 3000
 ```
 
@@ -147,12 +148,12 @@ The server sets a Content-Security-Policy via helmet:
 - **Styles:** self + inline + Google Fonts
 - **Fonts:** self + Google Fonts CDN
 - **Images:** self + data URIs + CloudFront hero image CDN
-- **API connections:** self + Azure Logic Apps (training form)
+- **API connections:** self (+ Azure Logic Apps if training form configured)
 - **Frame ancestors:** self (+ SharePoint origins when `SHAREPOINT_ORIGINS` is set)
 
-## Self-Hosted Deployment (Non-Azure)
+## Self-Hosted Deployment
 
-The app has no Azure-specific code. It runs on any server with Node 20.
+The app has no cloud-specific code. It runs on any server with Node 20.
 
 ### Docker
 
