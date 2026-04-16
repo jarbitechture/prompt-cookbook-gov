@@ -4,6 +4,25 @@
 
 An interactive AI prompt training app for county staff. 30 chapters covering prompt engineering from basics to advanced, with 4 game modes and a built-in AI coach. Built with React + Express.
 
+## Deployment Roadmap
+
+Status of each step to get the cookbook running in the county environment.
+
+| Step | Status | What's needed |
+|------|--------|---------------|
+| 1. Code in Azure DevOps | Done | Repo: `ManateeCounty/AIRollout/Prompt Cookbook` |
+| 2. Pipeline YAML | Done | `azure-pipelines.yml` — builds, bundles, publishes artifact |
+| 3. Self-hosted agent on RHEL | Pending | Install Azure DevOps agent on RHEL, create agent pool, update pipeline `pool:` |
+| 4. Pipeline runs (build validates) | Blocked by #3 | First successful build confirms code compiles on county infra |
+| 5. IIS site on Windows App Server | Pending | IT creates IIS site, enables Windows Auth, restricts to AD group |
+| 6. Deploy artifact to IIS | Pending | Copy build artifact from pipeline to IIS wwwroot, configure Node startup |
+| 7. Ollama running on RHEL | Pending | `ollama pull phi4` on inference server |
+| 8. Civic-ai governed proxy running | Pending | `uvicorn api_server:app --port 8100` on RHEL (see [civic-ai RUNBOOK](https://github.com/jarbitechture/manatee-civic-ai/blob/main/RUNBOOK.md)) |
+| 9. Point cookbook at governed proxy | Pending | Set `COOKBOOK_LLM_BASE_URL=http://<rhel-ip>:8100/v1` in IIS environment |
+| 10. Verify end-to-end | Pending | Staff opens cookbook, uses Try It, prompt goes through governance, response returns |
+
+Steps 1-2 are done. Steps 3-6 are IT infrastructure. Steps 7-9 are civic-ai platform setup. Step 10 is the final validation.
+
 ## Quick Start (Local)
 
 ```bash
@@ -57,6 +76,18 @@ All three checks should pass without any environment variables configured.
 3. Push to `main` — the pipeline installs, builds, bundles, and publishes the artifact
 
 The pipeline validates the build on every push. Deployment to IIS is handled separately by IT ops.
+
+**Agent setup:** The pipeline currently targets `vmImage: "ubuntu-latest"` (Microsoft-hosted). This won't run until either a free parallelism grant is approved or a self-hosted agent is configured. When the RHEL self-hosted agent is online, update `azure-pipelines.yml`:
+
+```yaml
+# Change:
+pool:
+  vmImage: "ubuntu-latest"
+
+# To:
+pool:
+  name: "<your-agent-pool-name>"
+```
 
 ### Governed LLM Integration
 
