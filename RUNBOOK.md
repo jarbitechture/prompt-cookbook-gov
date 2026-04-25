@@ -6,22 +6,20 @@ An interactive AI prompt training app for county staff. 30 chapters covering pro
 
 ## Deployment Roadmap
 
-Status of each step to get the cookbook running in the county environment.
-
 | Step | Status | What's needed |
 |------|--------|---------------|
 | 1. Code in Azure DevOps | Done | Repo: `ManateeCounty/AIRollout/Prompt Cookbook` |
 | 2. Pipeline YAML | Done | `azure-pipelines.yml` — builds, bundles, publishes artifact |
-| 3. Self-hosted agent on RHEL | Pending | Install Azure DevOps agent on RHEL, create agent pool, update pipeline `pool:` |
-| 4. Pipeline runs (build validates) | Blocked by #3 | First successful build confirms code compiles on county infra |
-| 5. IIS site on Windows App Server | Pending | IT creates IIS site, enables Windows Auth, restricts to AD group |
-| 6. Deploy artifact to IIS | Pending | Copy build artifact from pipeline to IIS wwwroot, configure Node startup |
-| 7. Ollama running on RHEL | Pending | `ollama pull phi4` on inference server |
-| 8. Civic-ai governed proxy running | Pending | `uvicorn api_server:app --port 8100` on RHEL (see [civic-ai RUNBOOK](https://github.com/jarbitechture/manatee-civic-ai/blob/main/RUNBOOK.md)) |
-| 9. Point cookbook at governed proxy | Pending | Set `COOKBOOK_LLM_BASE_URL=http://<rhel-ip>:8100/v1` in IIS environment |
-| 10. Verify end-to-end | Pending | Staff opens cookbook, uses Try It, prompt goes through governance, response returns |
-
-Steps 1-2 are done. Steps 3-6 are IT infrastructure. Steps 7-9 are civic-ai platform setup. Step 10 is the final validation.
+| 3. Self-hosted agent on RHEL | Pending | Optional once GitHub release deploy is in place |
+| 4. Pipeline runs (build validates) | Blocked by #3 | Optional |
+| 5. IIS site on Windows App Server | **Done 2026-04-25** | `Default Web Site` → `C:\inetpub\wwwroot\cookbook\public` on bcc-ap-llm01 |
+| 6. Deploy artifact to IIS + Node service | **Done 2026-04-25** | NSSM service `cookbook-node` runs `node dist/index.js` on `localhost:3000`; IIS reverse-proxies `/api/*` via ARR |
+| 7. LLM backend on RHEL | **Done 2026-04-25** | SGLang systemd unit on bcc-ap-infer01, serving Qwen2.5-7B-Instruct-FP8-dynamic on `0.0.0.0:30000`. Replaced original Ollama plan. |
+| 8. Civic-ai governed proxy | Deferred | Direct cookbook → SGLang for POC; civic-ai proxy slots in between for governance once POC accepted. |
+| 9. Cookbook → LLM env vars | **Done 2026-04-25** | `COOKBOOK_LLM_BASE_URL=http://bcc-ap-infer01.bcc.ad.mymanatee.org:30000/v1`, `COOKBOOK_LLM_DEFAULT_MODEL=qwen2.5-7b` |
+| 10. End-to-end verified | **Done 2026-04-25** | Streamed `Hello! How can I assist you today?` from infer01 → llm01:3000 → IIS → curl |
+| 11. DNS `www.mcgpt.mymanatee.org` → llm01 | Pending | County DNS ops (Mon) |
+| 12. TLS cert bound to IIS site | Pending | Wildcard cert PFX from ops, IIS HTTPS binding (Mon) |
 
 ## Quick Start (Local)
 
@@ -165,12 +163,72 @@ Everything except Try It and Chat:
 
 ## Architecture
 
+### Single-host (local dev / simple deploy)
+
 ```
-Client (React/Vite)  →  Express Server  →  LLM (optional: Ollama, Azure OpenAI, civic-ai proxy)
+Client (React/Vite)  →  Express Server  →  LLM (Azure OpenAI, OpenAI, Ollama, or self-hosted SGLang)
      port 3000              port 3000
 ```
 
-Single service. The Express server serves the built React app and handles the two API endpoints (`/api/try-it`, `/api/chat`). No database, no external dependencies beyond the optional LLM.
+### County production (live as of 2026-04-25)
+
+```
+County user (browser)
+    │  HTTP today / HTTPS pending DNS+cert
+    ▼
+http://bcc-ap-llm01.bcc.ad.mymanatee.org/   (Windows Server 2025, IIS Default Web Site)
+    │
+    ├── /                → IIS static (C:\inetpub\wwwroot\cookbook\public)
+    └── /api/*           → ARR reverse proxy → http://localhost:3000/api/*
+                                                       │
+                                                       ▼
+                          cookbook-node (NSSM service)
+                          C:\cookbook\dist\index.js, port 3000
+                          env: COOKBOOK_LLM_BASE_URL=http://bcc-ap-infer01...:30000/v1
+                                                       │  HTTP
+                                                       ▼
+                          bcc-ap-infer01 (RHEL 10, NVIDIA L4 24GB)
+                          sglang.service systemd unit
+                          /opt/sglang/venv → Qwen2.5-7B-Instruct-FP8-dynamic
+                          0.0.0.0:30000 (firewalled to llm01 only)
+                          OpenAI-compatible /v1/models, /v1/chat/completions
+```
+
+### Live service inventory
+
+| Host | Service | Port | Manage |
+|---|---|---|---|
+| bcc-ap-llm01 | IIS `Default Web Site` | 80 | `iisreset`, IIS Manager |
+| bcc-ap-llm01 | `cookbook-node` (NSSM) | 3000 (loopback) | `nssm {start\|stop\|restart\|status} cookbook-node` |
+| bcc-ap-infer01 | `sglang.service` (systemd) | 30000 | `sudo systemctl {start\|stop\|restart\|status} sglang` |
+
+### Logs
+
+| What | Where |
+|---|---|
+| cookbook stdout/stderr (llm01) | `C:\cookbook\service.out.log`, `service.err.log` (rotated 10MB) |
+| IIS access logs | `C:\inetpub\logs\LogFiles\W3SVC1\` |
+| SGLang (infer01) | `sudo journalctl -u sglang -f` |
+
+### Update workflow (deploy a new build)
+
+On Mac:
+```bash
+cd ~/Projects/prompt-cookbook-gov
+# edit source...
+pnpm run build
+git add -p && git commit -m "..." && git push origin main && git push azdo main
+tar -czf cookbook-dist-v0.1.0.tgz dist package.json pnpm-lock.yaml patches start.ps1
+gh release upload v0.1.0 cookbook-dist-v0.1.0.tgz --clobber
+```
+
+On llm01 (Admin PowerShell, in `C:\cookbook`):
+```powershell
+iwr https://github.com/jarbitechture/prompt-cookbook-gov/releases/download/v0.1.0/cookbook-dist-v0.1.0.tgz -OutFile cookbook.tgz
+tar -xzf cookbook.tgz
+.\iis-setup.ps1   # syncs static + restarts site
+nssm restart cookbook-node
+```
 
 ## Security Headers
 

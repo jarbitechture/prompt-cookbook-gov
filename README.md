@@ -44,6 +44,12 @@ COOKBOOK_LLM_API_KEY=sk-...
 # Or Ollama local (air-gapped, no data leaves the network)
 COOKBOOK_LLM_API_KEY=ollama
 COOKBOOK_LLM_BASE_URL=http://localhost:11434/v1
+
+# Or self-hosted SGLang (county production today)
+COOKBOOK_LLM_API_KEY=infer01-poc
+COOKBOOK_LLM_BASE_URL=http://bcc-ap-infer01.bcc.ad.mymanatee.org:30000/v1
+COOKBOOK_LLM_DEFAULT_MODEL=qwen2.5-7b
+COOKBOOK_LLM_ALLOWED_MODELS=qwen2.5-7b
 ```
 
 ## CI/CD
@@ -80,11 +86,21 @@ kill %1
 ## Architecture
 
 ```
-Client (React/Vite)  →  Express Server  →  LLM (optional: Ollama, Azure OpenAI, OpenAI)
+Client (React/Vite)  →  Express Server  →  LLM (Azure OpenAI, OpenAI, Ollama, or self-hosted SGLang)
      port 3000              port 3000
 ```
 
-Single service. Express serves the built React app and handles two API endpoints (`/api/try-it`, `/api/chat`). No database, no external dependencies beyond the optional LLM.
+Single service. Express serves the built React app and handles two API endpoints (`/api/try-it`, `/api/chat`). No database, no external dependencies beyond the LLM.
+
+### County production deployment
+
+The cookbook is live in the county environment:
+
+- **bcc-ap-llm01** (Windows Server 2025) — IIS at port 80 fronts the cookbook. Static files served directly; `/api/*` reverse-proxied via ARR to a local `cookbook-node` NSSM service on `localhost:3000`.
+- **bcc-ap-infer01** (RHEL 10, NVIDIA L4) — SGLang systemd service on `0.0.0.0:30000` serving Qwen2.5-7B-Instruct-FP8-dynamic. OpenAI-compatible API. Firewalled to llm01 only.
+- **Public test URL** (county network): `http://bcc-ap-llm01.bcc.ad.mymanatee.org/`. DNS + TLS cert pending ops handoff.
+
+See [RUNBOOK.md](RUNBOOK.md) for service inventory, log paths, and update workflow.
 
 ## Security
 
