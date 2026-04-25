@@ -49,7 +49,7 @@ if ($LASTEXITCODE -eq 0) {
 & nssm set $ServiceName Start SERVICE_AUTO_START
 
 # Description
-& nssm set $ServiceName Description "Manatee County Prompt Cookbook (Node, fronts SGLang on infer01)"
+& nssm set $ServiceName Description 'Manatee County Prompt Cookbook - Node fronting SGLang on infer01'
 
 # Start
 Write-Host "Starting service..."
