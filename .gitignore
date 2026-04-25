@@ -110,3 +110,6 @@ temp/
 
 # Scratch notes
 ideas.md
+
+# Python virtualenv (local only, never commit)
+.venv/

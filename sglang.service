@@ -1,0 +1,40 @@
+[Unit]
+Description=SGLang inference server (primary LLM, OpenAI-compatible)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=sglang
+Group=sglang
+WorkingDirectory=/opt/sglang
+Environment="HOME=/opt/sglang"
+Environment="HF_HOME=/model/.cache/huggingface"
+Environment="TRANSFORMERS_CACHE=/model/.cache/huggingface"
+Environment="CUDA_HOME=/usr/local/cuda-13.2"
+Environment="PATH=/opt/sglang/venv/bin:/usr/local/cuda-13.2/bin:/usr/bin:/bin"
+ExecStart=/opt/sglang/venv/bin/python -m sglang.launch_server \
+    --model-path /model/qwen2.5-7b-fp8 \
+    --served-model-name qwen2.5-7b \
+    --host 0.0.0.0 \
+    --port 30000 \
+    --mem-fraction-static 0.80 \
+    --max-running-requests 4 \
+    --context-length 16384 \
+    --enable-mixed-chunk \
+    --attention-backend triton \
+    --log-level info
+Restart=on-failure
+RestartSec=15
+TimeoutStartSec=300
+
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=sglang
+
+[Install]
+WantedBy=multi-user.target
