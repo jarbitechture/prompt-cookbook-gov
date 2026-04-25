@@ -146,8 +146,13 @@ async function streamCompletion(
 // ---------------------------------------------------------------------------
 // Model whitelist
 // ---------------------------------------------------------------------------
-const ALLOWED_MODELS = new Set(["gpt-4o-mini", "gpt-3.5-turbo"]);
-const DEFAULT_MODEL = "gpt-4o-mini";
+const ALLOWED_MODELS = new Set(
+  (process.env.COOKBOOK_LLM_ALLOWED_MODELS ?? "gpt-4o-mini,gpt-3.5-turbo")
+    .split(",")
+    .map((m) => m.trim())
+    .filter(Boolean),
+);
+const DEFAULT_MODEL = process.env.COOKBOOK_LLM_DEFAULT_MODEL ?? "gpt-4o-mini";
 
 // ---------------------------------------------------------------------------
 // Server
