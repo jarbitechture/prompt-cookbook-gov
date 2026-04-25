@@ -14,13 +14,12 @@ Write-Host "Node:   $NodeExe"
 Write-Host "Dir:    $AppDir"
 Write-Host "Script: $AppScript"
 
-# Stop and remove if it already exists (idempotent)
-$existing = & nssm status $ServiceName 2>&1
-if ($LASTEXITCODE -eq 0) {
-    Write-Host "Service exists — stopping + removing for clean reinstall"
-    & nssm stop $ServiceName 2>&1 | Out-Null
-    & nssm remove $ServiceName confirm 2>&1 | Out-Null
-}
+# Stop and remove if it already exists (idempotent — ignore errors if absent)
+$prevPref = $ErrorActionPreference
+$ErrorActionPreference = 'SilentlyContinue'
+& nssm stop $ServiceName 2>&1 | Out-Null
+& nssm remove $ServiceName confirm 2>&1 | Out-Null
+$ErrorActionPreference = $prevPref
 
 # Install
 & nssm install $ServiceName $NodeExe $AppScript
