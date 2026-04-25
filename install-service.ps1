@@ -14,7 +14,7 @@ Write-Host "Node:   $NodeExe"
 Write-Host "Dir:    $AppDir"
 Write-Host "Script: $AppScript"
 
-# Stop and remove if it already exists (idempotent — ignore errors if absent)
+# Stop and remove if it already exists (idempotent -- ignore errors if absent)
 $prevPref = $ErrorActionPreference
 $ErrorActionPreference = 'SilentlyContinue'
 & nssm stop $ServiceName 2>&1 | Out-Null
@@ -78,5 +78,5 @@ if ($status -eq 'SERVICE_RUNNING') {
     }
 }
 else {
-    Write-Host "Service failed to start — check $AppDir\service.err.log" -ForegroundColor Red
+    Write-Host "Service failed to start -- check $AppDir\service.err.log" -ForegroundColor Red
 }
