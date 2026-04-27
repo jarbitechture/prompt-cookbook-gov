@@ -230,6 +230,55 @@ tar -xzf cookbook.tgz
 nssm restart cookbook-node
 ```
 
+## Authentication
+
+The cookbook is gated by **IIS Windows Authentication + a hard-coded allowlist in `web.config`**. Domain-joined browsers SSO transparently for users on the allowlist; everyone else gets HTTP 401.
+
+### Source of truth
+
+`enable-auth.ps1` in this repo. The script:
+- Disables Anonymous Authentication on `Default Web Site`
+- Enables Windows Authentication
+- Writes `C:\inetpub\wwwroot\cookbook\public\web.config` with the rewrite rule **and** the `<authorization>` allowlist
+- `iisreset`s
+
+The `web.config` on llm01 is generated from the script — do not edit it directly. If you do, the next `iis-setup.ps1` run will overwrite it.
+
+### Current pilot allowlist
+
+| User | Notes |
+|---|---|
+| `BCC\ejarbeadm` | Operator account (do not remove — locks you out) |
+| `BCC\marriagaadm` | Pilot user |
+| `BCC\csolanadm` | Pilot user |
+| `BCC\kmonroeadm` | Pilot user |
+
+### Add or remove a user
+
+1. Edit `enable-auth.ps1` on Mac — change the `$AllowedUsers` line.
+2. Commit + push to both remotes.
+3. On llm01 (Admin PS):
+   ```powershell
+   $h = git rev-parse --short HEAD   # or copy the new commit hash from GitHub
+   iwr "https://raw.githubusercontent.com/jarbitechture/prompt-cookbook-gov/$h/enable-auth.ps1" -OutFile enable-auth.ps1
+   .\enable-auth.ps1
+   ```
+4. Browser test as the new user.
+
+### Lockout recovery
+
+If you remove yourself from the allowlist or the `web.config` is malformed, you'll get 401 on everything including the URL you'd use to fix it. Recovery from llm01 console (RDP as a local admin who is NOT gated):
+
+```powershell
+Remove-Item C:\inetpub\wwwroot\cookbook\public\web.config
+.\iis-setup.ps1   # restores rewrite-only web.config (no auth gate, full anon access)
+.\enable-auth.ps1 # then re-applies the gate with the corrected allowlist
+```
+
+### Move from allowlist to AD group (later)
+
+When the pilot expands beyond ~10 users, ask ops to create an AD security group (e.g., `BCC-Cookbook-Pilot`) and replace the `<add accessType="Allow" users="..." />` with `<add accessType="Allow" roles="BCC\BCC-Cookbook-Pilot" />`. Group membership is then managed in AD, no code changes needed.
+
 ## Security Headers
 
 The server sets a Content-Security-Policy via helmet:
