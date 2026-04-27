@@ -224,7 +224,7 @@ export default function ChatbotWidget({ departmentContext }: { departmentContext
             initial={{ opacity: 0, y: 20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            transition={{ duration: 0.25, ease: [0.25, 0.1, 0.25, 1] }}
+            transition={{ duration: 0.25, ease: [0.25, 0.1, 0.25, 1] as const }}
             className="fixed bottom-6 right-6 z-50 flex flex-col rounded-xl overflow-hidden shadow-2xl"
             style={{
               width: 420,

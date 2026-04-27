@@ -1,6 +1,7 @@
 // ═══════════════════════════════════════════════════════════════════════════
-// Manatee County Department/Service Hierarchy
-// 7 top-level categories → sub-categories → leaf services
+// Manatee County Service Hierarchy
+// Top-level categories → sub-categories → leaf services.
+// Each Category has `actualDepartments` — the real BCC departments it covers.
 // ═══════════════════════════════════════════════════════════════════════════
 
 export interface LeafService {
@@ -39,16 +40,18 @@ export interface DeptPersonalization {
   recommendedRecipeCategories: string[];
 }
 
-export interface Department {
+export interface Category {
   id: string;
   name: string;
   icon: string;
   description: string;
   color: string; // oklch accent
+  /** Real Manatee County departments this category covers */
+  actualDepartments: string[];
   subCategories: SubCategory[];
-  /** Chapter IDs most relevant to this department */
+  /** Chapter IDs most relevant to this category */
   relevantChapters: string[];
-  /** Prompt case studies specific to this department */
+  /** Prompt case studies specific to this category */
   caseStudies: CaseStudy[];
   /** Per-touchpoint personalization content */
   personalization: DeptPersonalization;
@@ -62,13 +65,14 @@ export interface CaseStudy {
   technique: string;
 }
 
-export const departments: Department[] = [
+export const departments: Category[] = [
   {
     id: "resident-services",
     name: "Resident Services",
     icon: "🏠",
-    description: "Day-to-day services for residents — utilities, trash, library, 311",
+    description: "Day-to-day services for residents — utilities, trash, library, parks access",
     color: "oklch(0.48 0.14 220)",
+    actualDepartments: ["Utilities", "Solid Waste", "Public Library System", "Natural Resources", "Parks & Recreation (Beach Access)"],
     subCategories: [
       {
         name: "Core Services",
@@ -77,7 +81,6 @@ export const departments: Department[] = [
           { name: "Report Missed Garbage Pickup", description: "Trash or recycling not collected" },
           { name: "Request Big Bin Pickup", description: "Large item or yard waste collection" },
           { name: "Get a Beach Parking Permit", description: "Annual or daily beach access permits" },
-          { name: "File a Manatee 311 Report", description: "General county service requests" },
           { name: "Report a Road or Traffic Issue", description: "Potholes, signals, signs" },
         ],
       },
@@ -156,6 +159,7 @@ export const departments: Department[] = [
     icon: "🏗️",
     description: "Roads, public safety, emergency management, transit",
     color: "oklch(0.45 0.14 155)",
+    actualDepartments: ["Public Works", "Public Safety", "Emergency Management", "MCAT Public Transit", "Fleet Services"],
     subCategories: [
       {
         name: "Accessibility & Mobility",
@@ -239,8 +243,9 @@ export const departments: Department[] = [
     id: "development-building",
     name: "Development, Building & Business",
     icon: "🏢",
-    description: "Permits, inspections, procurement, GIS, land use",
+    description: "Permits, inspections, land use, neighborhood services",
     color: "oklch(0.50 0.14 75)",
+    actualDepartments: ["Building & Development Services", "Planning", "Code Enforcement", "Neighborhood Services"],
     subCategories: [
       {
         name: "Building & Land Development",
@@ -259,15 +264,6 @@ export const departments: Department[] = [
           { name: "Register as a Vendor", description: "County supplier database" },
           { name: "View Surplus Property", description: "County assets for sale" },
           { name: "Apply for Grants", description: "Community and economic development funding" },
-        ],
-      },
-      {
-        name: "Maps & Geo-Data",
-        services: [
-          { name: "Search Property Records", description: "Ownership, value, history" },
-          { name: "View GIS Maps", description: "Interactive county mapping" },
-          { name: "Download Spatial Data", description: "Shapefiles and geodatabases" },
-          { name: "Check Flood Zone Maps", description: "FEMA flood hazard zones" },
         ],
       },
       {
@@ -321,6 +317,7 @@ export const departments: Department[] = [
     icon: "🤝",
     description: "Social support, aging services, animal services, veterans",
     color: "oklch(0.50 0.14 25)",
+    actualDepartments: ["Community & Veterans Services", "Aging Services", "Animal Services", "Disability Services"],
     subCategories: [
       {
         name: "Adult & Aging Services",
@@ -399,8 +396,9 @@ export const departments: Department[] = [
     id: "government-admin",
     name: "Government Administration & Civic Participation",
     icon: "🏛️",
-    description: "Records, HR, public engagement, budget, data, transparency",
+    description: "Clerk of the Board, public records, civic engagement, government relations, 311",
     color: "oklch(0.42 0.14 300)",
+    actualDepartments: ["Clerk of the Board", "County Administration", "Government Relations", "Public Information Office", "Property Management", "Manatee 311 / Citizen Engagement"],
     subCategories: [
       {
         name: "Administrative Services",
@@ -414,6 +412,7 @@ export const departments: Department[] = [
       {
         name: "Public Engagement & Feedback",
         services: [
+          { name: "File a Manatee 311 Report", description: "General county service requests, routed to the right department" },
           { name: "Submit Public Comment", description: "Board meetings and hearings" },
           { name: "Take a County Survey", description: "Resident feedback opportunities" },
           { name: "Volunteer with the County", description: "Programs and sign-up" },
@@ -480,6 +479,7 @@ export const departments: Department[] = [
     icon: "🤝",
     description: "Constitutional offices, airport, port, school district, health department",
     color: "oklch(0.50 0.10 180)",
+    actualDepartments: ["Clerk of Court", "Property Appraiser", "Tax Collector", "Supervisor of Elections", "Sheriff's Office", "SRQ Airport", "SeaPort Manatee", "Mosquito Control District", "School District", "FL Dept of Health", "Incorporated Municipalities"],
     subCategories: [
       {
         name: "Constitutional Offices & Agencies",
@@ -544,6 +544,7 @@ export const departments: Department[] = [
     icon: "🌴",
     description: "Parks, beaches, sports facilities, historic sites, and leisure programming",
     color: "oklch(0.50 0.14 145)",
+    actualDepartments: ["Parks & Recreation", "Convention & Visitors Bureau", "Aquatic Centers", "Historical Resources"],
     subCategories: [
       {
         name: "Parks & Beaches",
@@ -608,14 +609,372 @@ export const departments: Department[] = [
       recommendedRecipeCategories: ["Writing", "Planning", "County Work"],
     },
   },
+  {
+    id: "information-technology",
+    name: "Information Technology Services",
+    icon: "💻",
+    description: "Cybersecurity, M365, GIS, the help desk, and county-wide system support",
+    color: "oklch(0.45 0.14 260)",
+    actualDepartments: ["Information Technology Services (ITS)", "Cybersecurity", "GIS", "Service Desk"],
+    subCategories: [
+      {
+        name: "Service Desk & Support",
+        services: [
+          { name: "Submit a Help Desk Ticket", description: "Hardware, software, or access issues" },
+          { name: "Reset Your Password", description: "M365 / AD password recovery" },
+          { name: "Request Software Access", description: "Application provisioning and license requests" },
+          { name: "Report a Phishing Email", description: "Forward suspicious emails to the security team" },
+        ],
+      },
+      {
+        name: "Systems & Applications",
+        services: [
+          { name: "Access M365 Resources", description: "Teams, SharePoint, Outlook, OneDrive" },
+          { name: "Use Cherwell ITSM", description: "IT service management portal" },
+          { name: "View System Status", description: "Outage and maintenance notices" },
+          { name: "Request Software Evaluation", description: "AI tool reviews, vendor assessments, security review" },
+        ],
+      },
+      {
+        name: "Maps & Geo-Data",
+        services: [
+          { name: "Search Property Records", description: "Ownership, value, history" },
+          { name: "View GIS Maps", description: "Interactive county mapping" },
+          { name: "Download Spatial Data", description: "Shapefiles and geodatabases" },
+          { name: "Check Flood Zone Maps", description: "FEMA flood hazard zones" },
+        ],
+      },
+      {
+        name: "Cybersecurity",
+        services: [
+          { name: "Report a Security Incident", description: "Suspected breach, malware, or data exposure" },
+          { name: "Take Security Awareness Training", description: "Annual mandatory training in M365" },
+          { name: "Request a Vulnerability Scan", description: "Pre-deployment review for new systems" },
+        ],
+      },
+    ],
+    relevantChapters: ["ch01", "ch02", "ch04", "ch15", "ch16", "ch17", "ch29", "ch30"],
+    caseStudies: [
+      {
+        title: "Phishing Advisory to County Staff",
+        scenario: "A targeted phishing wave is spoofing the County Administrator's email address.",
+        weakPrompt: "Write an email about phishing",
+        strongPrompt: "You are a Manatee County ITS cybersecurity analyst. In the last 24 hours, staff have received phishing emails spoofing the County Administrator with a request to purchase gift cards. Draft a county-wide advisory under 200 words that: identifies the spoofing pattern (sender display name vs. real address), names two red flags (urgent gift-card request, mismatched reply-to), gives the action to take (forward to phishing@mymanatee.org, do not reply), and states that ITS has already blocked the inbound domain. Plain language, no jargon.",
+        technique: "Persona + Specificity",
+      },
+      {
+        title: "AI Tool Evaluation Memo",
+        scenario: "A department director asks ITS to greenlight a new generative-AI vendor.",
+        weakPrompt: "Review this AI tool",
+        strongPrompt: "Act as an ITS analyst evaluating a new AI tool against the county AI Governance Handbook. The tool is a writing assistant that processes county documents in the vendor's cloud. Draft an evaluation memo with sections: data classification handled, where data is stored, retention and deletion controls, F.S. 119 public-records implications, vendor SOC 2 status, recommended risk tier (Minimal / Limited / High / Unacceptable), and a go / no-go recommendation. Reference the AI Working Group review process. Under 600 words.",
+        technique: "RTCO Framework",
+      },
+    ],
+    personalization: {
+      heroGreeting: "ITS work cuts across every department: incident reports, change requests, security advisories, AI-tool reviews. Good prompts help you write faster without losing precision on the details that matter for audit and compliance.",
+      starterChapters: ["ch01", "ch02", "ch04"],
+      promptOfTheWeek: {
+        title: "Incident Response Narrative",
+        description: "Draft a clear post-incident narrative for an internal cybersecurity event with a defined scope, timeline, and remediation list.",
+        template: "Role: You are a Manatee County ITS incident response analyst.\nTask: Write the post-incident narrative for [INCIDENT TYPE, e.g., phishing wave, ransomware probe, credential leak] that affected [SYSTEMS / DEPARTMENTS] from [START TIME] to [CONTAINED TIME].\nConstraints: Plain language for a non-technical audience. Sections: what happened, scope, timeline, indicators observed, containment actions, current status, follow-up actions with owner and due date. No speculation about attribution. Cite the relevant ticket numbers in Cherwell.\nOutput: A narrative ready for the CIO and the AI Working Group.",
+        technique: "Structured Output",
+      },
+      quickActions: {
+        lab: "Practice writing security advisories, change-request narratives, and software-evaluation memos.",
+        builder: "Build prompts for incident narratives, AI tool reviews, and service-desk knowledge-base articles.",
+        resources: "Templates for cybersecurity advisories, AI governance reviews, and IT change communications.",
+      },
+      builderTemplate: "Role: You are a Manatee County ITS [security analyst / systems administrator / service desk lead].\nTask: Draft a [memo / advisory / KB article] about [SPECIFIC EVENT OR CHANGE].\nConstraints: Cite Cherwell ticket numbers. State scope, timeline, and risk tier. Reference the AI Governance Handbook where AI tools are involved. Plain language for a non-technical reader.\nOutput: [Memo / advisory / KB article] ready for review.",
+      chatbotContext: "Information Technology Services covers Manatee County's M365 environment, network, cybersecurity, GIS platform, application portfolio (Accela, Cherwell, OpenGov, RapidDeploy 911, CityWorks), and the help desk. ITS staff write incident response narratives, security advisories, AI tool evaluation memos, change-management requests, knowledge-base articles, and audit responses. The AI Governance Handbook (March 2026) governs AI tool reviews, and Florida Statute 119 governs public-records exposure for IT systems.",
+      recommendedRecipeCategories: ["Writing", "Analysis", "County Work"],
+    },
+  },
+  {
+    id: "human-resources",
+    name: "Human Resources",
+    icon: "👥",
+    description: "Recruitment, classification and comp, benefits, FMLA / ADA, employee relations",
+    color: "oklch(0.50 0.14 350)",
+    actualDepartments: ["Human Resources", "Risk Management", "Employee Benefits", "Training & Development"],
+    subCategories: [
+      {
+        name: "Recruitment & Hiring",
+        services: [
+          { name: "Apply for a County Job", description: "Open positions and the applicant portal" },
+          { name: "Track Application Status", description: "View where your application stands" },
+          { name: "Refer a Candidate", description: "Internal referral program" },
+        ],
+      },
+      {
+        name: "Benefits & Leave",
+        services: [
+          { name: "Enroll in Benefits", description: "Annual open enrollment and qualifying events" },
+          { name: "Request FMLA Leave", description: "Family and Medical Leave Act paperwork" },
+          { name: "Request ADA Accommodation", description: "Workplace accommodation requests" },
+          { name: "View Florida Retirement Info", description: "FRS plan details and resources" },
+        ],
+      },
+      {
+        name: "Performance & Development",
+        services: [
+          { name: "Complete a Performance Review", description: "Annual review forms and timelines" },
+          { name: "Browse Training Catalog", description: "M365, leadership, role-specific courses" },
+          { name: "Request Tuition Assistance", description: "Education benefit applications" },
+        ],
+      },
+    ],
+    relevantChapters: ["ch01", "ch02", "ch03", "ch08", "ch15", "ch24", "ch27"],
+    caseStudies: [
+      {
+        title: "Job Posting Without Bias Language",
+        scenario: "A department needs a Senior Analyst posting that meets HR equity standards.",
+        weakPrompt: "Write a job posting",
+        strongPrompt: "Act as a Manatee County HR recruitment specialist. Draft a posting for a Senior Business Analyst role in [DEPARTMENT]. Include: position summary, six essential duties, minimum qualifications, preferred qualifications, salary range [MIN-MAX], FRS pension eligibility, and the application link. Do not use age, gender, marital status, or any bias-coded language. Avoid superlative descriptors that exclude career-changers. Under 500 words. Final review by HR before posting.",
+        technique: "Persona + Negative Constraints",
+      },
+      {
+        title: "ADA Accommodation Response",
+        scenario: "An employee requests a standing desk and a quieter workspace for documented chronic pain.",
+        weakPrompt: "Reply to the accommodation request",
+        strongPrompt: "You are a Manatee County HR Risk Management specialist. An employee in the Public Works field office has submitted an ADA accommodation request for a standing desk and a partition for noise reduction, supported by a physician's note. Draft a response that: confirms receipt, explains the interactive process, names the next step (a 30-minute meeting with the employee and their supervisor), states the timeline (15 business days for initial determination), and notes confidentiality of medical information. Empathetic but procedural tone, under 200 words.",
+        technique: "Persona + Specificity",
+      },
+    ],
+    personalization: {
+      heroGreeting: "HR work runs on careful, legally aware language: postings, accommodations, performance documents, benefits notices. Good prompts help you draft compliant communications faster while keeping the warmth that recruitment and employee relations need.",
+      starterChapters: ["ch01", "ch02", "ch03"],
+      promptOfTheWeek: {
+        title: "Performance Improvement Plan Draft",
+        description: "Draft a clear, fair PIP that documents specific behaviors, expectations, and the support the employee will receive.",
+        template: "Role: You are a Manatee County HR business partner.\nTask: Draft a Performance Improvement Plan for an employee in [DEPARTMENT / ROLE] who has [SPECIFIC PERFORMANCE GAP, e.g., missed three deliverable deadlines in the last 60 days].\nConstraints: List specific behaviors observed (with dates). State measurable expectations and a 60-day review window. Name the support the county will provide (training, weekly check-ins, mentor). Avoid emotional language and judgments about the employee's character. End with the consequence statement and the signature lines.\nOutput: A PIP ready for legal and the supervisor to review.",
+        technique: "Structured Output",
+      },
+      quickActions: {
+        lab: "Practice writing job postings, accommodation responses, PIP drafts, and policy memos.",
+        builder: "Build prompts for benefits notices, training announcements, and recruitment outreach.",
+        resources: "Templates for HR correspondence, performance documentation, and onboarding communications.",
+      },
+      builderTemplate: "Role: You are a Manatee County HR [recruiter / business partner / benefits specialist].\nTask: Draft a [posting / response / memo] regarding [SPECIFIC HR MATTER].\nConstraints: Comply with EEOC, ADA, FMLA, FLSA, and county policy. Avoid bias-coded language. State specific dates, deadlines, and contacts. Confidential where applicable.\nOutput: [Document type] ready for legal and supervisor review.",
+      chatbotContext: "Human Resources covers Manatee County's recruitment, classification and compensation, employee benefits, retirement (FRS), Risk Management (workers' comp, ADA, FMLA), training, and employee relations. HR staff draft job postings, accommodation responses, performance improvement plans, benefits notices, training announcements, and policy memos. EEOC, ADA, FMLA, FLSA, and Florida Sunshine Law (for personnel records exemptions under F.S. 119.071) shape the language they use every day.",
+      recommendedRecipeCategories: ["Writing", "County Work", "Planning"],
+    },
+  },
+  {
+    id: "county-attorney",
+    name: "County Attorney",
+    icon: "⚖️",
+    description: "Contracts, ordinances, public records, board legal support, ethics opinions",
+    color: "oklch(0.42 0.14 30)",
+    actualDepartments: ["County Attorney's Office", "Litigation", "Real Property", "Public Records Counsel"],
+    subCategories: [
+      {
+        name: "Board & Department Support",
+        services: [
+          { name: "Request a Legal Opinion", description: "Formal legal review for staff and the BCC" },
+          { name: "Review a Draft Contract", description: "Terms, indemnity, insurance, signature authority" },
+          { name: "Get Ethics Guidance", description: "Florida Code of Ethics, conflict of interest" },
+        ],
+      },
+      {
+        name: "Compliance & Records",
+        services: [
+          { name: "Review F.S. 119 Exemption Claim", description: "Public-records exemption analysis" },
+          { name: "Sunshine Law Question", description: "Open meetings, public-records compliance" },
+          { name: "Draft an Ordinance Summary", description: "Plain-language summary for board agenda" },
+        ],
+      },
+      {
+        name: "Litigation & Property",
+        services: [
+          { name: "Refer a Claim", description: "Tort claims and pre-suit notices under F.S. 768.28" },
+          { name: "Real Property Review", description: "Easements, deeds, eminent domain" },
+        ],
+      },
+    ],
+    relevantChapters: ["ch01", "ch02", "ch04", "ch12", "ch15", "ch24", "ch29", "ch30"],
+    caseStudies: [
+      {
+        title: "Public Records Exemption Analysis",
+        scenario: "A reporter requests body-worn camera footage from an active investigation.",
+        weakPrompt: "Analyze this records request",
+        strongPrompt: "You are a Manatee County Assistant County Attorney. A public-records request seeks body-worn camera footage from an active criminal investigation by the Sheriff's Office. Draft an exemption analysis memo for the Records Custodian that: identifies the requester and what was requested, lists the candidate exemptions (F.S. 119.071(2)(c) active criminal investigative information, F.S. 119.071(2)(h) victim privacy, F.S. 943.0525 if applicable), explains why each applies, identifies what can be redacted versus fully withheld, and recommends a response. Cite each statute with subsection. Plain language so the Custodian can defend the position to the requester. Under 700 words.",
+        technique: "Chain-of-Thought",
+      },
+      {
+        title: "Ordinance Plain-Language Summary",
+        scenario: "A new short-term-rental ordinance is going on the BCC agenda next month.",
+        weakPrompt: "Summarize this ordinance",
+        strongPrompt: "Act as a Manatee County Assistant County Attorney drafting the executive summary for an ordinance going to the Board of County Commissioners. The ordinance amends the LDC to add registration, inspection, and tax-collection requirements for short-term rentals. Draft a one-page summary with: what the ordinance does in plain language, what changes for residents and operators, fiscal impact, enforcement mechanism, and the section-by-section roadmap. Reading level appropriate for a non-attorney commissioner and the public. No legal jargon without a parenthetical definition.",
+        technique: "Persona + Constraints",
+      },
+    ],
+    personalization: {
+      heroGreeting: "Legal work for the county is precision work: exemption analyses, ordinance summaries, opinion letters, contract memos. Good prompts help you draft a clean first pass faster, so review time is spent on the legal judgment that matters.",
+      starterChapters: ["ch01", "ch02", "ch04"],
+      promptOfTheWeek: {
+        title: "Legal Opinion Memo Skeleton",
+        description: "Draft the structural skeleton of a legal opinion memo with issue, short answer, facts, analysis, and conclusion.",
+        template: "Role: You are a Manatee County Assistant County Attorney.\nTask: Draft a legal opinion memo on [SPECIFIC LEGAL QUESTION] for [REQUESTING DEPARTMENT].\nConstraints: Use the IRAC structure (Issue, Rule, Application, Conclusion). Cite Florida Statutes, county ordinances, and case law with full citations. State the level of confidence (settled / clear / unsettled / open question). Note any assumptions about facts. End with a one-sentence short answer the client can act on.\nOutput: A memo ready for the County Attorney's signature.",
+        technique: "Structured Output",
+      },
+      quickActions: {
+        lab: "Practice drafting exemption analyses, ordinance summaries, and contract memos.",
+        builder: "Build prompts for legal opinion skeletons, public-records responses, and ethics review notes.",
+        resources: "Templates for legal memos, ordinance executive summaries, and Sunshine Law guidance.",
+      },
+      builderTemplate: "Role: You are a Manatee County Assistant County Attorney.\nTask: Draft a [memo / opinion / analysis / summary] regarding [SPECIFIC LEGAL MATTER].\nConstraints: Cite Florida Statutes, the Florida Constitution, county ordinances, and case law with full citations. Use IRAC where appropriate. State assumptions and confidence level. Plain language for the non-attorney client where possible. No legal jargon without a parenthetical definition.\nOutput: A memo ready for the County Attorney's signature.",
+      chatbotContext: "The County Attorney's Office advises the Board of County Commissioners, the County Administrator, and every department on contracts, ordinances, public-records exemptions under F.S. 119.071, the Florida Sunshine Law, ethics and conflicts under F.S. Chapter 112, eminent domain and real property, tort claims under F.S. 768.28, and litigation. Attorneys draft legal opinions, ordinance executive summaries, exemption analyses, contract review memos, and BCC agenda backup. AI tools used in legal drafting must comply with the AI Governance Handbook and be reviewed for hallucination of citations.",
+      recommendedRecipeCategories: ["Analysis", "Writing", "County Work"],
+    },
+  },
+  {
+    id: "finance-procurement",
+    name: "Financial Management — Budget & Procurement",
+    icon: "💰",
+    description: "Annual budget, fiscal controls, procurement, contract administration, audit",
+    color: "oklch(0.45 0.14 130)",
+    actualDepartments: ["Financial Management Department", "Budget Office", "Procurement", "Accounts Payable", "Audit & Internal Controls"],
+    subCategories: [
+      {
+        name: "Budget",
+        services: [
+          { name: "Submit Budget Transfer", description: "Within-fund and between-fund transfers" },
+          { name: "Request Budget Amendment", description: "Formal amendments requiring BCC approval" },
+          { name: "View FY Budget Calendar", description: "Key dates for the annual budget cycle" },
+          { name: "Access Budget Narratives", description: "Department justifications and historical narratives" },
+        ],
+      },
+      {
+        name: "Procurement",
+        services: [
+          { name: "Start an RFP / RFB / ITQ", description: "Solicitation pathways and pre-solicitation review" },
+          { name: "Manage a Contract", description: "Contract administration and renewals" },
+          { name: "Access Vendor Tools", description: "Vendor registration, certifications, performance" },
+          { name: "Submit a Sole-Source Justification", description: "Documented justification for non-competitive award" },
+        ],
+      },
+      {
+        name: "Accounting & Audit",
+        services: [
+          { name: "Submit a Payment Request", description: "Invoices and accounts payable" },
+          { name: "Resolve a Vendor Payment Issue", description: "Late payment, holds, dispute review" },
+          { name: "Access Audit Findings", description: "Internal and external audit reports and responses" },
+        ],
+      },
+    ],
+    relevantChapters: ["ch01", "ch02", "ch04", "ch05", "ch06", "ch09", "ch15", "ch24", "ch29"],
+    caseStudies: [
+      {
+        title: "Budget Transfer Justification",
+        scenario: "A department needs to move $40,000 from operating to a one-time equipment purchase.",
+        weakPrompt: "Write a budget transfer memo",
+        strongPrompt: "You are a Manatee County Budget Office analyst. A department has requested a $40,000 transfer from object code 5310 (operating supplies) to 5640 (machinery and equipment) to purchase a replacement field laptop fleet. Draft a transfer memo that: states the source and destination codes with current balances, explains why the operating supplies surplus exists (specific quantified evidence), explains why the equipment purchase cannot wait until the next fiscal year, identifies any impact on FY-end audit, and lists the approvals required (department director, Budget, Finance Director). Tight, factual, under 300 words.",
+        technique: "Chain-of-Thought",
+      },
+      {
+        title: "RFP Scope of Work Draft",
+        scenario: "Procurement needs a Scope of Work for a county-wide records management system.",
+        weakPrompt: "Write an RFP scope",
+        strongPrompt: "Act as a Manatee County Procurement specialist drafting the Scope of Work for RFP-IT-2026-XXX (Records Management System). Sections: business problem, in-scope deliverables (with the must-have versus nice-to-have split), out-of-scope items, integration requirements (M365, Cherwell, Accela), data residency requirement (US-only, FedRAMP-aligned where relevant for personnel data), security requirements (SOC 2 Type II), implementation milestones, training and knowledge transfer, vendor performance metrics, and the evaluation criteria with weights (cost 30%, technical fit 25%, experience 20%, timeline 15%, support 10%). Reference the county procurement ordinance and the AI Governance Handbook for any AI-enabled features. Under 1,500 words.",
+        technique: "RTCO Framework",
+      },
+    ],
+    personalization: {
+      heroGreeting: "Budget memos, RFP scopes, vendor performance reviews, audit responses: every word in finance work has a paper trail. Good prompts help you draft accurate, traceable documents that stand up to audit.",
+      starterChapters: ["ch01", "ch02", "ch04"],
+      promptOfTheWeek: {
+        title: "Bid Evaluation Summary",
+        description: "Draft a bid evaluation summary memo with a comparison table, scoring against the published criteria, and a recommendation.",
+        template: "Role: You are a Manatee County Procurement evaluator.\nTask: Summarize the [N]-vendor evaluation for [RFP NUMBER, e.g., RFP-IT-2026-XXX, project name].\nConstraints: Build a comparison table (vendor, total cost, timeline, key differentiators, references, compliance with requirements). Score each vendor against the published evaluation criteria with weights. Identify the recommended vendor and the top concerns. End with a one-paragraph executive recommendation for the County Administrator and the BCC. Cite the county procurement ordinance section that governs the award.\nOutput: A summary memo for the BCC agenda backup.",
+        technique: "Structured Output",
+      },
+      quickActions: {
+        lab: "Practice writing budget transfer justifications, RFP scopes, and bid evaluation summaries.",
+        builder: "Build prompts for budget narratives, contract renewal memos, and vendor performance reviews.",
+        resources: "Templates for procurement documents, budget memos, and audit response narratives.",
+      },
+      builderTemplate: "Role: You are a Manatee County [Budget analyst / Procurement specialist / Accounts Payable analyst].\nTask: Draft a [memo / SOW / evaluation / response] regarding [SPECIFIC FISCAL OR PROCUREMENT MATTER].\nConstraints: Cite the relevant fund codes, object codes, contract numbers, RFP numbers. Reference county procurement ordinance and Florida Statutes where applicable. State approvals required and the audit trail. No estimated numbers — use actuals or label as 'projected'.\nOutput: [Document type] ready for the Finance Director's review.",
+      chatbotContext: "Financial Management covers Manatee County's annual budget, fund accounting, procurement (RFP, RFB, ITQ, sole-source), contract administration, accounts payable, and audit liaison. Staff write budget transfer memos, budget amendments, RFP scopes of work, bid evaluation summaries, sole-source justifications, vendor performance reviews, audit responses, and BCC agenda backup for fiscal items. The county procurement ordinance, Florida Statute Chapter 218 (county finance), and GAAP shape the language used daily. AI-enabled features in any procured system require AI Governance Handbook review.",
+      recommendedRecipeCategories: ["Analysis", "Writing", "Data"],
+    },
+  },
+  {
+    id: "ems-911",
+    name: "EMS & 911 Communications",
+    icon: "🚑",
+    description: "Ambulance ops, 911 dispatch, mass-casualty response, medical protocols",
+    color: "oklch(0.50 0.14 10)",
+    actualDepartments: ["Public Safety Department — EMS", "911 Communications Center", "Emergency Management"],
+    subCategories: [
+      {
+        name: "Operations",
+        services: [
+          { name: "Submit a Run Report Note", description: "Field-to-record narrative addenda" },
+          { name: "Request a Protocol Clarification", description: "Medical Director protocol questions" },
+          { name: "Coordinate Mutual Aid", description: "Inter-agency response coordination" },
+        ],
+      },
+      {
+        name: "911 Communications",
+        services: [
+          { name: "Submit a Dispatch QA Note", description: "Quality assurance review and feedback" },
+          { name: "Update CAD Reference Data", description: "Address points, response zones, hazards" },
+          { name: "Access RapidDeploy Resources", description: "Dispatch console, mapping, training" },
+        ],
+      },
+      {
+        name: "Training & Readiness",
+        services: [
+          { name: "Schedule MCI Drill", description: "Mass-casualty incident exercise coordination" },
+          { name: "Access Continuing Education", description: "EMT and paramedic CE credits" },
+          { name: "Submit AAR Findings", description: "After-action report contributions" },
+        ],
+      },
+    ],
+    relevantChapters: ["ch01", "ch02", "ch04", "ch14", "ch15", "ch23", "ch29"],
+    caseStudies: [
+      {
+        title: "Mass-Casualty After-Action Report",
+        scenario: "A multi-vehicle crash on I-75 with 14 patients and 4 responding agencies.",
+        weakPrompt: "Write the AAR",
+        strongPrompt: "You are a Manatee County EMS Battalion Chief writing the after-action report for an MCI on I-75 northbound near University Parkway, on [DATE]. Fourteen patients triaged (3 red, 6 yellow, 5 green), four responding agencies, two air-medical transports. Draft the AAR with sections: incident summary, timeline (with dispatch, on-scene, transport, and clear times), unified-command structure, what worked, gaps observed (with specifics on triage, communications, transport routing), and recommendations with owner and due date. Plain factual language. No speculation about clinical outcomes. Cite specific run numbers and CAD incident IDs. Under 1,500 words.",
+        technique: "Structured Output",
+      },
+      {
+        title: "Public Safety Advisory During Active Incident",
+        scenario: "A large structure fire is closing a major arterial at rush hour.",
+        weakPrompt: "Tell people about the fire",
+        strongPrompt: "Act as a Manatee County Public Safety public information officer. A large commercial structure fire is closing State Road 64 between 43rd Street East and Lena Road. Draft three communications under tight deadline: (1) AlertManatee text under 280 characters with closure, detour, and Emergency Hotline 941-749-3500, (2) Social media post under 150 words with the same facts plus what residents in the smoke plume should do (shelter in place, close windows, monitor for updates), (3) A 200-word website update with detour map link placeholder, estimated reopening, and the public-information line. Factual, no speculation about cause or injuries. Update cadence stated.",
+        technique: "Format + Structure",
+      },
+    ],
+    personalization: {
+      heroGreeting: "Public-safety communication has to be fast, accurate, and survivable in front of a TV camera. Good prompts help you draft AARs, advisories, and protocol updates that hold up under audit while moving at the speed of an active incident.",
+      starterChapters: ["ch01", "ch02", "ch04"],
+      promptOfTheWeek: {
+        title: "Real-Time Public Safety Update",
+        description: "Draft a three-channel public safety update during an active incident: AlertManatee text, social post, website update, with one consistent set of facts.",
+        template: "Role: You are a Manatee County Public Safety public information officer.\nTask: Draft three communications during an active [INCIDENT TYPE] at [LOCATION], affecting [AREA].\n  1. AlertManatee text under 280 characters with the closure, detour, and Emergency Hotline 941-749-3500.\n  2. Social media post under 150 words with the same facts and shelter-in-place guidance if smoke or hazmat is in play.\n  3. Website update of 200-300 words with detour link placeholder, estimated reopening, public-information line, and update cadence.\nConstraints: Factual, no speculation about cause, injuries, or attribution. Update cadence stated explicitly. Same core facts across all three channels.\nOutput: Three messages ready for distribution.",
+        technique: "Multi-Format Output",
+      },
+      quickActions: {
+        lab: "Practice writing AARs, public safety advisories, protocol updates, and dispatch QA narratives.",
+        builder: "Build prompts for incident narratives, multi-channel public safety updates, and training exercise documentation.",
+        resources: "Templates for AARs, public safety advisories, mutual-aid coordination, and 911 QA reviews.",
+      },
+      builderTemplate: "Role: You are a Manatee County [EMS supervisor / 911 communications supervisor / Public Safety PIO].\nTask: Draft a [AAR / advisory / protocol update / QA note] regarding [SPECIFIC INCIDENT OR EVENT].\nConstraints: Cite run numbers, CAD IDs, and timestamps. Plain factual language, no speculation about cause or clinical outcomes. Include Emergency Hotline 941-749-3500 in any public-facing communication.\nOutput: [Document type] ready for the EMS Chief or PIO review.",
+      chatbotContext: "EMS & 911 Communications covers Manatee County's ambulance operations, the 911 communications center (CAD, RapidDeploy), Emergency Management coordination, mass-casualty response, EMS protocol administration, and public safety communications. Staff write after-action reports, public safety advisories, dispatch QA narratives, mutual-aid coordination notes, and training exercise documentation. HIPAA, F.S. Chapter 401 (EMS and 911 regulation), and the county Medical Director's protocols shape clinical language. F.S. 119 governs public-records exposure of CAD and run report data.",
+      recommendedRecipeCategories: ["Writing", "Planning", "County Work"],
+    },
+  },
 ];
 
-/** Get a department by ID */
-export function getDepartment(id: string): Department | undefined {
+/** Get a category by ID */
+export function getDepartment(id: string): Category | undefined {
   return departments.find((d) => d.id === id);
 }
 
-/** Get all leaf services for a department */
-export function getLeafServices(dept: Department): LeafService[] {
+/** Get all leaf services for a category */
+export function getLeafServices(dept: Category): LeafService[] {
   return dept.subCategories.flatMap((sc) => sc.services);
 }

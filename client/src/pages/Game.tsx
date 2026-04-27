@@ -608,7 +608,7 @@ function ResultsScreen({
       <motion.div
         initial={{ scale: 0.8, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        transition={{ duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
+        transition={{ duration: 0.5, ease: [0.25, 0.1, 0.25, 1] as const }}
         className="max-w-lg w-full rounded-2xl p-8"
         style={{ background: CARD_BG, border: `1px solid ${CARD_BORDER}`, boxShadow: "0 8px 40px oklch(0.18 0.02 38 / 0.08)" }}
       >
@@ -2142,7 +2142,7 @@ function ModeSelection({ onSelect }: { onSelect: (mode: GameMode) => void }) {
                 key={mode.id}
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 + i * 0.12, duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
+                transition={{ delay: 0.2 + i * 0.12, duration: 0.5, ease: [0.25, 0.1, 0.25, 1] as const }}
                 whileHover={{ scale: 1.03, y: -4 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => onSelect(mode.id)}

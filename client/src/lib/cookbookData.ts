@@ -68,7 +68,7 @@ export const chapters: Chapter[] = [
     content: [
       "Generative AI relies on a user to \"prompt\" the AI to generate content. Prompts are any direction provided by a user. Think of it like giving instructions to a very capable but very literal assistant — the clearer you are, the better the result.",
       "There are several types of prompts: Text-to-Text (writing emails, summaries, memos), Text-to-Image (generating illustrations or diagrams), Voice+Text-to-Audio (transcription, voice synthesis), Image+Text-to-Video (creating visual content), and Multi-modal (combining multiple input types in a single prompt).",
-      "A 2024 NACo survey found that 75% of county officials and staff already use GenAI tools at work and in personal life. This means Manatee County staff are likely already prompting AI systems without formal guidance. Establishing a shared vocabulary is the recommended first step.",
+      "Establishing a shared vocabulary for prompting is the recommended first step so every department speaks the same language when working with AI.",
       "The AI Working Group created this cookbook so that every department — from Utilities to HR to Emergency Management — speaks the same language when it comes to AI prompting.",
       "Tip: Before your next prompt, pause 5 seconds and ask: 'Am I asking for something vague, or a specific thing?' That one habit will improve every prompt you write."
     ],
@@ -80,7 +80,7 @@ export const chapters: Chapter[] = [
     keyTakeaways: [
       "A prompt is simply a direction or instruction you give to an AI tool",
       "Types include text-to-text, text-to-image, voice-to-audio, and multi-modal",
-      "75% of county staff are already using AI — shared vocabulary matters",
+      "Many county staff already use AI without formal guidance — shared vocabulary matters",
       "This cookbook gives every department a common starting point"
     ],
     tryItTemplate: "I am a {{role}} at Manatee County. Explain what a {{topic}} is in simple terms that I can share with {{audience}}. Keep the tone {{tone}} and limit the response to {{format}}.",
@@ -582,7 +582,7 @@ export const chapters: Chapter[] = [
       "Strategy 1 — Use Search Engines First: Before prompting AI, check if a simple web search answers your question. Add \"-ai\" to your search query to exclude AI-generated results and get primary sources. This saves AI credits and often gives you a faster, more authoritative answer.",
       "Strategy 2 — Minimize Number of Prompts: Combine related questions into a single prompt instead of asking one at a time. For example, instead of three separate prompts about a policy, ask: \"Summarize this policy, list the key requirements, and draft an FAQ — all in one response.\"",
       "Strategy 3 — Constrain Output Length: Tell the AI how long the response should be. \"Respond in less than 100 words\" or \"Give me 3 bullet points\" prevents the AI from generating pages of text you will not read. This saves time and processing resources.",
-      "These three strategies alone can cut your AI usage by 40-60% while improving output quality. The AI Working Group recommends starting every AI task by asking: \"Can I answer this with a search engine first?\"",
+      "The AI Working Group recommends starting every AI task by asking: \"Can I answer this with a search engine first?\"",
       "Tip: Before using AI, ask yourself: 'Can I answer this with a search engine first?' If yes, save your AI usage for tasks that actually need generation, not lookup."
     ],
     promptExamples: [
@@ -594,7 +594,6 @@ export const chapters: Chapter[] = [
       "Search engines first — add \"-ai\" to exclude AI-generated results",
       "Combine related questions into a single prompt",
       "Always constrain output length (word count, bullet count, page limit)",
-      "These strategies can cut AI usage by 40-60%",
       "Ask yourself: \"Can I answer this with a search engine first?\""
     ],
     tryItTemplate: "I need to {{task}} for Manatee County {{department}}. Combine all of the following into a single response:\n1. {{subtask_1}}\n2. {{subtask_2}}\n3. {{subtask_3}}\n\nKeep the total response under {{length}}.",
@@ -1016,7 +1015,7 @@ export const chapters: Chapter[] = [
     riskTier: "green",
     qualityScore: 9,
     summary: "Chain-of-thought prompting forces AI to reason step-by-step instead of jumping to conclusions. This improves accuracy for logic, math, analysis, and multi-step tasks.",
-    source: "Prompt Engineering Jumpstart, Ch. 5; Wei et al. 2022",
+    source: "Wei et al. 2022; County AI Working Group",
     persona: "Alex Rivera",
     personaRole: "Budget Analyst, Manatee County Finance",
     content: [
@@ -1102,7 +1101,7 @@ export const chapters: Chapter[] = [
     riskTier: "green",
     qualityScore: 8,
     summary: "Persona prompting tells the AI to 'act as' a specific expert. Combined with a scenario, it produces more relevant, contextually appropriate outputs for government work.",
-    source: "Prompt Engineering Jumpstart, Ch. 3; White et al. 2023",
+    source: "White et al. 2023; County AI Working Group",
     persona: "Tom Rodriguez",
     personaRole: "Communications Director, Manatee County",
     content: [
@@ -1189,7 +1188,7 @@ export const chapters: Chapter[] = [
     riskTier: "green",
     qualityScore: 8,
     summary: "Negative prompting eliminates fluff, wrong tones, hallucinations, and unwanted formatting by explicitly telling the AI what to exclude from its response.",
-    source: "Prompt Engineering Jumpstart, Ch. 8",
+    source: "NIST AI RMF; County AI Working Group",
     persona: "David Kim",
     personaRole: "Communications Specialist, Manatee County",
     content: [
@@ -1233,7 +1232,7 @@ export const chapters: Chapter[] = [
     riskTier: "yellow",
     qualityScore: 7,
     summary: "Writing good image prompts is about giving the model the right constraints — subject, style, composition, details, and constraints — like directing a photographer.",
-    source: "Prompt Engineering Jumpstart, Ch. 11; DALL-E documentation",
+    source: "DALL-E documentation; County AI Working Group",
     persona: "Rachel Torres",
     personaRole: "Graphic Designer, Manatee County Communications",
     content: [
@@ -1276,7 +1275,7 @@ export const chapters: Chapter[] = [
     riskTier: "green",
     qualityScore: 9,
     summary: "Before relying on any AI output, you need to test it. This chapter covers practical testing methods: consistency checks, edge cases, fact verification, and the prompt scorecard.",
-    source: "Prompt Engineering Jumpstart, Ch. 12; NIST AI RMF",
+    source: "NIST AI RMF; County AI Working Group",
     persona: "Dr. Karen Liu",
     personaRole: "Quality Assurance Lead, Manatee County IT",
     content: [
@@ -1316,8 +1315,8 @@ export const chapters: Chapter[] = [
     cardType: "governance",
     riskTier: "yellow",
     qualityScore: 9,
-    summary: "Four techniques that eliminate 70% of AI hallucinations: the Don't Make Stuff Up clause, Source Enforcement, Uncertainty Prompting, and Boundary Setting.",
-    source: "Prompt Engineering Jumpstart, Ch. 13; NIST AI RMF; County AI Working Group",
+    summary: "Four defensive techniques that reduce AI hallucinations: the Don't Make Stuff Up clause, Source Enforcement, Uncertainty Prompting, and Boundary Setting.",
+    source: "NIST AI RMF; County AI Working Group",
     persona: "Dr. Karen Liu",
     personaRole: "Quality Assurance Lead, Manatee County IT",
     content: [
@@ -1353,7 +1352,7 @@ export const chapters: Chapter[] = [
 export const stats = {
   chapters: chapters.length,
   prompts: "110+",
-  templates: 11,
+  templates: chapters.filter((c) => c.tryItTemplate).length,
   sources: "14+",
 };
 

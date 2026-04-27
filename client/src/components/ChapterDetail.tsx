@@ -95,8 +95,8 @@ const riskLabels: Record<string, { label: string; color: string; bg: string }> =
   red: { label: "High Risk", color: "oklch(0.48 0.16 25)", bg: "oklch(0.94 0.04 25)" },
 };
 
-const fadeTransition: Transition = { duration: 0.4, ease: [0.25, 0.1, 0.25, 1] };
-const delayedTransition = (delay: number): Transition => ({ duration: 0.4, ease: [0.25, 0.1, 0.25, 1], delay });
+const fadeTransition: Transition = { duration: 0.4, ease: [0.25, 0.1, 0.25, 1] as const };
+const delayedTransition = (delay: number): Transition => ({ duration: 0.4, ease: [0.25, 0.1, 0.25, 1] as const, delay });
 
 const BOOKMARKS_KEY = "cookbook-bookmarks";
 

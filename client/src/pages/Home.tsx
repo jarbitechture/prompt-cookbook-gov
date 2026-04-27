@@ -10,7 +10,7 @@ import { useRecentlyViewed } from "@/hooks/useRecentlyViewed";
 import { usePersona } from "@/hooks/usePersona";
 import { useTasteTests } from "@/hooks/useTasteTests";
 import { getDepartment, departments } from "@/lib/departments";
-import type { Department } from "@/lib/departments";
+import type { Category } from "@/lib/departments";
 import Sidebar from "@/components/Sidebar";
 import HeroSection from "@/components/HeroSection";
 import DifficultyFilter from "@/components/DifficultyFilter";
@@ -116,11 +116,11 @@ function OnboardingBanner({ onSelectChapter: _onSelectChapter }: { onSelectChapt
 }
 
 /** Prompt of the Week — featured prompt, department-aware */
-function PromptOfTheWeek({ department }: { department?: Department | null }) {
+function PromptOfTheWeek({ department }: { department?: Category | null }) {
   const [expanded, setExpanded] = useState(false);
 
   const defaultPrompt = {
-    week: "Week of March 31, 2026",
+    week: "",
     title: "Meeting Transcript Summarizer",
     description: "Take a Microsoft Stream or Teams recording transcript and turn it into a concise summary with action items, decisions, and next steps.",
     template: `You are a meeting analyst for Manatee County Government.
@@ -146,7 +146,7 @@ Rules:
 
   const deptPrompt = department?.personalization.promptOfTheWeek;
   const prompt = deptPrompt
-    ? { ...deptPrompt, week: "Week of March 31, 2026" }
+    ? { ...deptPrompt, week: "" }
     : defaultPrompt;
 
   return (
@@ -165,9 +165,11 @@ Rules:
               <span className="text-xs font-bold uppercase tracking-wider" style={{ color: "oklch(0.65 0.14 250)" }}>
                 Prompt of the Week
               </span>
-              <span className="text-[10px] block" style={{ color: "oklch(0.55 0.05 260)" }}>
-                {prompt.week}
-              </span>
+              {prompt.week && (
+                <span className="text-[10px] block" style={{ color: "oklch(0.55 0.05 260)" }}>
+                  {prompt.week}
+                </span>
+              )}
             </div>
           </div>
           <span
@@ -251,14 +253,14 @@ export default function Home() {
   const [tierDropdownOpen, setTierDropdownOpen] = useState(false);
   const [activeTestId, setActiveTestId] = useState<string | null>(null);
   const [showAllChapters, setShowAllChapters] = useState(false);
-  const [selectedDept, setSelectedDeptState] = useState<Department | null>(() => {
+  const [selectedDept, setSelectedDeptState] = useState<Category | null>(() => {
     try {
       const stored = localStorage.getItem("cookbook-department");
       if (stored) return getDepartment(stored) || null;
     } catch { /* */ }
     return null;
   });
-  const setSelectedDept = useCallback((dept: Department | null) => {
+  const setSelectedDept = useCallback((dept: Category | null) => {
     setSelectedDeptState(dept);
     try {
       if (dept) localStorage.setItem("cookbook-department", dept.id);
@@ -801,9 +803,6 @@ export default function Home() {
                 </p>
                 <p className="text-xs mt-1" style={{ color: "oklch(0.60 0.03 55)" }}>
                   Sources: GovAI Coalition, City of San Jose, NIST, NJ OIT, MA EOTSS, Georgia GTA, InnovateUS/Maryland DoIT, NACo, National Academies
-                </p>
-                <p className="text-xs mt-1" style={{ color: "oklch(0.60 0.03 55)" }}>
-                  Compiled March 2026
                 </p>
               </footer>
             </>

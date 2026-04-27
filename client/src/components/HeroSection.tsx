@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { chapters, stats } from "@/lib/cookbookData";
+import { departments } from "@/lib/departments";
 
 const HERO_IMAGE = "https://d2xsxph8kpxj0f.cloudfront.net/310519663269100577/iNoee2hzjbmnACpdRetr7a/robot-chef-hero-CDn5BTigHTzYxm8RQw7AGt.webp";
 
@@ -72,9 +74,9 @@ export default function HeroSection({ greeting }: HeroSectionProps) {
           style={{ borderTop: "1px solid oklch(0.30 0.03 45 / 0.5)" }}
         >
           {[
-            { value: "30", label: "recipes" },
-            { value: "15", label: "templates" },
-            { value: "7", label: "departments" },
+            { value: String(chapters.length), label: "recipes" },
+            { value: String(stats.templates), label: "templates" },
+            { value: String(departments.length), label: "departments" },
           ].map(({ value, label }) => (
             <div key={label} className="flex items-baseline gap-1.5">
               <span className="text-lg font-black font-serif" style={{ color: "oklch(0.85 0.14 58)" }}>

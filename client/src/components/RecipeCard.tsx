@@ -45,7 +45,7 @@ export default function RecipeCard({ chapter, onClick, index = 0 }: RecipeCardPr
     <motion.article
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3, delay: index * 0.025, ease: [0.25, 0.1, 0.25, 1] }}
+      transition={{ duration: 0.3, delay: index * 0.025, ease: [0.25, 0.1, 0.25, 1] as const }}
       className="recipe-card group relative flex flex-col cursor-pointer"
       style={{
         background: "oklch(0.998 0.002 70)",

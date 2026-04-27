@@ -3,7 +3,7 @@ import { Search, BookOpen, ChefHat, FlaskConical, Wrench, Clock, ChevronDown, Ch
 import { chapters, parts } from "@/lib/cookbookData";
 import { tasteTests } from "@/lib/tasteTests";
 import { departments } from "@/lib/departments";
-import type { Department } from "@/lib/departments";
+import type { Category } from "@/lib/departments";
 import type { RecentItem } from "@/hooks/useRecentlyViewed";
 import { search as semanticSearch } from "@/lib/searchIndex";
 
@@ -15,8 +15,8 @@ interface SidebarProps {
   onClose: () => void;
   completedTests?: string[];
   onOpenTest?: (testId: string) => void;
-  selectedDepartment?: Department | null;
-  onSelectDepartment?: (dept: Department | null) => void;
+  selectedDepartment?: Category | null;
+  onSelectDepartment?: (dept: Category | null) => void;
 }
 
 export default function Sidebar({ activeChapter, onSelectChapter, recentItems, isOpen, onClose, completedTests = [], onOpenTest, selectedDepartment, onSelectDepartment }: SidebarProps) {

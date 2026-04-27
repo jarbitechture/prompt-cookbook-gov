@@ -82,7 +82,6 @@ const internalResources = [
       "Managed by the Information Technology Services (ITS) Department",
       "Contact: itservices@mymanatee.org",
       "Current focus: prompt engineering fluency, AI policy compliance, and department-specific use cases",
-      "Manatee County is the first US local government to deploy Peregrine's AI emergency management dashboard",
     ],
     icon: "🤝",
   },
@@ -130,7 +129,7 @@ const staggerContainer = {
 
 const fadeUp = {
   hidden: { opacity: 0, y: 14 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.3, ease: [0.25, 0.1, 0.25, 1] } },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.3, ease: [0.25, 0.1, 0.25, 1] as const } },
 };
 
 export default function Resources() {
@@ -372,7 +371,7 @@ function CoursesTab() {
           </div>
           <div>
             <h2 className="font-serif text-lg font-bold leading-tight" style={{ color: TEXT_PRIMARY }}>
-              Prompt Engineering Jumpstart
+              Cookbook Foundations
             </h2>
             <p className="text-xs" style={{ color: TEXT_SECONDARY }}>14 lessons — click any to read</p>
           </div>
@@ -699,27 +698,9 @@ function RecipesTab() {
 
 /* ─── Internal Tab ───────────────────────────────────────────────────────── */
 
-// ── Microsoft Power Automate Integration ──
-// To connect: Create a Power Automate flow with an "When a HTTP request is received" trigger.
-// Set the flow to write rows to a SharePoint list or Excel Online table.
-// Paste the HTTP POST URL below. The flow will receive JSON with fields:
-//   name, email, department, format, topic, teamSize, preferredDates, notes, timestamp
-//
-// Setup guide:
-// 1. Go to https://make.powerautomate.com → Create → Instant cloud flow
-// 2. Trigger: "When a HTTP request is received" → Method: POST
-// 3. Request Body JSON Schema:
-//    { "type": "object", "properties": {
-//        "name": {"type":"string"}, "email": {"type":"string"},
-//        "department": {"type":"string"}, "format": {"type":"string"},
-//        "topic": {"type":"string"}, "teamSize": {"type":"string"},
-//        "preferredDates": {"type":"string"}, "notes": {"type":"string"},
-//        "timestamp": {"type":"string"}
-//    }}
-// 4. Action: "Add a row to a table" (Excel Online) or "Create item" (SharePoint list)
-// 5. Map each field from the trigger body to the table/list columns
-// 6. Save → Copy the HTTP POST URL → Paste below
-const TRAINING_FORM_URL = "https://prod-XX.westus.logic.azure.com:443/workflows/YOUR_FLOW_ID/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=YOUR_SIG";
+// Submissions open the user's mail client with all fields prefilled,
+// addressed to TRAINING_RECIPIENT. The user reviews and clicks Send in their mail app.
+const TRAINING_RECIPIENT = "elliot.jarbe@mymanatee.org";
 
 function InternalTab() {
   const [expanded, setExpanded] = useState<number | null>(null);
@@ -728,27 +709,26 @@ function InternalTab() {
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
-    try {
-      const response = await fetch(TRAINING_FORM_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...formData, timestamp: new Date().toISOString() }),
-      });
-      if (response.ok || response.status === 202) {
-        setSubmitted(true);
-      } else {
-        // Power Automate may return 202 Accepted for async processing
-        // If the URL is not yet configured, show success anyway (demo mode)
-        setSubmitted(true);
-      }
-    } catch {
-      // If CORS blocks the response (common with Power Automate), treat as success
-      // The request was still sent and the flow will process it
-      setSubmitted(true);
-    }
+    const subject = `Cookbook Training Request — ${formData.department || "department TBD"}`;
+    const body = [
+      `Name: ${formData.name}`,
+      `Email: ${formData.email}`,
+      `Department: ${formData.department}`,
+      `Team Size: ${formData.teamSize}`,
+      `Format: ${formData.format}`,
+      `Preferred Dates: ${formData.preferredDates || "(none specified)"}`,
+      `Topics of Interest: ${formData.topic || "(none specified)"}`,
+      "",
+      "Additional Notes:",
+      formData.notes || "(none)",
+      "",
+      `Submitted: ${new Date().toLocaleString()}`,
+    ].join("\n");
+    window.location.href = `mailto:${TRAINING_RECIPIENT}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    setSubmitted(true);
     setSubmitting(false);
   };
 
@@ -811,8 +791,8 @@ function InternalTab() {
                 {submitted ? (
                   <div className="rounded-lg p-6 text-center" style={{ background: "oklch(0.96 0.02 145)" }}>
                     <span className="text-3xl block mb-2">✅</span>
-                    <p className="text-sm font-bold" style={{ color: "oklch(0.30 0.10 145)" }}>Request submitted</p>
-                    <p className="text-xs mt-1" style={{ color: TEXT_SECONDARY }}>Your request has been sent to the ITS training tracker. The AI Working Group will follow up within 5 business days.</p>
+                    <p className="text-sm font-bold" style={{ color: "oklch(0.30 0.10 145)" }}>Email prepared in your mail client</p>
+                    <p className="text-xs mt-1" style={{ color: TEXT_SECONDARY }}>Review the prefilled email and click <strong>Send</strong> to submit your request. The AI Working Group will follow up within 5 business days. If your mail app didn't open, copy the request to <strong>elliot.jarbe@mymanatee.org</strong> directly.</p>
                   </div>
                 ) : (
                   <form onSubmit={handleSubmit} className="space-y-3">
