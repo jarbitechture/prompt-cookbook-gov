@@ -42,6 +42,15 @@ $webConfig = @'
           <match url="^api/(.*)" />
           <action type="Rewrite" url="http://localhost:3000/api/{R:1}" />
         </rule>
+        <rule name="SPA fallback" stopProcessing="true">
+          <match url=".*" />
+          <conditions logicalGrouping="MatchAll">
+            <add input="{REQUEST_FILENAME}" matchType="IsFile" negate="true" />
+            <add input="{REQUEST_FILENAME}" matchType="IsDirectory" negate="true" />
+            <add input="{REQUEST_URI}" pattern="^/api/" negate="true" />
+          </conditions>
+          <action type="Rewrite" url="/index.html" />
+        </rule>
       </rules>
     </rewrite>
     <httpErrors errorMode="DetailedLocalOnly" />
