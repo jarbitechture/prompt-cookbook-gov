@@ -113,3 +113,4 @@ ideas.md
 
 # Python virtualenv (local only, never commit)
 .venv/
+package-lock.json
