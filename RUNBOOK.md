@@ -216,19 +216,18 @@ On Mac:
 ```bash
 cd ~/Projects/prompt-cookbook-gov
 # edit source...
-pnpm run build
-git add -p && git commit -m "..." && git push origin main && git push azdo main
-tar -czf cookbook-dist-v0.1.0.tgz dist package.json pnpm-lock.yaml patches start.ps1
-gh release upload v0.1.0 cookbook-dist-v0.1.0.tgz --clobber
+git add ... && git commit -m "..." && git push origin main && git push azdo main
+./deploy.sh    # builds, bundles dist + PS scripts, uploads to GitHub release v0.1.0
 ```
 
-On llm01 (Admin PowerShell, in `C:\cookbook`):
+`deploy.sh` bundles `dist/`, `package.json`, `pnpm-lock.yaml`, `patches/`, and the three PS scripts (`start.ps1`, `iis-setup.ps1`, `enable-auth.ps1`) into the tarball. Updates to those scripts ship with the release automatically.
+
+On llm01 (Admin PowerShell, **must run from `C:\cookbook` or any directory containing `dist\public\`**):
 ```powershell
-iwr https://github.com/jarbitechture/prompt-cookbook-gov/releases/download/v0.1.0/cookbook-dist-v0.1.0.tgz -OutFile cookbook.tgz
-tar -xzf cookbook.tgz
-.\iis-setup.ps1   # syncs static + restarts site
-nssm restart cookbook-node
+iwr https://github.com/jarbitechture/prompt-cookbook-gov/releases/download/v0.1.0/cookbook-dist-v0.1.0.tgz -OutFile cookbook.tgz; tar -xzf cookbook.tgz; .\iis-setup.ps1; nssm restart cookbook-node
 ```
+
+`iis-setup.ps1` auto-detects `dist/public/` from `$PSScriptRoot` and preserves any existing `<security>` block in `web.config`, so the auth allowlist survives the redeploy.
 
 ## Authentication
 
@@ -242,7 +241,7 @@ The cookbook is gated by **IIS Windows Authentication + a hard-coded allowlist i
 - Writes `C:\inetpub\wwwroot\cookbook\public\web.config` with the rewrite rule **and** the `<authorization>` allowlist
 - `iisreset`s
 
-The `web.config` on llm01 is generated from the script — do not edit it directly. If you do, the next `iis-setup.ps1` run will overwrite it.
+The `web.config` on llm01 is generated from `enable-auth.ps1`. `iis-setup.ps1` re-runs (deploys) read the existing `<security>` block off the live web.config and re-inject it into the new one — so the allowlist survives every deploy without re-running `enable-auth.ps1`. Edit the script, not the live `web.config`, to change the allowlist.
 
 ### Current pilot allowlist
 
