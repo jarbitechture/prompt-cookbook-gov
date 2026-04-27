@@ -274,6 +274,34 @@ Remove-Item C:\inetpub\wwwroot\cookbook\public\web.config
 .\enable-auth.ps1 # then re-applies the gate with the corrected allowlist
 ```
 
+### web.config rules (both PS scripts must agree)
+
+The `web.config` has 4 functional sections: rewrite rules, error mode, static cache, and `<security>`/`<authorization>`. Two PS scripts write it:
+
+| Script | Writes web.config? | Includes `<security>` block? | Triggers `iisreset`? |
+|---|---|---|---|
+| `iis-setup.ps1` | Yes | Preserves existing block (reads before wipe, re-injects) | No |
+| `enable-auth.ps1` | Yes | Yes (full template with allowlist) | Yes |
+
+**Both scripts must include identical rewrite rules**: `ReverseProxyToNode` (for `/api/*`) **AND** `SPA fallback` (for client-side routes like `/builder`, `/resources`). If either rule is missing from either script, deep links 404 after that script runs.
+
+When editing one script's web.config template, edit the other to match. Future hardening: consolidate the template into a shared dot-sourced PS function.
+
+### Verifying the auth gate is live
+
+NTLM SSO is transparent for allowlisted users on domain-joined machines — you will not see a credential prompt. To prove the gate is enforcing the allowlist (not letting everyone through):
+
+```powershell
+# From any PS on llm01:
+iwr http://bcc-ap-llm01.bcc.ad.mymanatee.org/api/health -UseDefaultCredentials | Select-Object StatusCode
+# Allowlisted account => 200
+
+iwr http://bcc-ap-llm01.bcc.ad.mymanatee.org/api/health
+# No credentials => 401 Unauthorized (this proves the gate is rejecting non-allowlisted access)
+```
+
+If both return 200, the `<authorization>` block is missing — re-run `enable-auth.ps1`.
+
 ### Move from allowlist to AD group (later)
 
 When the pilot expands beyond ~10 users, ask ops to create an AD security group (e.g., `BCC-Cookbook-Pilot`) and replace the `<add accessType="Allow" users="..." />` with `<add accessType="Allow" roles="BCC\BCC-Cookbook-Pilot" />`. Group membership is then managed in AD, no code changes needed.
