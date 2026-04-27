@@ -15,7 +15,7 @@ pnpm run build
 
 echo "=== 2. Bundle release tarball ==="
 rm -f "$TARBALL"
-tar -czf "$TARBALL" dist package.json pnpm-lock.yaml patches start.ps1
+tar -czf "$TARBALL" dist package.json pnpm-lock.yaml patches start.ps1 iis-setup.ps1 enable-auth.ps1
 ls -lh "$TARBALL"
 
 echo "=== 3. Upload to GitHub release $RELEASE_TAG (clobber) ==="
