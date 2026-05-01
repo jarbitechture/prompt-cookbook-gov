@@ -96,9 +96,9 @@ Single service. Express serves the built React app and handles two API endpoints
 
 The cookbook is live in the county environment:
 
-- **bcc-ap-llm01** (Windows Server 2025) — IIS at port 80 fronts the cookbook. Static files served directly; `/api/*` reverse-proxied via ARR to a local `cookbook-node` NSSM service on `localhost:3000`.
+- **bcc-ap-llm01** (Windows Server 2025) — IIS at port 443 fronts the cookbook with the county wildcard cert. Static files served directly; `/api/*` reverse-proxied via ARR to a local `cookbook-node` NSSM service on `localhost:3000`.
 - **bcc-ap-infer01** (RHEL 10, NVIDIA L4) — SGLang systemd service on `0.0.0.0:30000` serving Qwen2.5-7B-Instruct-FP8-dynamic. OpenAI-compatible API. Firewalled to llm01 only.
-- **Public test URL** (county network): `http://bcc-ap-llm01.bcc.ad.mymanatee.org/`. DNS + TLS cert pending ops handoff.
+- **Public URL** (county network): `https://mcgpt.mymanatee.org/` — CNAME → `bcc-ap-llm01.bcc.ad.mymanatee.org`. DNS + TLS live as of 2026-05-01.
 
 See [RUNBOOK.md](RUNBOOK.md) for service inventory, log paths, and update workflow.
 

@@ -85,7 +85,7 @@ Write-Host "=== Auth gate live ===" -ForegroundColor Green
 Write-Host "Allowed: $AllowedUsers"
 Write-Host ""
 Write-Host "Test from a domain-joined browser:"
-Write-Host "  http://bcc-ap-llm01.bcc.ad.mymanatee.org/"
+Write-Host "  https://mcgpt.mymanatee.org/"
 Write-Host "  -> allowlist member: SSO (no prompt), cookbook loads"
 Write-Host "  -> non-member:       HTTP 401"
 Write-Host ""

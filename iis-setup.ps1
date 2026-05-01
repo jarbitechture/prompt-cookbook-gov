@@ -100,4 +100,4 @@ Write-Host ""
 Write-Host "=== IIS reverse proxy live ===" -ForegroundColor Green
 Write-Host "Static files: $IISRoot"
 Write-Host "API proxied:  http://localhost/api/* -> http://localhost:3000/api/*"
-Write-Host "Test in browser: http://bcc-ap-llm01.bcc.ad.mymanatee.org/"
+Write-Host "Test in browser: https://mcgpt.mymanatee.org/"

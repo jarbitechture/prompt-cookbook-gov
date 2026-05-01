@@ -18,7 +18,7 @@ An interactive AI prompt training app for county staff. 30 chapters covering pro
 | 8. Civic-ai governed proxy | Deferred | Direct cookbook → SGLang for POC; civic-ai proxy slots in between for governance once POC accepted. |
 | 9. Cookbook → LLM env vars | **Done 2026-04-25** | `COOKBOOK_LLM_BASE_URL=http://bcc-ap-infer01.bcc.ad.mymanatee.org:30000/v1`, `COOKBOOK_LLM_DEFAULT_MODEL=qwen2.5-7b` |
 | 10. End-to-end verified | **Done 2026-04-25** | Streamed `Hello! How can I assist you today?` from infer01 → llm01:3000 → IIS → curl |
-| 11. DNS `www.mcgpt.mymanatee.org` → llm01 | Pending | County DNS ops (Mon) |
+| 11. DNS `mcgpt.mymanatee.org` → llm01 | Pending | County DNS ops (Mon) |
 | 12. TLS cert bound to IIS site | Pending | Wildcard cert PFX from ops, IIS HTTPS binding (Mon) |
 
 ## Quick Start (Local)
@@ -174,9 +174,9 @@ Client (React/Vite)  →  Express Server  →  LLM (Azure OpenAI, OpenAI, Ollama
 
 ```
 County user (browser)
-    │  HTTP today / HTTPS pending DNS+cert
+    │  HTTPS via county wildcard cert
     ▼
-http://bcc-ap-llm01.bcc.ad.mymanatee.org/   (Windows Server 2025, IIS Default Web Site)
+https://mcgpt.mymanatee.org/   (CNAME → bcc-ap-llm01, Windows Server 2025, IIS Default Web Site)
     │
     ├── /                → IIS static (C:\inetpub\wwwroot\cookbook\public)
     └── /api/*           → ARR reverse proxy → http://localhost:3000/api/*
@@ -293,10 +293,10 @@ NTLM SSO is transparent for allowlisted users on domain-joined machines — you 
 
 ```powershell
 # From any PS on llm01:
-iwr http://bcc-ap-llm01.bcc.ad.mymanatee.org/api/health -UseDefaultCredentials | Select-Object StatusCode
+iwr https://mcgpt.mymanatee.org/api/health -UseDefaultCredentials | Select-Object StatusCode
 # Allowlisted account => 200
 
-iwr http://bcc-ap-llm01.bcc.ad.mymanatee.org/api/health
+iwr https://mcgpt.mymanatee.org/api/health
 # No credentials => 401 Unauthorized (this proves the gate is rejecting non-allowlisted access)
 ```
 
