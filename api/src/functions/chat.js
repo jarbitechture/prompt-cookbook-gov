@@ -1,5 +1,6 @@
 import { app } from "@azure/functions";
 import OpenAI from "openai";
+import { withRoiEvent, EventKind } from "../lib/roi-sidecar.js";
 
 const ALLOWED_MODELS = new Set(["gpt-4o-mini", "gpt-4o", "gpt-3.5-turbo"]);
 const DEFAULT_MODEL = "gpt-4o-mini";
@@ -24,7 +25,7 @@ app.http("chat", {
     if (!apiKey) return { status: 500, jsonBody: { error: "API key not configured" } };
 
     const body = await request.json();
-    const { messages, model } = body;
+    const { messages, model, user_id, dept, role_band, task_type } = body;
 
     if (!Array.isArray(messages) || messages.length === 0) {
       return { status: 400, jsonBody: { error: "messages array is required" } };
@@ -41,29 +42,50 @@ app.http("chat", {
 
     const apiMessages = [{ role: "system", content: SYSTEM_MESSAGE }, ...sanitized];
 
-    try {
-      const stream = await openai.chat.completions.create({
-        model: safeModel,
-        messages: apiMessages,
-        stream: true,
-        max_tokens: 1024,
-        temperature: 0.7,
-      });
+    return await withRoiEvent(
+      {
+        workflow: "cookbook.chat",
+        user_id: user_id || "anonymous",
+        dept: dept || "Unknown",
+        role_band: role_band || "professional",
+        task_type: task_type || "drafting",
+        tool: "cookbook",
+        surface: "cookbook_ui",
+        event_kind: EventKind.LLM_CALL,
+      },
+      async (usage) => {
+        try {
+          const stream = await openai.chat.completions.create({
+            model: safeModel,
+            messages: apiMessages,
+            stream: true,
+            stream_options: { include_usage: true },
+            max_tokens: 1024,
+            temperature: 0.7,
+          });
 
-      const chunks = [];
-      for await (const chunk of stream) {
-        const content = chunk.choices?.[0]?.delta?.content;
-        if (content) chunks.push(`data: ${JSON.stringify({ content })}\n\n`);
+          const chunks = [];
+          for await (const chunk of stream) {
+            const content = chunk.choices?.[0]?.delta?.content;
+            if (content) chunks.push(`data: ${JSON.stringify({ content })}\n\n`);
+            if (chunk.usage) {
+              usage.prompt_tokens = chunk.usage.prompt_tokens;
+              usage.output_tokens = chunk.usage.completion_tokens;
+            }
+          }
+          chunks.push("data: [DONE]\n\n");
+
+          return {
+            status: 200,
+            headers: { "Content-Type": "text/event-stream", "Cache-Control": "no-cache" },
+            body: chunks.join(""),
+          };
+        } catch (_err) {
+          // ROI event will record success=false because withRoiEvent catches the throw.
+          // Re-throw so withRoiEvent records and the handler returns 500.
+          throw new Error("LLM request failed");
+        }
       }
-      chunks.push("data: [DONE]\n\n");
-
-      return {
-        status: 200,
-        headers: { "Content-Type": "text/event-stream", "Cache-Control": "no-cache" },
-        body: chunks.join(""),
-      };
-    } catch (err) {
-      return { status: 500, jsonBody: { error: "LLM request failed" } };
-    }
+    ).catch(() => ({ status: 500, jsonBody: { error: "LLM request failed" } }));
   },
 });
