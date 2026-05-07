@@ -27,7 +27,9 @@ const COOLDOWN_MS = 30_000;
 const TIMEOUT_MS = 3_000; // spec §9: raised from 1.5s based on county VLAN p99
 const DRAIN_INTERVAL_MS = 60_000;
 
-// EventKind values mirror manatee_ai_roi.schema.EventKind (11 values).
+// EventKind values mirror manatee_ai_roi.schema.EventKind (16 values, schema 1.2.0).
+// 11 original + 5 ADR-007 lifecycle kinds (session_start, prompt_received,
+// stream_complete, citation_surfaced, followup_action).
 export const EventKind = Object.freeze({
   LLM_CALL: "llm_call",
   TOOL_INVOCATION: "tool_invocation",
@@ -40,7 +42,27 @@ export const EventKind = Object.freeze({
   FEEDBACK: "feedback",
   ESCALATION: "escalation",
   TRAINING_INTERACTION: "training_interaction",
+  // ADR-007 lifecycle kinds (one user action emits N events sharing trace_id)
+  SESSION_START: "session_start",
+  PROMPT_RECEIVED: "prompt_received",
+  STREAM_COMPLETE: "stream_complete",
+  CITATION_SURFACED: "citation_surfaced",
+  FOLLOWUP_ACTION: "followup_action",
 });
+
+/** Generate a fresh W3C-compatible trace_id (32 lowercase hex chars). */
+export function newTraceId() {
+  const bytes = new Uint8Array(16);
+  (globalThis.crypto || require("node:crypto").webcrypto).getRandomValues(bytes);
+  return Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+/** Generate a fresh W3C-compatible span_id (16 lowercase hex chars). */
+export function newSpanId() {
+  const bytes = new Uint8Array(8);
+  (globalThis.crypto || require("node:crypto").webcrypto).getRandomValues(bytes);
+  return Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
+}
 
 const VALID_KINDS = new Set(Object.values(EventKind));
 
@@ -269,6 +291,11 @@ export async function withRoiEvent(ctx, fn) {
     prompt_tokens: usage.prompt_tokens ?? null,
     output_tokens: usage.output_tokens ?? null,
     success,
+    // ADR-007: lifecycle grouping — pass ctx.trace_id to group with other
+    // events from the same user action.
+    trace_id: ctx.trace_id ?? null,
+    span_id: ctx.span_id ?? null,
+    parent_event_id: ctx.parent_event_id ?? null,
   };
 
   await dispatch(event);
