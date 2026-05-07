@@ -1,0 +1,18 @@
+{
+  "name": "manatee-cookbook-mcp",
+  "version": "0.1.0",
+  "description": "MCP server exposing the Manatee County Prompt Cookbook to ChatGPT Enterprise and M365 Copilot. Each tool invocation emits a ROI event (Operating Rule #18, ADR-008 Layer 3).",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "start": "tsx server.ts",
+    "smoke": "tsx smoke.ts"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0"
+  },
+  "devDependencies": {
+    "tsx": "^4.21.0",
+    "typescript": "^5.6.3"
+  }
+}
