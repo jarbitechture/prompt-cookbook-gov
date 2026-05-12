@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useLocation } from "wouter";
 import { Search, BookOpen, ChefHat, FlaskConical, Wrench, Clock, ChevronDown, ChevronRight, X } from "lucide-react";
 import { chapters, parts } from "@/lib/cookbookData";
 import { tasteTests } from "@/lib/tasteTests";
@@ -20,6 +21,7 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ activeChapter, onSelectChapter, recentItems, isOpen, onClose, completedTests = [], onOpenTest, selectedDepartment, onSelectDepartment }: SidebarProps) {
+  const [, setLocation] = useLocation();
   const [deptDropdownOpen, setDeptDropdownOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [expandedParts, setExpandedParts] = useState<Record<string, boolean>>({
@@ -60,8 +62,7 @@ export default function Sidebar({ activeChapter, onSelectChapter, recentItems, i
         <div className="p-4 pb-3 flex items-center justify-between" style={{ borderBottom: "1px solid oklch(0.26 0.03 40)" }}>
           <button
             onClick={() => {
-              window.location.hash = "";
-              window.location.href = "/";
+              setLocation("/");
               onClose();
             }}
             className="flex items-center gap-2.5 hover:opacity-80 transition-opacity"
@@ -174,7 +175,7 @@ export default function Sidebar({ activeChapter, onSelectChapter, recentItems, i
               className="w-full flex items-center gap-2 px-2 py-1.5 rounded text-sm text-left"
               style={{ color: "oklch(0.75 0.03 55)" }}
               onClick={() => {
-                window.location.href = "/";
+                setLocation("/");
                 setTimeout(() => {
                   const el = document.getElementById("recently-viewed");
                   el?.scrollIntoView({ behavior: "smooth" });
@@ -191,7 +192,7 @@ export default function Sidebar({ activeChapter, onSelectChapter, recentItems, i
             style={{ color: "oklch(0.75 0.03 55)" }}
             onClick={() => {
               try { localStorage.setItem("cookbook-resources-tab", "recipes"); } catch {}
-              window.location.href = "/resources?tab=recipes";
+              setLocation("/resources?tab=recipes");
               onClose();
             }}
           >
@@ -201,7 +202,7 @@ export default function Sidebar({ activeChapter, onSelectChapter, recentItems, i
           <button
             className="w-full flex items-center gap-2 px-2 py-1.5 rounded text-sm text-left hover:opacity-80"
             style={{ color: "oklch(0.75 0.03 55)" }}
-            onClick={() => { window.location.href = "/resources"; }}
+            onClick={() => { setLocation("/resources"); }}
           >
             <BookOpen className="w-3.5 h-3.5" style={{ color: "oklch(0.42 0.14 300)" }} />
             Resources
@@ -209,7 +210,7 @@ export default function Sidebar({ activeChapter, onSelectChapter, recentItems, i
           <button
             className="w-full flex items-center gap-2 px-2 py-1.5 rounded text-sm text-left hover:opacity-80"
             style={{ color: "oklch(0.75 0.03 55)" }}
-            onClick={() => { window.location.href = "/builder"; }}
+            onClick={() => { setLocation("/builder"); }}
           >
             <Wrench className="w-3.5 h-3.5" style={{ color: "oklch(0.55 0.12 220)" }} />
             Build a Prompt
@@ -217,7 +218,7 @@ export default function Sidebar({ activeChapter, onSelectChapter, recentItems, i
           <button
             className="w-full flex items-center gap-2 px-2 py-1.5 rounded text-sm text-left hover:opacity-80"
             style={{ color: "oklch(0.75 0.03 55)" }}
-            onClick={() => { window.location.href = "/game"; }}
+            onClick={() => { setLocation("/game"); }}
           >
             <FlaskConical className="w-3.5 h-3.5" style={{ color: "oklch(0.42 0.14 155)" }} />
             Prompt Lab
@@ -245,7 +246,7 @@ export default function Sidebar({ activeChapter, onSelectChapter, recentItems, i
                       if (result.href.startsWith("/#")) {
                         handleSelect(result.href.replace("/#", ""));
                       } else {
-                        window.location.href = result.href;
+                        setLocation(result.href);
                         onClose();
                       }
                     }}

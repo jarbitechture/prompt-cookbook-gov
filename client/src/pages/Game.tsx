@@ -21,6 +21,7 @@ import {
   Lightbulb,
 } from "lucide-react";
 import { Link } from "wouter";
+import { apiUrl } from "@/lib/apiUrl";
 import {
   ACCENT_GAME as ACCENT,
   PAGE_BG as BG,
@@ -721,7 +722,7 @@ function ResultsScreen({
 // ═══════════════════════════════════════════════════════════════════════════
 
 async function fetchSSE(prompt: string, signal: AbortSignal): Promise<string> {
-  const res = await fetch("/api/try-it", {
+  const res = await fetch(apiUrl("/api/try-it"), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ prompt }),
@@ -790,7 +791,7 @@ function BlindArena({ onBack }: { onBack: () => void }) {
 
   // Check API health on mount to determine if live mode is possible
   useEffect(() => {
-    fetch("/api/health")
+    fetch(apiUrl("/api/health"))
       .then((r) => { if (r.ok) setLiveMode(true); })
       .catch(() => setLiveMode(false));
   }, []);
@@ -1368,7 +1369,7 @@ function ChallengeMode({ onBack }: { onBack: () => void }) {
     abortRef.current = new AbortController();
 
     try {
-      const response = await fetch("/api/try-it", {
+      const response = await fetch(apiUrl("/api/try-it"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ prompt: userPrompt }),

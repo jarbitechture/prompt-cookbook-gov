@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MessageCircle, X, Send, RotateCcw, Loader2 } from "lucide-react";
 import { chapters } from "@/lib/cookbookData";
+import { apiUrl } from "@/lib/apiUrl";
 
 interface Message {
   role: "user" | "assistant";
@@ -50,7 +51,7 @@ export default function ChatbotWidget({ departmentContext }: { departmentContext
     setMessages((prev) => [...prev, { role: "assistant", content: "" }]);
 
     try {
-      const response = await fetch("/api/chat", {
+      const response = await fetch(apiUrl("/api/chat"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

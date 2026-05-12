@@ -40,6 +40,7 @@ import {
 } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { toast } from "sonner";
+import { apiUrl } from "@/lib/apiUrl";
 import { personas } from "@/lib/personas";
 import type { Persona } from "@/lib/personas";
 import { getDepartment } from "@/lib/departments";
@@ -685,7 +686,7 @@ function BuildMode() {
     abortRef.current = new AbortController();
     try {
       await streamSSE(
-        "/api/try-it",
+        apiUrl("/api/try-it"),
         { prompt: assembledPrompt },
         (text) => setTryItResult(text),
         abortRef.current.signal
@@ -1162,7 +1163,7 @@ function ReverseEngineerMode() {
     abortRef.current = new AbortController();
     try {
       await streamSSE(
-        "/api/try-it",
+        apiUrl("/api/try-it"),
         {
           prompt: `Analyze this output and reverse-engineer the prompt that likely created it. Break it down into Role, Task, Context, Output Format, and Constraints. Format each as a labeled section.\n\n---\n\n${inputText}`,
         },

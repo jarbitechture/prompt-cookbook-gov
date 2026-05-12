@@ -117,6 +117,7 @@ function OnboardingBanner({ onSelectChapter: _onSelectChapter }: { onSelectChapt
 
 /** Prompt of the Week — featured prompt, department-aware */
 function PromptOfTheWeek({ department }: { department?: Category | null }) {
+  const [, navigate] = useLocation();
   const [expanded, setExpanded] = useState(false);
 
   const defaultPrompt = {
@@ -228,7 +229,7 @@ Rules:
           <button
             onClick={() => {
               localStorage.setItem("cookbook-builder-import", prompt.template);
-              window.location.href = "/builder";
+              navigate("/builder");
             }}
             className="text-xs font-bold px-3 py-1.5 rounded-lg transition-all"
             style={{
@@ -683,7 +684,7 @@ export default function Home() {
                           <button
                             onClick={() => {
                               localStorage.setItem("cookbook-builder-import", cs.strongPrompt);
-                              window.location.href = "/builder";
+                              navigate("/builder");
                             }}
                             className="text-[11px] font-bold"
                             style={{ color: "oklch(0.48 0.12 220)" }}

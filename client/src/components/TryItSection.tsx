@@ -1,7 +1,9 @@
 import { useState, useMemo, useRef, useCallback } from "react";
+import { useLocation } from "wouter";
 import { Copy, Check, RotateCcw, Beaker, Play, Loader2, Wrench, Square } from "lucide-react";
 import type { TryItVariable } from "@/lib/cookbookData";
 import { toast } from "sonner";
+import { apiUrl } from "@/lib/apiUrl";
 
 interface TryItSectionProps {
   template: string;
@@ -10,6 +12,7 @@ interface TryItSectionProps {
 }
 
 export default function TryItSection({ template, variables, accentColor = "oklch(0.55 0.12 45)" }: TryItSectionProps) {
+  const [, setLocation] = useLocation();
   const [values, setValues] = useState<Record<string, string>>({});
   const [copied, setCopied] = useState(false);
   const [response, setResponse] = useState("");
@@ -53,7 +56,7 @@ export default function TryItSection({ template, variables, accentColor = "oklch
     abortRef.current = new AbortController();
 
     try {
-      const res = await fetch("/api/try-it", {
+      const res = await fetch(apiUrl("/api/try-it"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ prompt: preview }),
@@ -106,7 +109,7 @@ export default function TryItSection({ template, variables, accentColor = "oklch
   const handleOpenInBuilder = () => {
     // Store the assembled prompt in localStorage for the Builder to pick up
     localStorage.setItem("cookbook-builder-import", preview);
-    window.location.href = "/builder";
+    setLocation("/builder");
   };
 
   return (

@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence, type Transition } from "framer-motion";
 import { useState, useEffect, useCallback } from "react";
+import { useLocation } from "wouter";
 import type { Chapter } from "@/lib/cookbookData";
 import { chapters } from "@/lib/cookbookData";
 import TryItSection from "./TryItSection";
@@ -248,6 +249,7 @@ const chapterBanners: Record<string, string> = {
 };
 
 export default function ChapterDetail({ chapter, onBack }: ChapterDetailProps) {
+  const [, setLocation] = useLocation();
   const theme = partThemes[chapter.part] || partThemes.part1;
   const diff = diffBadges[chapter.difficulty];
   const risk = riskLabels[chapter.riskTier];
@@ -912,7 +914,7 @@ export default function ChapterDetail({ chapter, onBack }: ChapterDetailProps) {
                   onClick={() => {
                     const cleaned = example.replace(/^(SAFE|UNSAFE|PROHIBITED|ALLOWED|EFFICIENT|INEFFICIENT|Chain for [^:]+|UC\d|Before|After|Example [^:]+|Combined prompt|Constrained prompt|Efficient prompt):\s*/i, "");
                     localStorage.setItem("cookbook-builder-import", cleaned);
-                    window.location.href = "/builder";
+                    setLocation("/builder");
                   }}
                   className="no-print inline-flex items-center gap-1 text-xs font-medium mt-2 transition-opacity hover:opacity-80"
                   style={{ color: theme.accent, background: "none", border: "none", cursor: "pointer", padding: 0 }}
@@ -1007,7 +1009,7 @@ export default function ChapterDetail({ chapter, onBack }: ChapterDetailProps) {
         <button
           onClick={() => {
             localStorage.setItem("cookbook-builder-import", chapter.tryItTemplate);
-            window.location.href = "/builder";
+            setLocation("/builder");
           }}
           className="inline-flex items-center gap-2.5 px-6 py-3 rounded-xl text-sm font-semibold transition-all hover:shadow-md active:scale-[0.98]"
           style={{
