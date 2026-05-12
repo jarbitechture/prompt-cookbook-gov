@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/NotFound";
-import { Route, Switch } from "wouter";
+import { Router, Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import ChatbotWidget from "./components/ChatbotWidget";
 import { getDepartment } from "./lib/departments";
@@ -12,7 +12,7 @@ import Game from "./pages/Game";
 import Builder from "./pages/Builder";
 import Resources from "./pages/Resources";
 
-function Router() {
+function AppRoutes() {
   return (
     <Switch>
       <Route path={"/"} component={Home} />
@@ -68,7 +68,9 @@ function App() {
             }}
           />
           <a href="#main-content" className="skip-link">Skip to main content</a>
-          <Router />
+          <Router base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+            <AppRoutes />
+          </Router>
           <ChatbotWidget departmentContext={deptContext} />
         </TooltipProvider>
       </ThemeProvider>
