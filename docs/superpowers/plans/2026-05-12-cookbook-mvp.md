@@ -215,13 +215,18 @@ The audit's 10-step pre-deletion checklist + new MVP work yields this execution 
 ### Task #5 — Output regex post-filter
 
 **Acceptance criteria:**
-- New file `server/lib/output-filter.ts` exports `filterOutput(text: string, mode: 'critique'|'refine'|'preview'): { clean: string, flags: string[] }`.
-- Detects and redacts: `Fla\.\s*Stat\.\s*\d+`, `F\.S\.\s*§?\s*\d+`, `\$\d+(\.\d+)?\s*(M|million|B|billion)`, `Chapter\s+\d+\.\d+` (ordinance-style, not cookbook chapter refs which are `Chapter \d+` only).
-- For critique/preview: redact in-place, append to `flags`.
-- For refine: reject (return non-empty flags); endpoint then retries once.
-- Unit tests: 8-10 fixture strings, each with expected flags + clean output.
+- New file `server/lib/output-filter.ts` exports `filterOutput<T>(input: T, mode: 'critique'|'refine'|'preview'): { clean: T, flags: FilterFlag[], reject: boolean }` plus `FilterMode`, `FilterFlag`, `FilterResult` types. The function walks the input object recursively and scans every `string` value against the patterns; `clean` preserves the input's type via generic `T`. (Signature expanded from spec's original flat-string contract during Task #5 implementation — the generic shape is what Task #4 integrates against; `FilterFlag.field` carries the field path lost in a flat `string[]`.)
+- Detects 4 patterns (case-insensitive, named consts):
+  - `FLORIDA_STATUTE_RE` — `Fla. Stat. §...`, `F.S. ...`, `F.S.A. §...(N)` shapes
+  - `DOLLAR_AMOUNT_LARGE_RE` — `$Xm`, `$X million`, `$XK`, `$XB` (not bare `$50`)
+  - `ORDINANCE_SECTION_RE` — `Chapter X.Y`, `Section X.Y.Z`, `Ord. X.Y` (decimal required — bare `Chapter 13` is safe)
+  - `FY_BUDGET_YEAR_RE` — `FYNNNN budget|appropriation|allocation|fund` (just `FY2025` alone is fine)
+- For critique/preview: redact matches in `clean` as `[REDACTED:flag_name]`, populate `flags`, `reject = false`.
+- For refine: do NOT redact (so the user's rewritten prompt has no `[REDACTED:...]` marks). Set `reject = true` if any flags fired. Endpoint code (Task #4) then retries once with a stricter prompt; second failure → 502.
+- Schema-agnostic walker: pure (no mutation, uses `structuredClone`), handles arrays + nested objects + null/undefined gracefully, ignores non-string primitives.
+- Unit tests: 8-10 fixture strings, each with expected flags + clean output — **CONDITIONAL on a test runner being configured.** No test runner exists as of Task #3; Task #10's eval gate provides indirect coverage via the per-mode JSON fixtures.
 
-**Files:** `server/lib/output-filter.ts`, `server/lib/output-filter.test.ts`.
+**Files:** `server/lib/output-filter.ts` (133 lines). Test file skipped per the conditional above.
 
 ### Task #9 — ROI sidecar events on new endpoints
 
