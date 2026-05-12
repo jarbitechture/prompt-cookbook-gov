@@ -191,6 +191,7 @@ export async function handleCritique(
   ];
   const options: CivicAiOptions = {
     temperature: TEMPERATURES.critique,
+    max_tokens: 600,
     response_format: { type: "json_object" },
   };
 
@@ -333,6 +334,7 @@ export async function handleRefine(
   ];
   const options: CivicAiOptions = {
     temperature: TEMPERATURES.refine,
+    max_tokens: 600,
     response_format: { type: "json_object" },
   };
 
@@ -474,6 +476,7 @@ export async function handlePreview(
   ];
   const options: CivicAiOptions = {
     temperature: TEMPERATURES.preview,
+    max_tokens: 600,
     response_format: { type: "json_object" },
   };
 
