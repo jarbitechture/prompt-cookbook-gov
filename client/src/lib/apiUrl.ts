@@ -1,9 +1,7 @@
 /**
  * Prepends the Vite base URL to an API path, avoiding double slashes.
- *
- * TODO(task-18): Migrate existing fetch("/api/...") callers to use this helper.
- *   Current callers in TryItSection, ChatbotWidget, Builder, Game still use
- *   bare paths and will break under subpath deploy until migrated.
+ * Use for every API call from the client so subpath deployments (e.g. /cookbook/)
+ * resolve correctly.
  */
 export function apiUrl(path: string): string {
   const base = import.meta.env.BASE_URL.replace(/\/$/, "");
