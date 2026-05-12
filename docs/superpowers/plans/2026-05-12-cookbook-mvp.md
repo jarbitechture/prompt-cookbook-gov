@@ -14,6 +14,10 @@ The cookbook stops being "another LLM passthrough." It becomes a **prompt qualit
 
 The LLM is back in — narrowly. It evaluates, refines, and previews **prompts**. It does not answer factual questions about Manatee County, Florida law, or any specific topic. This is enforced by system prompt, RAG over chapter content, structured JSON outputs, and regex post-filtering.
 
+### Reputational risk frame (the "screenshot defense")
+
+Hallucination is not just a technical correctness problem — it is a credibility problem. Per the 2026-05-12 9 AM Matt discussion: *"I don't want us to lose credibility too soon. ... Funny is the worst part, right? If something if it comes back with something funny, somebody takes a screenshot."* Every technical control in this plan (domain-bound system prompts, keyword RAG, structured JSON outputs, regex post-filter, eval gate) exists to prevent the screenshot scenario. The eval gate (Task #10) is the explicit screenshot-defense gate before the AI Working Group demo. If a fixture would produce something a staff member could screenshot and laugh at, the eval fails and the build is blocked.
+
 ---
 
 ## 2. Architecture Decision Records
@@ -322,7 +326,7 @@ The audit's 10-step pre-deletion checklist + new MVP work yields this execution 
 ### Task #16 — `.github/` governance scaffolding
 
 **Acceptance criteria:**
-- `.github/CODEOWNERS` requires AI Working Group review on `client/src/lib/cookbookData.ts`, `client/src/pages/Resources.tsx`, `server/prompts/`, `mcp/`.
+- `.github/CODEOWNERS` requires **Matt + Keith + Chris** review on `client/src/lib/cookbookData.ts`, `client/src/pages/Resources.tsx`, `server/prompts/`, `mcp/`. (Per 2026-05-12 Matt meeting: *"I mean us. You know me Keith Chris you read through the the whole application and make sure ..."*. Add GitHub usernames once known; placeholder entries acceptable for the scaffold commit.)
 - `.github/pull_request_template.md` with content checklist (source cited, URL alive, no real PII, persona labeled, banned-claims regex clean, ROI events tagged).
 - `.github/workflows/content-checks.yml`: link-check (lychee or similar), banned-claims regex grep, JSON-schema validation on system prompts.
 - Branch protection on `main` requires this workflow + 1 CODEOWNERS approval. (Documented in RUNBOOK; setting actual protection is a GitHub admin action.)
@@ -353,21 +357,40 @@ The audit's 10-step pre-deletion checklist + new MVP work yields this execution 
 
 ## 8. Definition of done
 
+### Audience phasing (per 2026-05-12 Matt meeting)
+
+- **Phase 1 — Internal demo to Matt:** target Friday **2026-05-15**. Refactored MVP shown end-of-week; Matt out Thursday morning, back Thursday afternoon + all day Friday.
+- **Phase 2 — AI Working Group demo:** target **early June 2026** (next working-group meeting). Per Matt: *"if we're going to release this to the AI working group. It just need I think it needs to be focused."* This is the first non-author audience.
+- **Phase 3 — County-wide rollout:** post-Working-Group sign-off. Not in scope for this plan.
+
+### Done criteria (Phase 1 — Matt demo)
+
 - All 16 tasks (1-16) + 3 new tasks (17, 18, 19) marked completed.
 - Eval gate (Task #10) green on `feat/cookbook-mvp`.
 - Pre-deletion audit (`docs/mvp-pre-deletion-audit.md`) all HIGH-risk items resolved.
-- Final code review (per SDD `superpowers:finishing-a-development-branch`) approved.
+- Final code review (per SDD `superpowers:finishing-a-development-branch`) approved by **Matt + Keith + Chris** per the named review trio.
 - Manual smoke: Builder Critique + Refine + Preview + Send-to-Copilot work end-to-end against dev-loop civic-ai.
 - Deploy guide updated in RUNBOOK.md.
-- Persona PII audit (Task #15) signed off OR rollout blocked pending sign-off.
+
+### Done criteria (Phase 2 — Working Group demo)
+
+- Persona PII audit (Task #15) signed off — blocks Working-Group exposure.
+- IIS subpath deploy (Task #13) verified at `/cookbook/` under county hostname.
+- Civic-ai deployed on bcc-ap-infer01 per ADR-007 (separate work in `manatee-civic-ai-deploy` repo).
 
 ---
 
 ## 9. References
 
 - Pre-deletion audit: `docs/mvp-pre-deletion-audit.md`
-- Copilot deep-link spike: `docs/spike-copilot-deeplink.md` (in flight)
+- Copilot deep-link spike: `docs/spike-copilot-deeplink.md` (UNSUPPORTED — see Task #11)
+- Stakeholder-alignment check: `docs/alignment-check-2026-05-12-matt.md` (verbatim cross-reference of plan against Matt meeting)
 - Civic-ai repo: `~/Projects/manatee-civic-ai/`
 - Civic-ai deploy repo: `~/Projects/manatee-civic-ai-deploy/`
 - ROI sidecar SDK: `~/Projects/manatee-ai-roi/`
 - Session memory: `~/.claude/projects/-Users-ejarbe/memory/project_prompt_cookbook_gov.md`
+
+## 10. Phase-2 integration candidates (not MVP scope)
+
+- **Matt's SharePoint Python module** — Matt's parallel work on a Python utility that downloads files from SharePoint and builds SharePoint pages from HTML. Could become the publishing pipeline for cookbook content updates post-MVP. Source: 2026-05-12 Matt meeting.
+- **RAG over county knowledge base** — beyond MVP's chapter-content RAG, a future expansion could ground LLM responses in a county-specific KB (statutes index, org charts, policy docs) via MCP. Source: 2026-05-12 Matt meeting (Elliot proposed; Matt agreed but explicitly deferred from MVP).
