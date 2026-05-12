@@ -38,6 +38,8 @@ import { RefineSchema } from "../schemas/refine.js";
 import type { Refine } from "../schemas/refine.js";
 import { PreviewSchema } from "../schemas/preview.js";
 import type { Preview } from "../schemas/preview.js";
+import { newTraceId } from "../../api/src/lib/roi-sidecar.js";
+import { emitPromptEvent, emitLlmCallEvent } from "./roi-emit.js";
 
 // ─── Prompt template cache ────────────────────────────────────────────────────
 
@@ -170,10 +172,12 @@ export async function handleCritique(
   req: express.Request,
   res: express.Response
 ): Promise<void> {
-  const startTs = Date.now(); // ROI prep — emitted in Task #9
+  const startTs = Date.now();
+  const traceId = newTraceId();
 
   const parsed = CritiqueBodySchema.safeParse(req.body);
   if (!parsed.success) {
+    emitPromptEvent(req, "critique", false, startTs, traceId);
     res.status(400).json({ error: parsed.error.issues[0]?.message ?? "Invalid request body" });
     return;
   }
@@ -196,9 +200,13 @@ export async function handleCritique(
   };
 
   // First attempt
+  const call1Start = Date.now();
   let callResult = await callAndParse(messages, options);
+  emitLlmCallEvent(req, "critique", callResult.ok, Date.now() - call1Start, traceId,
+    callResult.ok ? undefined : { breaker_state: callResult.breakerOpen ? "open" : "closed" });
 
   if (!callResult.ok && callResult.breakerOpen) {
+    emitPromptEvent(req, "critique", false, startTs, traceId, { breaker_state: "open" });
     res.status(503).json({ error: "Coach feedback temporarily unavailable" });
     return;
   }
@@ -209,10 +217,15 @@ export async function handleCritique(
       { role: "system", content: JSON_RETRY_PREFIX + systemPrompt },
       { role: "user", content: prompt },
     ];
+    const call2Start = Date.now();
     callResult = await callAndParse(retryMessages, options);
+    emitLlmCallEvent(req, "critique", callResult.ok, Date.now() - call2Start, traceId,
+      callResult.ok ? undefined : { breaker_state: callResult.breakerOpen ? "open" : "closed" });
   }
 
   if (!callResult.ok) {
+    emitPromptEvent(req, "critique", false, startTs, traceId,
+      callResult.breakerOpen ? { breaker_state: "open" } : undefined);
     if (callResult.breakerOpen) {
       res.status(503).json({ error: "Coach feedback temporarily unavailable" });
     } else {
@@ -231,8 +244,13 @@ export async function handleCritique(
       { role: "system", content: JSON_RETRY_PREFIX + systemPrompt },
       { role: "user", content: prompt },
     ];
+    const call3Start = Date.now();
     const retryCall = await callAndParse(retryMessages, options);
+    emitLlmCallEvent(req, "critique", retryCall.ok, Date.now() - call3Start, traceId,
+      retryCall.ok ? undefined : { breaker_state: retryCall.breakerOpen ? "open" : "closed" });
     if (!retryCall.ok) {
+      emitPromptEvent(req, "critique", false, startTs, traceId,
+        retryCall.breakerOpen ? { breaker_state: "open" } : undefined);
       if (retryCall.breakerOpen) {
         res.status(503).json({ error: "Coach feedback temporarily unavailable" });
       } else {
@@ -242,6 +260,7 @@ export async function handleCritique(
     }
     zodResult = CritiqueSchema.safeParse(retryCall.data);
     if (!zodResult.success) {
+      emitPromptEvent(req, "critique", false, startTs, traceId);
       res.status(502).json({ error: "Coach returned an invalid response. Try again." });
       return;
     }
@@ -252,9 +271,7 @@ export async function handleCritique(
   // Output filter (critique: redact, never reject)
   const filtered = filterOutput<Critique>(validated, "critique" as FilterMode);
 
-  const durationMs = Date.now() - startTs; // ROI prep
-  void durationMs; // used in Task #9
-
+  emitPromptEvent(req, "critique", true, startTs, traceId);
   res.status(200).json({
     result: filtered.clean,
     flags: filtered.flags,
@@ -265,10 +282,12 @@ export async function handleRefine(
   req: express.Request,
   res: express.Response
 ): Promise<void> {
-  const startTs = Date.now(); // ROI prep — emitted in Task #9
+  const startTs = Date.now();
+  const traceId = newTraceId();
 
   const parsed = RefineBodySchema.safeParse(req.body);
   if (!parsed.success) {
+    emitPromptEvent(req, "refine", false, startTs, traceId);
     res.status(400).json({ error: parsed.error.issues[0]?.message ?? "Invalid request body" });
     return;
   }
@@ -280,6 +299,7 @@ export async function handleRefine(
   if (chapter_id !== undefined) {
     const pinnedChapter = chapters.find((c) => c.number === chapter_id);
     if (!pinnedChapter) {
+      emitPromptEvent(req, "refine", false, startTs, traceId);
       res.status(400).json({ error: `Unknown chapter_id: ${chapter_id}` });
       return;
     }
@@ -339,9 +359,13 @@ export async function handleRefine(
   };
 
   // First attempt
+  const r1Start = Date.now();
   let callResult = await callAndParse(messages, options);
+  emitLlmCallEvent(req, "refine", callResult.ok, Date.now() - r1Start, traceId,
+    callResult.ok ? undefined : { breaker_state: callResult.breakerOpen ? "open" : "closed" });
 
   if (!callResult.ok && callResult.breakerOpen) {
+    emitPromptEvent(req, "refine", false, startTs, traceId, { breaker_state: "open" });
     res.status(503).json({ error: "Coach feedback temporarily unavailable" });
     return;
   }
@@ -351,10 +375,15 @@ export async function handleRefine(
       { role: "system", content: JSON_RETRY_PREFIX + systemPrompt },
       { role: "user", content: prompt },
     ];
+    const r2Start = Date.now();
     callResult = await callAndParse(retryMessages, options);
+    emitLlmCallEvent(req, "refine", callResult.ok, Date.now() - r2Start, traceId,
+      callResult.ok ? undefined : { breaker_state: callResult.breakerOpen ? "open" : "closed" });
   }
 
   if (!callResult.ok) {
+    emitPromptEvent(req, "refine", false, startTs, traceId,
+      callResult.breakerOpen ? { breaker_state: "open" } : undefined);
     if (callResult.breakerOpen) {
       res.status(503).json({ error: "Coach feedback temporarily unavailable" });
     } else {
@@ -372,8 +401,13 @@ export async function handleRefine(
       { role: "system", content: JSON_RETRY_PREFIX + systemPrompt },
       { role: "user", content: prompt },
     ];
+    const r3Start = Date.now();
     const retryCall = await callAndParse(retryMessages, options);
+    emitLlmCallEvent(req, "refine", retryCall.ok, Date.now() - r3Start, traceId,
+      retryCall.ok ? undefined : { breaker_state: retryCall.breakerOpen ? "open" : "closed" });
     if (!retryCall.ok) {
+      emitPromptEvent(req, "refine", false, startTs, traceId,
+        retryCall.breakerOpen ? { breaker_state: "open" } : undefined);
       if (retryCall.breakerOpen) {
         res.status(503).json({ error: "Coach feedback temporarily unavailable" });
       } else {
@@ -383,6 +417,7 @@ export async function handleRefine(
     }
     zodResult = RefineSchema.safeParse(retryCall.data);
     if (!zodResult.success) {
+      emitPromptEvent(req, "refine", false, startTs, traceId);
       res.status(502).json({ error: "Coach returned an invalid response. Try again." });
       return;
     }
@@ -407,8 +442,13 @@ export async function handleRefine(
       },
       { role: "user", content: prompt },
     ];
+    const r4Start = Date.now();
     const retryCall = await callAndParse(retryMessages, options);
+    emitLlmCallEvent(req, "refine", retryCall.ok, Date.now() - r4Start, traceId,
+      retryCall.ok ? undefined : { breaker_state: retryCall.breakerOpen ? "open" : "closed" });
     if (!retryCall.ok) {
+      emitPromptEvent(req, "refine", false, startTs, traceId,
+        retryCall.breakerOpen ? { breaker_state: "open" } : undefined);
       if (retryCall.breakerOpen) {
         res.status(503).json({ error: "Coach feedback temporarily unavailable" });
       } else {
@@ -419,12 +459,14 @@ export async function handleRefine(
 
     const retryZod = RefineSchema.safeParse(retryCall.data);
     if (!retryZod.success) {
+      emitPromptEvent(req, "refine", false, startTs, traceId);
       res.status(502).json({ error: "Coach returned an invalid response. Try again." });
       return;
     }
 
     const retryFiltered = filterOutput<Refine>(retryZod.data, "refine" as FilterMode);
     if (retryFiltered.reject) {
+      emitPromptEvent(req, "refine", false, startTs, traceId);
       res.status(502).json({
         error: "Coach returned content that could not be verified safe. Try again.",
         flags: retryFiltered.flags,
@@ -432,9 +474,7 @@ export async function handleRefine(
       return;
     }
 
-    const durationMs = Date.now() - startTs; // ROI prep
-    void durationMs;
-
+    emitPromptEvent(req, "refine", true, startTs, traceId);
     res.status(200).json({
       result: retryFiltered.clean,
       flags: retryFiltered.flags,
@@ -442,9 +482,7 @@ export async function handleRefine(
     return;
   }
 
-  const durationMs = Date.now() - startTs; // ROI prep
-  void durationMs;
-
+  emitPromptEvent(req, "refine", true, startTs, traceId);
   res.status(200).json({
     result: filtered.clean,
     flags: filtered.flags,
@@ -455,10 +493,12 @@ export async function handlePreview(
   req: express.Request,
   res: express.Response
 ): Promise<void> {
-  const startTs = Date.now(); // ROI prep — emitted in Task #9
+  const startTs = Date.now();
+  const traceId = newTraceId();
 
   const parsed = PreviewBodySchema.safeParse(req.body);
   if (!parsed.success) {
+    emitPromptEvent(req, "preview", false, startTs, traceId);
     res.status(400).json({ error: parsed.error.issues[0]?.message ?? "Invalid request body" });
     return;
   }
@@ -481,9 +521,13 @@ export async function handlePreview(
   };
 
   // First attempt
+  const p1Start = Date.now();
   let callResult = await callAndParse(messages, options);
+  emitLlmCallEvent(req, "preview", callResult.ok, Date.now() - p1Start, traceId,
+    callResult.ok ? undefined : { breaker_state: callResult.breakerOpen ? "open" : "closed" });
 
   if (!callResult.ok && callResult.breakerOpen) {
+    emitPromptEvent(req, "preview", false, startTs, traceId, { breaker_state: "open" });
     res.status(503).json({ error: "Coach feedback temporarily unavailable" });
     return;
   }
@@ -493,10 +537,15 @@ export async function handlePreview(
       { role: "system", content: JSON_RETRY_PREFIX + systemPrompt },
       { role: "user", content: prompt },
     ];
+    const p2Start = Date.now();
     callResult = await callAndParse(retryMessages, options);
+    emitLlmCallEvent(req, "preview", callResult.ok, Date.now() - p2Start, traceId,
+      callResult.ok ? undefined : { breaker_state: callResult.breakerOpen ? "open" : "closed" });
   }
 
   if (!callResult.ok) {
+    emitPromptEvent(req, "preview", false, startTs, traceId,
+      callResult.breakerOpen ? { breaker_state: "open" } : undefined);
     if (callResult.breakerOpen) {
       res.status(503).json({ error: "Coach feedback temporarily unavailable" });
     } else {
@@ -514,8 +563,13 @@ export async function handlePreview(
       { role: "system", content: JSON_RETRY_PREFIX + systemPrompt },
       { role: "user", content: prompt },
     ];
+    const p3Start = Date.now();
     const retryCall = await callAndParse(retryMessages, options);
+    emitLlmCallEvent(req, "preview", retryCall.ok, Date.now() - p3Start, traceId,
+      retryCall.ok ? undefined : { breaker_state: retryCall.breakerOpen ? "open" : "closed" });
     if (!retryCall.ok) {
+      emitPromptEvent(req, "preview", false, startTs, traceId,
+        retryCall.breakerOpen ? { breaker_state: "open" } : undefined);
       if (retryCall.breakerOpen) {
         res.status(503).json({ error: "Coach feedback temporarily unavailable" });
       } else {
@@ -525,6 +579,7 @@ export async function handlePreview(
     }
     zodResult = PreviewSchema.safeParse(retryCall.data);
     if (!zodResult.success) {
+      emitPromptEvent(req, "preview", false, startTs, traceId);
       res.status(502).json({ error: "Coach returned an invalid response. Try again." });
       return;
     }
@@ -535,9 +590,7 @@ export async function handlePreview(
   // Output filter (preview: redact, never reject)
   const filtered = filterOutput<Preview>(validated, "preview" as FilterMode);
 
-  const durationMs = Date.now() - startTs; // ROI prep
-  void durationMs;
-
+  emitPromptEvent(req, "preview", true, startTs, traceId);
   res.status(200).json({
     result: filtered.clean,
     flags: filtered.flags,

@@ -30,6 +30,8 @@ const DRAIN_INTERVAL_MS = 60_000;
 // EventKind values mirror manatee_ai_roi.schema.EventKind (16 values, schema 1.2.0).
 // 11 original + 5 ADR-007 lifecycle kinds (session_start, prompt_received,
 // stream_complete, citation_surfaced, followup_action).
+// 3 cookbook-specific kinds (prompt_critique, prompt_refine, prompt_preview)
+// added in cookbook Task #9 for Tier 1-4 KPI dashboards.
 export const EventKind = Object.freeze({
   LLM_CALL: "llm_call",
   TOOL_INVOCATION: "tool_invocation",
@@ -48,6 +50,10 @@ export const EventKind = Object.freeze({
   STREAM_COMPLETE: "stream_complete",
   CITATION_SURFACED: "citation_surfaced",
   FOLLOWUP_ACTION: "followup_action",
+  // Cookbook coach endpoint kinds (Task #9)
+  PROMPT_CRITIQUE: "prompt_critique",
+  PROMPT_REFINE: "prompt_refine",
+  PROMPT_PREVIEW: "prompt_preview",
 });
 
 /** Generate a fresh W3C-compatible trace_id (32 lowercase hex chars). */
@@ -302,6 +308,35 @@ export async function withRoiEvent(ctx, fn) {
 
   if (caught) throw caught;
   return result;
+}
+
+/**
+ * Fire-and-forget ROI event emission (Task #9).
+ *
+ * Builds a complete event from `partial`, fills defaults, then calls
+ * `void dispatch(event)` so emission NEVER blocks the caller.
+ *
+ * Required fields in partial: event_kind, workflow, user_id, dept,
+ * role_band, task_type, tool, success.
+ * Optional: started_at, duration_s, surface, prompt_tokens,
+ * output_tokens, trace_id, span_id, parent_event_id.
+ *
+ * @param {object} partial
+ */
+export function emitEvent(partial) {
+  const event = {
+    event_id: cryptoRandomUUID(),
+    started_at: partial.started_at ?? new Date().toISOString(),
+    duration_s: partial.duration_s ?? 0,
+    surface: "other",
+    prompt_tokens: null,
+    output_tokens: null,
+    trace_id: null,
+    span_id: null,
+    parent_event_id: null,
+    ...partial,
+  };
+  void dispatch(event);
 }
 
 async function dispatch(event) {
