@@ -6,6 +6,7 @@ import OpenAI from "openai";
 import helmet from "helmet";
 import cors from "cors";
 import { getBreakerState } from "./lib/breaker.js";
+import { handleCritique, handleRefine, handlePreview } from "./lib/llm-endpoints.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -295,6 +296,34 @@ CRITICAL RULES:
 
     streamCompletion(res, chatMessages, safeModel).catch((err) => {
       console.error("chat streaming error:", err);
+      if (!res.headersSent) {
+        res.status(500).json({ error: "Internal server error" });
+      }
+    });
+  });
+
+  // ---- Coach endpoints ----
+  app.post("/api/critique", (req, res) => {
+    handleCritique(req, res).catch((err) => {
+      console.error("critique error:", err);
+      if (!res.headersSent) {
+        res.status(500).json({ error: "Internal server error" });
+      }
+    });
+  });
+
+  app.post("/api/refine", (req, res) => {
+    handleRefine(req, res).catch((err) => {
+      console.error("refine error:", err);
+      if (!res.headersSent) {
+        res.status(500).json({ error: "Internal server error" });
+      }
+    });
+  });
+
+  app.post("/api/preview", (req, res) => {
+    handlePreview(req, res).catch((err) => {
+      console.error("preview error:", err);
       if (!res.headersSent) {
         res.status(500).json({ error: "Internal server error" });
       }
