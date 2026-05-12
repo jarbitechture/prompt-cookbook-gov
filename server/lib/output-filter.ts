@@ -7,6 +7,11 @@
  */
 
 // Florida statute citation: "Fla. Stat. § 286.011", "F.S. 119.07", "FS §286.011(1)"
+// Known quirk: when input is "F.S.A. §286.011(1)" the match truncates to
+// "F.S.A. §286.011" because the trailing \b prefers the word boundary
+// between "1" and "(" over the boundary after ")". The hallucination is
+// still flagged and redacted; a dangling ")" appears in the redacted
+// output. Cosmetic only — does not affect detection.
 const FLORIDA_STATUTE_RE =
   /\b(?:Fla\.?\s*Stat\.?|F\.?S\.?A?\.?)\s*§?\s*\d+(?:\.\d+)?(?:\([a-z0-9]+\))?\b/gi;
 
@@ -25,6 +30,10 @@ const ORDINANCE_SECTION_RE =
 const FY_BUDGET_YEAR_RE =
   /\bFY\s*(?:20\d{2}|\d{2})\s+(?:budget|appropriation|allocation|fund)\b/gi;
 
+// Module-level RegExp objects with /g flag carry mutable lastIndex
+// state. The walker resets lastIndex = 0 before each use. Safe under
+// Node's single-threaded event loop because matchAll + replace
+// complete atomically within one synchronous scan.
 const PATTERNS: ReadonlyArray<{ name: string; re: RegExp }> = [
   { name: "florida_statute", re: FLORIDA_STATUTE_RE },
   { name: "dollar_amount_large", re: DOLLAR_AMOUNT_LARGE_RE },
@@ -118,6 +127,8 @@ export function filterOutput<T>(input: T, mode: FilterMode): FilterResult<T> {
   const flags: FilterFlag[] = [];
   // Redact for critique and preview; leave alone for refine.
   const redact = mode !== "refine";
+  // path is the empty string at the root; first-level keys render as
+  // bare names (e.g., "suggestions[2]" not ".suggestions[2]").
   const clean = walkAndFilter(
     structuredClone(input),
     "",
