@@ -14,7 +14,7 @@ export const CritiqueSchema = z
       .strict(),
     anti_hallucination_clause: z.boolean(),
     specificity_issues: z.array(z.string()),
-    suggestions: z.array(z.string()),
+    suggestions: z.array(z.string()).min(1),
     cited_chapters: z.array(z.number().int().min(1).max(30)),
   })
   .strict();
