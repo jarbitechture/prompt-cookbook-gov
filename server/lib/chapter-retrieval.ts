@@ -20,7 +20,7 @@
 
 import { chapters, type Chapter } from "../../client/src/lib/cookbookData.js";
 
-const SCORE_THRESHOLD = 1;
+const SCORE_THRESHOLD = 5;
 
 /** Tokenize query: lowercase, split on whitespace, deduplicate. */
 function tokenize(query: string): string[] {
@@ -51,6 +51,7 @@ function formatContext(
 
   lines.push("## Top-matched chapter (full content)");
   lines.push(`### Chapter ${fullChapter.number}: ${fullChapter.title}`);
+  lines.push("");
   lines.push(fullChapter.content.join("\n\n"));
 
   if (summaries.length > 0) {
@@ -58,6 +59,7 @@ function formatContext(
     lines.push("## Related chapter summaries");
     for (const s of summaries) {
       lines.push(`### Chapter ${s.chapterNumber}: ${s.title}`);
+      lines.push("");
       lines.push(s.summary);
       lines.push("");
     }
