@@ -217,7 +217,7 @@ async function startServer() {
 
   // ---- Circuit-breaker health endpoint ----
   app.get("/api/health/breakers", (_req, res) => {
-    res.json({ "civic-ai": getBreakerState() });
+    res.json({ civic_ai: getBreakerState() });
   });
 
   // ---- Try-it endpoint (single prompt) ----

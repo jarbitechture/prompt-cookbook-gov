@@ -79,14 +79,19 @@ External:
 
 | Setting | Value |
 |---|---|
-| `fail_max` | 5 consecutive failures |
+| `errorThresholdPercentage` | 50 — open when >50% of calls fail in a 5-call rolling window |
+| `volumeThreshold` | 5 |
 | `reset_timeout_ms` | 30,000 |
 | `call_timeout_ms` | 10,000 |
-| `half_open_max_probes` | 1 |
+| `half_open_max_probes` | omitted (see note) |
 | Excluded statuses (don't trip) | 400, 401, 403, 404, 422 |
 | Fallback | Returns `{ __breaker_open: true }`; endpoints respond 503 + ROI event `success=false, reason=breaker_open` |
 
-State machine: Closed → Open (5 failures) → HalfOpen (after 30s) → Closed (probe success) or Open (probe fail). Single-probe enforcement matches the civic-ai inner-breaker pattern per Operating Rule #19.
+> **Note — `errorThresholdPercentage`:** Cannot use 100 — opossum uses strict `>` comparison, so a 100% failure rate would never trip the breaker. 50 with `volumeThreshold: 5` trips on >50% failure (3+ out of 5 calls).
+
+> **Note — `half_open_max_probes` / `capacity`:** `capacity: 1` was a misspecification. opossum's `capacity` is a global semaphore that serializes ALL calls in EVERY state — not half-open single-probe enforcement. Half-open single-probe is enforced natively by opossum via its `PENDING_CLOSE` flag (see `node_modules/opossum/lib/circuit.js`). The `capacity` option was intentionally omitted from the implementation.
+
+State machine: Closed → Open (>50% error rate over 5+ calls) → HalfOpen (after 30s) → Closed (probe success) or Open (probe fail). Single-probe enforcement matches the civic-ai inner-breaker pattern per Operating Rule #19.
 
 ---
 

@@ -3,7 +3,9 @@
  *
  * Config (per ADR-002 / §4 of 2026-05-12-cookbook-mvp.md):
  *   timeout              10 s   — call is considered failed if it takes longer
- *   errorThresholdPct   100 %   — combined with volumeThreshold: open after 5 failures
+ *   errorThresholdPct    50 %   — open when >50% of calls fail within a 5-call window.
+ *                               Cannot use 100 — opossum uses strict `>` comparison, so
+ *                               a 100% failure rate would never trip the breaker.
  *   volumeThreshold       5    — minimum requests in window before the breaker can open
  *   resetTimeout         30 s   — half-open probe fires 30 s after opening
  *   rollingCountTimeout  60 s   — statistical window
@@ -30,7 +32,7 @@ const breaker = new CircuitBreaker(
   {
     name: "civic-ai",
     timeout: 10_000,
-    errorThresholdPercentage: 100,
+    errorThresholdPercentage: 50,
     volumeThreshold: 5,
     resetTimeout: 30_000,
     rollingCountTimeout: 60_000,
