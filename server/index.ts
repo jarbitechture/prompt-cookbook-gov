@@ -5,6 +5,7 @@ import { fileURLToPath } from "url";
 import OpenAI from "openai";
 import helmet from "helmet";
 import cors from "cors";
+import { getBreakerState } from "./lib/breaker.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -212,6 +213,11 @@ async function startServer() {
   // ---- Health endpoint ----
   app.get("/api/health", (_req, res) => {
     res.json({ status: "ok" });
+  });
+
+  // ---- Circuit-breaker health endpoint ----
+  app.get("/api/health/breakers", (_req, res) => {
+    res.json({ "civic-ai": getBreakerState() });
   });
 
   // ---- Try-it endpoint (single prompt) ----
