@@ -54,6 +54,8 @@ export const EventKind = Object.freeze({
   PROMPT_CRITIQUE: "prompt_critique",
   PROMPT_REFINE: "prompt_refine",
   PROMPT_PREVIEW: "prompt_preview",
+  // Cookbook handoff kind (Task #11)
+  TEMPLATE_EXPORT: "template_export",
 });
 
 /** Generate a fresh W3C-compatible trace_id (32 lowercase hex chars). */

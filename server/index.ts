@@ -7,6 +7,7 @@ import helmet from "helmet";
 import cors from "cors";
 import { getBreakerState } from "./lib/breaker.js";
 import { handleCritique, handleRefine, handlePreview } from "./lib/llm-endpoints.js";
+import { handleTemplateExport } from "./routes/roi-template-export.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -324,6 +325,15 @@ CRITICAL RULES:
   app.post("/api/preview", (req, res) => {
     handlePreview(req, res).catch((err) => {
       console.error("preview error:", err);
+      if (!res.headersSent) {
+        res.status(500).json({ error: "Internal server error" });
+      }
+    });
+  });
+
+  app.post("/api/roi/template-export", (req, res) => {
+    handleTemplateExport(req, res).catch((err) => {
+      console.error("template-export error:", err);
       if (!res.headersSent) {
         res.status(500).json({ error: "Internal server error" });
       }

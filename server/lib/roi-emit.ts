@@ -85,6 +85,37 @@ export function emitPromptEvent(
 }
 
 /**
+ * Emit one TEMPLATE_EXPORT event for a Send-to-Copilot / Send-to-ChatGPT handoff.
+ *
+ * @param req        — Express request (for header extraction)
+ * @param targetTool — "copilot" | "chatgpt_enterprise"
+ * @param mode       — originating coach mode, or undefined when opened from BuildMode
+ * @param startTs    — `Date.now()` captured at handler entry
+ */
+export function emitTemplateExportEvent(
+  req: express.Request,
+  targetTool: "copilot" | "chatgpt_enterprise",
+  mode: "critique" | "refine" | "preview" | "manual" | undefined,
+  startTs: number,
+): void {
+  const { user_id, dept, role_band } = extractContext(req);
+  emitEvent({
+    event_kind:  EventKind.TEMPLATE_EXPORT,
+    workflow:    "cookbook",
+    user_id,
+    dept,
+    role_band,
+    task_type:   "template_export",
+    tool:        "cookbook",
+    surface:     "web",
+    duration_s:  Number(((Date.now() - startTs) / 1000).toFixed(3)),
+    success:     true,
+    target_tool: targetTool,
+    ...(mode !== undefined ? { mode } : {}),
+  });
+}
+
+/**
  * Emit one LLM_CALL event for a single civic-ai breaker call.
  *
  * Called once per `callAndParse` invocation (including retries).
