@@ -1,11 +1,8 @@
-import { useState, useEffect, useCallback } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/NotFound";
 import { Router, Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
-import ChatbotWidget from "./components/ChatbotWidget";
-import { getDepartment } from "./lib/departments";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
 import Game from "./pages/Game";
@@ -26,33 +23,6 @@ function AppRoutes() {
 }
 
 function App() {
-  const [deptContext, setDeptContext] = useState<string | undefined>(() => {
-    try {
-      const id = localStorage.getItem("cookbook-department");
-      if (id) return getDepartment(id)?.personalization.chatbotContext;
-    } catch {}
-    return undefined;
-  });
-
-  // Listen for department changes from any component that writes to localStorage
-  const syncDeptContext = useCallback(() => {
-    try {
-      const id = localStorage.getItem("cookbook-department");
-      const ctx = id ? getDepartment(id)?.personalization.chatbotContext : undefined;
-      setDeptContext(ctx);
-    } catch {}
-  }, []);
-
-  useEffect(() => {
-    window.addEventListener("storage", syncDeptContext);
-    // Also listen for custom event dispatched by same-tab localStorage writes
-    window.addEventListener("cookbook-department-changed", syncDeptContext);
-    return () => {
-      window.removeEventListener("storage", syncDeptContext);
-      window.removeEventListener("cookbook-department-changed", syncDeptContext);
-    };
-  }, [syncDeptContext]);
-
   return (
     <ErrorBoundary>
       <ThemeProvider defaultTheme="light">
@@ -71,7 +41,6 @@ function App() {
           <Router base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
             <AppRoutes />
           </Router>
-          <ChatbotWidget departmentContext={deptContext} />
         </TooltipProvider>
       </ThemeProvider>
     </ErrorBoundary>
