@@ -231,14 +231,19 @@ The audit's 10-step pre-deletion checklist + new MVP work yields this execution 
 ### Task #9 — ROI sidecar events on new endpoints
 
 **Acceptance criteria:**
-- Emit `PROMPT_CRITIQUE`, `PROMPT_REFINE`, `PROMPT_PREVIEW` on respective endpoint completion.
-- Emit `LLM_CALL` per call with token counts from civic-ai response.
-- Emit `TEMPLATE_EXPORT` from Send-to-Copilot handoff (client-side).
-- Required fields per Operating Rule #18: event_kind, workflow=cookbook, user_id (from IIS Windows Auth header), dept, role_band, task_type, tool, surface, duration_s, success.
-- Reuse existing `api/src/lib/roi-sidecar.js` SDK (no new sidecar code needed).
-- Architecture A+ delivery: POST + JSONL fallback already in the SDK.
+- Emit `PROMPT_CRITIQUE`, `PROMPT_REFINE`, `PROMPT_PREVIEW` on respective endpoint completion (every path: 200, 400, 502, 503).
+- Emit `LLM_CALL` per civic-ai breaker call (including retries — up to 4 per request on the refine filter-reject worst case).
+- `TEMPLATE_EXPORT` from Send-to-Copilot handoff lands in Task #11 (client-side).
+- Required fields per Operating Rule #18: event_kind, workflow=cookbook, user_id (from `iisaf-username` header), dept (`iisaf-dept`), role_band (`iisaf-roleband`), task_type, tool=cookbook, surface=web, duration_s, success. Fallbacks: `anonymous` / `unknown` / `professional`.
+- task_type mapping: critique → `prompt_evaluation`, refine → `prompt_rewrite`, preview → `prompt_simulation`, LLM_CALL → `llm_inference`.
+- Conditional `prompt_tokens` / `output_tokens` on LLM_CALL: **set to `0`** with a TODO. The SDK validator (`api/src/lib/roi-sidecar.js`) currently REQUIRES both fields non-null on every LLM_CALL — UNSET causes the event to be silently dropped. Until civic-ai-client.ts is expanded to expose `usage` from the response, `0` is the sentinel. Power BI dashboards will show `0` tokens on cookbook LLM_CALL rows until that lands.
+- All emissions are fire-and-forget (`void emitEvent(...)`) — telemetry never blocks the user-facing response per Rule #18.
+- trace_id (from `newTraceId()`) links each PROMPT_<MODE> event with its sibling LLM_CALL(s) — one trace per request.
+- 503 emissions include `breaker_state: "open"` as an extra field.
+- IIS forwarding of `iisaf-*` headers is a separate concern handled in Task #13 (subpath IIS rewrite rules). Until then, all requests fall back to defaults.
+- Reuse existing `api/src/lib/roi-sidecar.js` SDK + add a `.d.ts` declaration for clean TypeScript imports.
 
-**Files:** Modify endpoints in `server/routes/llm.ts` to emit events; client-side emit in Builder.tsx for TEMPLATE_EXPORT.
+**Files:** `api/src/lib/roi-sidecar.js` (add 3 EventKinds + `emitEvent` export), `api/src/lib/roi-sidecar.d.ts` (new — TypeScript declarations matching the JS public surface), `server/lib/roi-emit.ts` (new — `extractContext`, `emitPromptEvent`, `emitLlmCallEvent` helpers), `server/lib/llm-endpoints.ts` (modify — wire emits across all completion paths).
 
 ### Task #6 — Builder UI: Critique panel
 
