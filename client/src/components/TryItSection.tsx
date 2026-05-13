@@ -1,9 +1,8 @@
-import { useState, useMemo, useRef, useCallback } from "react";
+import { useState, useMemo } from "react";
 import { useLocation } from "wouter";
-import { Copy, Check, RotateCcw, Beaker, Play, Loader2, Wrench, Square } from "lucide-react";
+import { Copy, Check, RotateCcw, Beaker, Wrench } from "lucide-react";
 import type { TryItVariable } from "@/lib/cookbookData";
 import { toast } from "sonner";
-import { apiUrl } from "@/lib/apiUrl";
 
 interface TryItSectionProps {
   template: string;
@@ -15,9 +14,6 @@ export default function TryItSection({ template, variables, accentColor = "oklch
   const [, setLocation] = useLocation();
   const [values, setValues] = useState<Record<string, string>>({});
   const [copied, setCopied] = useState(false);
-  const [response, setResponse] = useState("");
-  const [streaming, setStreaming] = useState(false);
-  const abortRef = useRef<AbortController | null>(null);
 
   const preview = useMemo(() => {
     let result = template;
@@ -41,70 +37,7 @@ export default function TryItSection({ template, variables, accentColor = "oklch
 
   const handleReset = () => {
     setValues({});
-    setResponse("");
   };
-
-  const handleStop = useCallback(() => {
-    abortRef.current?.abort();
-    setStreaming(false);
-  }, []);
-
-  const handleRun = useCallback(async () => {
-    if (!allFilled || streaming) return;
-    setResponse("");
-    setStreaming(true);
-    abortRef.current = new AbortController();
-
-    try {
-      const res = await fetch(apiUrl("/api/try-it"), {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt: preview }),
-        signal: abortRef.current.signal,
-      });
-
-      if (!res.ok) {
-        toast.error("Failed to run prompt. Is the server running?");
-        setStreaming(false);
-        return;
-      }
-
-      const reader = res.body?.getReader();
-      if (!reader) { setStreaming(false); return; }
-
-      const decoder = new TextDecoder();
-      let accumulated = "";
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        const chunk = decoder.decode(value, { stream: true });
-        for (const line of chunk.split("\n")) {
-          if (line.startsWith("data: ")) {
-            const data = line.slice(6);
-            if (data === "[DONE]") break;
-            try {
-              const parsed = JSON.parse(data);
-              const token = parsed.content || parsed.choices?.[0]?.delta?.content || parsed.token || parsed.text || "";
-              accumulated += token;
-              setResponse(accumulated);
-            } catch {
-              if (data.trim()) {
-                accumulated += data;
-                setResponse(accumulated);
-              }
-            }
-          }
-        }
-      }
-    } catch (err: unknown) {
-      if (err instanceof Error && err.name !== "AbortError") {
-        toast.error("Error running prompt.");
-      }
-    } finally {
-      setStreaming(false);
-    }
-  }, [allFilled, streaming, preview]);
 
   const handleOpenInBuilder = () => {
     // Store the assembled prompt in localStorage for the Builder to pick up
@@ -234,41 +167,13 @@ export default function TryItSection({ template, variables, accentColor = "oklch
 
         {/* Action buttons */}
         <div className="flex flex-wrap items-center gap-3 mt-4">
-          {streaming ? (
-            <button
-              onClick={handleStop}
-              className="flex items-center gap-2 text-xs font-bold px-4 py-2 rounded-lg transition-all"
-              style={{
-                background: "oklch(0.50 0.16 25)",
-                color: "oklch(0.98 0.01 75)",
-              }}
-            >
-              <Square className="w-3.5 h-3.5" /> Stop
-            </button>
-          ) : (
-            <button
-              onClick={handleRun}
-              disabled={!allFilled}
-              className="flex items-center gap-2 text-xs font-bold px-4 py-2 rounded-lg transition-all"
-              style={{
-                background: allFilled ? accentColor : "oklch(0.88 0.01 75)",
-                color: allFilled ? "oklch(0.98 0.01 75)" : "oklch(0.58 0.03 55)",
-                cursor: allFilled ? "pointer" : "not-allowed",
-                opacity: allFilled ? 1 : 0.5,
-              }}
-            >
-              {streaming ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5" />}
-              Run Prompt
-            </button>
-          )}
           <button
             onClick={handleOpenInBuilder}
             disabled={!allFilled}
             className="flex items-center gap-2 text-xs font-semibold px-4 py-2 rounded-lg transition-all"
             style={{
-              background: "oklch(0.94 0.01 75)",
-              color: allFilled ? "oklch(0.35 0.04 45)" : "oklch(0.58 0.03 55)",
-              border: "1px solid oklch(0.85 0.02 70)",
+              background: allFilled ? accentColor : "oklch(0.88 0.01 75)",
+              color: allFilled ? "oklch(0.98 0.01 75)" : "oklch(0.58 0.03 55)",
               cursor: allFilled ? "pointer" : "not-allowed",
               opacity: allFilled ? 1 : 0.5,
             }}
@@ -277,33 +182,10 @@ export default function TryItSection({ template, variables, accentColor = "oklch
           </button>
         </div>
 
-        {!allFilled && !response && (
+        {!allFilled && (
           <p className="text-xs mt-3" style={{ color: "oklch(0.52 0.04 50)" }}>
-            Fill in all fields to run the prompt or open it in the Builder.
+            Fill in all fields to open your prompt in the Builder.
           </p>
-        )}
-
-        {/* AI Response */}
-        {(response || streaming) && (
-          <div className="mt-5">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: "oklch(0.45 0.04 45)" }}>
-                AI Response
-              </span>
-              {streaming && <Loader2 className="w-3 h-3 animate-spin" style={{ color: accentColor }} />}
-            </div>
-            <div
-              className="rounded-lg px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap"
-              style={{
-                background: "oklch(0.998 0.002 70)",
-                border: `1px solid oklch(0.90 0.02 75)`,
-                color: "oklch(0.25 0.03 40)",
-                minHeight: "80px",
-              }}
-            >
-              {response || (streaming ? "Generating..." : "")}
-            </div>
-          </div>
         )}
       </div>
     </div>

@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef, useCallback, useEffect } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Wrench,
@@ -7,7 +7,6 @@ import {
   Clock,
   ChevronRight,
   ChevronDown,
-  Wand2,
   Loader2,
   RotateCcw,
   ArrowRight,
@@ -20,7 +19,6 @@ import {
   Siren,
   Mail,
   Table2,
-  MessageSquare,
   Eye,
   EyeOff,
   GripVertical,
@@ -31,14 +29,13 @@ import {
   Layers,
   Lightbulb,
   GitBranch,
-  Play,
   Home,
   Shield,
   HardHat,
   Heart,
   Database,
 } from "lucide-react";
-import { Link, useLocation } from "wouter";
+import { Link } from "wouter";
 import { toast } from "sonner";
 import { apiUrl } from "@/lib/apiUrl";
 import { sendToCopilot } from "@/lib/copilot-handoff";
@@ -288,76 +285,10 @@ function estimateTokens(text: string): number {
   return Math.ceil(wordCount * 1.3);
 }
 
-/* ─── Example Outputs for Reverse Engineer ─── */
-const exampleOutputs = [
-  {
-    label: "Meeting Summary",
-    preview: "Q2 Budget Review meeting notes with action items...",
-    icon: MessageSquare,
-    text: `Meeting Summary: Q2 Budget Review\n\nOverview: The Finance team met to review Q2 spending against budget allocations. Three departments exceeded their quarterly targets.\n\nKey Points:\n- IT infrastructure spending is 12% over budget due to unplanned server migration\n- Parks & Recreation is under budget by 8% after postponing the Summer Concert Series\n- Fleet maintenance costs increased 15% due to aging vehicle inventory\n\nDecisions:\n- Approved emergency IT budget amendment of $45,000\n- Directed Parks to reallocate savings to deferred maintenance projects\n- Requested Fleet to prepare a vehicle replacement proposal by August 1\n\nAction Items:\n1. Finance to distribute revised budget projections by Friday (Owner: Sarah M.)\n2. IT to submit final migration costs by end of month (Owner: James K.)\n3. Fleet to present replacement options at July board meeting (Owner: Mike R.)\n\nNext Steps: Follow-up meeting scheduled for July 15 to review revised projections.`,
-  },
-  {
-    label: "Budget Memo",
-    preview: "FY2026 Q1 variance report with line-item analysis...",
-    icon: BarChart3,
-    text: `MEMORANDUM\n\nTO: Department Directors\nFROM: Budget Office\nDATE: March 15, 2026\nRE: FY2026 Q1 Budget Variance Report\n\nExecutive Summary: First quarter expenditures totaled $12.4M against a budget of $11.8M, representing a 5.1% overage driven primarily by emergency response costs and personnel overtime.\n\nSignificant Variances:\n| Line Item | Budget | Actual | Variance |\n| Personnel | $6.2M | $6.5M | +4.8% |\n| Emergency Ops | $800K | $1.1M | +37.5% |\n| Capital Projects | $2.1M | $1.9M | -9.5% |\n\nRecommendations:\n1. Implement overtime pre-approval process for non-emergency situations\n2. Request supplemental appropriation for emergency operations\n3. Accelerate delayed capital projects to utilize available funds`,
-  },
-  {
-    label: "Public Notice",
-    preview: "Road closure notification for SR 64 construction...",
-    icon: FileText,
-    text: `PUBLIC NOTICE — TEMPORARY ROAD CLOSURE\n\nEffective: April 1, 2026 through June 30, 2026\n\nManatee County Public Works Department announces a temporary closure of State Road 64 between 43rd Street East and Lena Road for infrastructure improvements.\n\nProject: SR 64 Drainage & Utility Upgrade (Project #MCG-2025-PW-142)\n\nImpacts:\n- Full closure of eastbound lanes April 1-30\n- Full closure of westbound lanes May 1-31\n- Intersection closures at 51st Street and Lena Road during June\n\nDetour Route: Traffic will be redirected via University Parkway to I-75 to SR 70.\n\nResidents and businesses along the corridor will maintain local access at all times.\n\nFor questions or concerns:\nPublic Works Hotline: (941) 555-0200\nProject Website: manatee.gov/sr64project\nEmail: publicworks@mymanatee.org\n\nManatee County Board of County Commissioners\nCharles B. Smith, Chair`,
-  },
-];
-
-/* ─── SSE Stream Helper ─── */
-async function streamSSE(
-  url: string,
-  body: object,
-  onToken: (text: string) => void,
-  signal: AbortSignal
-): Promise<void> {
-  const response = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-    signal,
-  });
-  if (!response.ok) throw new Error("Request failed");
-  const reader = response.body?.getReader();
-  if (!reader) throw new Error("No reader");
-  const decoder = new TextDecoder();
-  let accumulated = "";
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    const chunk = decoder.decode(value, { stream: true });
-    for (const line of chunk.split("\n")) {
-      if (line.startsWith("data: ")) {
-        const data = line.slice(6);
-        if (data === "[DONE]") return;
-        try {
-          const parsed = JSON.parse(data);
-          const token = parsed.content || parsed.choices?.[0]?.delta?.content || parsed.token || parsed.text || "";
-          accumulated += token;
-          onToken(accumulated);
-        } catch {
-          if (data.trim()) {
-            accumulated += data;
-            onToken(accumulated);
-          }
-        }
-      }
-    }
-  }
-}
-
 /* ═══════════════════════════════════════════════════════════════
    MAIN COMPONENT
    ═══════════════════════════════════════════════════════════════ */
 export default function Builder() {
-  const [mode, setMode] = useState<"build" | "reverse">("build");
-
   return (
     <div className="min-h-screen" style={{ background: "oklch(0.97 0.008 75)" }}>
       {/* Header */}
@@ -383,44 +314,7 @@ export default function Builder() {
         </div>
       </header>
 
-      {/* Tab Bar */}
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-6">
-        <div
-          className="inline-flex rounded-xl p-1"
-          style={{ background: "oklch(0.92 0.01 70)", border: "1px solid oklch(0.88 0.015 75)" }}
-        >
-          {[
-            { key: "build" as const, label: "Build a Prompt", Icon: Wrench },
-            { key: "reverse" as const, label: "Reverse Engineer", Icon: Wand2 },
-          ].map(({ key, label, Icon }) => (
-            <button
-              key={key}
-              onClick={() => setMode(key)}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-bold transition-all"
-              style={{
-                background: mode === key ? ACCENT : "transparent",
-                color: mode === key ? "oklch(0.98 0.01 75)" : "oklch(0.45 0.04 50)",
-                boxShadow: mode === key ? "0 2px 8px oklch(0.18 0.02 38 / 0.1)" : "none",
-              }}
-            >
-              <Icon className="w-4 h-4" />
-              {label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <AnimatePresence mode="wait">
-        {mode === "build" ? (
-          <motion.div key="build" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.25 }}>
-            <BuildMode />
-          </motion.div>
-        ) : (
-          <motion.div key="reverse" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.25 }}>
-            <ReverseEngineerMode />
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <BuildMode />
     </div>
   );
 }
@@ -496,9 +390,6 @@ function BuildMode() {
   const [templatePanelOpen, setTemplatePanelOpen] = useState(true);
   const [copied, setCopied] = useState(false);
   const [copilotSent, setCopilotSent] = useState(false);
-  const [tryItResult, setTryItResult] = useState("");
-  const [tryItLoading, setTryItLoading] = useState(false);
-  const abortRef = useRef<AbortController | null>(null);
 
   const deptCategoryMap: Record<string, string> = {
     "resident-services": "Resident Services",
@@ -646,7 +537,6 @@ function BuildMode() {
     setSelectedTemplate(null);
     setHiddenBlocks(new Set());
     setCollapsedBlocks(new Set());
-    setTryItResult("");
   }, []);
 
   const toggleCategory = useCallback((cat: string) => {
@@ -683,35 +573,6 @@ function BuildMode() {
       setTimeout(() => setCopied(false), 2000);
     });
   }, [assembledPrompt]);
-
-  const handleTryIt = useCallback(async () => {
-    if (!assembledPrompt.trim() || tryItLoading) return;
-    setTryItResult("");
-    setTryItLoading(true);
-    abortRef.current = new AbortController();
-    try {
-      await streamSSE(
-        apiUrl("/api/try-it"),
-        { prompt: assembledPrompt },
-        (text) => setTryItResult(text),
-        abortRef.current.signal
-      );
-    } catch (err: unknown) {
-      if (err instanceof Error && err.name !== "AbortError") {
-        toast.error("Failed to run prompt. Check that the server is running.");
-      }
-    } finally {
-      setTryItLoading(false);
-      // Save to prompt history
-      if (assembledPrompt.trim()) {
-        try {
-          const history = JSON.parse(localStorage.getItem("cookbook-prompt-history") || "[]");
-          history.unshift({ prompt: assembledPrompt, timestamp: Date.now() });
-          localStorage.setItem("cookbook-prompt-history", JSON.stringify(history.slice(0, 10)));
-        } catch { /* localStorage full */ }
-      }
-    }
-  }, [assembledPrompt, tryItLoading]);
 
   // Render preview with color-coded labels
   const renderPreview = () => {
@@ -1106,51 +967,12 @@ function BuildMode() {
             {renderPreview()}
           </div>
 
-          {/* Token count + Run button */}
-          <div className="flex items-center justify-between">
+          {/* Token count */}
+          <div className="flex items-center">
             <span className="text-xs font-medium" style={{ color: "oklch(0.55 0.03 55)" }}>
               ~{tokenCount} tokens
             </span>
-            <button
-              onClick={handleTryIt}
-              disabled={!assembledPrompt.trim() || tryItLoading}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all"
-              style={{
-                background: assembledPrompt.trim() && !tryItLoading ? "oklch(0.42 0.14 155)" : "oklch(0.88 0.01 75)",
-                color: assembledPrompt.trim() && !tryItLoading ? "oklch(0.98 0.01 75)" : "oklch(0.58 0.03 55)",
-                cursor: assembledPrompt.trim() && !tryItLoading ? "pointer" : "not-allowed",
-                boxShadow: assembledPrompt.trim() && !tryItLoading ? "0 2px 10px oklch(0.42 0.14 155 / 0.25)" : "none",
-              }}
-            >
-              {tryItLoading ? (
-                <><Loader2 className="w-4 h-4 animate-spin" /> Running...</>
-              ) : (
-                <><Play className="w-4 h-4" /> Run This Prompt</>
-              )}
-            </button>
           </div>
-
-          {/* Try-it response */}
-          {tryItResult && (
-            <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
-              <div
-                className="w-full my-3"
-                style={{ height: "1px", background: "oklch(0.30 0.03 240)" }}
-              />
-              <div
-                className="rounded-xl p-5 text-sm leading-relaxed whitespace-pre-wrap"
-                style={{
-                  background: "oklch(0.16 0.02 240)",
-                  border: "1px solid oklch(0.28 0.03 240)",
-                  fontFamily: "'SF Mono', 'Fira Code', 'Consolas', monospace",
-                  fontSize: "13px",
-                  color: "oklch(0.80 0.02 70)",
-                }}
-              >
-                {tryItResult}
-              </div>
-            </motion.div>
-          )}
 
           {/* Quality Scoring */}
           <div
@@ -1184,216 +1006,6 @@ function BuildMode() {
       {/* Preview Panel — full-width below Refine Diff */}
       <div className="mt-6">
         <PreviewPanel prompt={assembledPrompt} />
-      </div>
-    </div>
-  );
-}
-
-/* ═══════════════════════════════════════════════════════════════
-   REVERSE ENGINEER MODE
-   ═══════════════════════════════════════════════════════════════ */
-function ReverseEngineerMode() {
-  const [inputText, setInputText] = useState("");
-  const [result, setResult] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [copied, setCopied] = useState(false);
-  const abortRef = useRef<AbortController | null>(null);
-  const [, navigate] = useLocation();
-
-  const handleLoadExample = useCallback((text: string) => {
-    setInputText(text);
-    setResult("");
-  }, []);
-
-  const handleReverseEngineer = useCallback(async () => {
-    if (!inputText.trim() || loading) return;
-    setResult("");
-    setLoading(true);
-    abortRef.current = new AbortController();
-    try {
-      await streamSSE(
-        apiUrl("/api/try-it"),
-        {
-          prompt: `Analyze this output and reverse-engineer the prompt that likely created it. Break it down into Role, Task, Context, Output Format, and Constraints. Format each as a labeled section.\n\n---\n\n${inputText}`,
-        },
-        (text) => setResult(text),
-        abortRef.current.signal
-      );
-    } catch (err: unknown) {
-      if (err instanceof Error && err.name !== "AbortError") {
-        toast.error("Failed to reverse-engineer prompt. Check that the server is running.");
-      }
-    } finally {
-      setLoading(false);
-    }
-  }, [inputText, loading]);
-
-  const handleCopyResult = useCallback(() => {
-    if (!result.trim()) return;
-    navigator.clipboard.writeText(result).then(() => {
-      setCopied(true);
-      toast.success("Result copied to clipboard!");
-      setTimeout(() => setCopied(false), 2000);
-    });
-  }, [result]);
-
-  const handleUsePrompt = useCallback(() => {
-    if (!result.trim()) return;
-    // Parse result into RTCO blocks and store for Build mode
-    try {
-      sessionStorage.setItem("builder-prefill", result);
-    } catch { /* sessionStorage unavailable */ }
-    navigator.clipboard.writeText(result).then(() => {
-      toast.success("Prompt copied! Switching to Build mode.");
-    });
-    navigate("/builder");
-    window.location.reload();
-  }, [result, navigate]);
-
-  // Color-code RTCO labels in result
-  const renderResult = () => {
-    if (!result) return null;
-    return result.split("\n").map((line, i) => {
-      const match = line.match(/^(Role|Task|Context|Output(?:\s*Format)?|Constraints|Examples|Reasoning):\s*(.*)/i);
-      if (match) {
-        const key = match[1].toLowerCase().replace(/\s*format/, "") as string;
-        const color = PREVIEW_LABEL_COLORS[key] || "oklch(0.70 0.02 70)";
-        return (
-          <div key={i}>
-            <span style={{ color, fontWeight: 700 }}>{match[1]}:</span>{" "}
-            <span style={{ color }}>{match[2]}</span>
-          </div>
-        );
-      }
-      return <div key={i}>{line || "\u00A0"}</div>;
-    });
-  };
-
-  return (
-    <div className="max-w-3xl mx-auto p-4 sm:p-6 lg:p-8">
-      <p className="text-sm mb-5 leading-relaxed" style={{ color: "oklch(0.42 0.04 50)" }}>
-        Paste an example of AI-generated output and we will reverse-engineer the prompt that could have created it using the RTCO framework.
-      </p>
-
-      {/* Quick Examples */}
-      <div className="mb-6">
-        <label className="text-xs font-bold uppercase tracking-wider mb-2.5 block" style={{ color: "oklch(0.50 0.04 50)" }}>
-          Quick Examples
-        </label>
-        <div className="flex flex-wrap gap-3">
-          {exampleOutputs.map((ex) => {
-            const Icon = ex.icon;
-            const isActive = inputText === ex.text;
-            return (
-              <motion.button
-                key={ex.label}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={() => handleLoadExample(ex.text)}
-                className="flex flex-col items-start gap-1 px-4 py-3 rounded-xl text-left transition-all"
-                style={{
-                  background: isActive ? ACCENT : "oklch(0.998 0.002 70)",
-                  color: isActive ? "oklch(0.98 0.01 75)" : "oklch(0.38 0.04 50)",
-                  border: isActive ? `1.5px solid ${ACCENT}` : "1.5px solid oklch(0.88 0.015 75)",
-                  boxShadow: isActive ? `0 2px 8px ${ACCENT}33` : "none",
-                  minWidth: "180px",
-                }}
-              >
-                <div className="flex items-center gap-2">
-                  <Icon className="w-4 h-4" />
-                  <span className="text-xs font-bold">{ex.label}</span>
-                </div>
-                <span className="text-[11px] opacity-70 line-clamp-1">{ex.preview}</span>
-              </motion.button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Input Area */}
-      <div className="space-y-4">
-        <div>
-          <div className="flex items-center justify-between mb-1.5">
-            <label className="block text-xs font-bold" style={{ color: "oklch(0.38 0.04 45)" }}>
-              Paste Output
-            </label>
-            <span className="text-xs" style={{ color: "oklch(0.55 0.03 55)" }}>
-              {inputText.length} characters
-            </span>
-          </div>
-          <textarea
-            value={inputText}
-            onChange={(e) => setInputText(e.target.value)}
-            placeholder="Paste an example of AI-generated output..."
-            rows={8}
-            className="w-full px-4 py-3 rounded-xl text-sm transition-all resize-none"
-            style={{
-              background: "oklch(1 0 0)",
-              border: inputText.trim() ? `1.5px solid ${ACCENT}` : "1.5px solid oklch(0.88 0.015 75)",
-              color: "oklch(0.22 0.03 40)",
-              outline: "none",
-            }}
-          />
-        </div>
-
-        <button
-          onClick={handleReverseEngineer}
-          disabled={!inputText.trim() || loading}
-          className="flex items-center gap-2 px-7 py-3 rounded-xl text-sm font-bold transition-all"
-          style={{
-            background: inputText.trim() && !loading ? ACCENT : "oklch(0.88 0.01 75)",
-            color: inputText.trim() && !loading ? "oklch(0.98 0.01 75)" : "oklch(0.58 0.03 55)",
-            cursor: inputText.trim() && !loading ? "pointer" : "not-allowed",
-            boxShadow: inputText.trim() && !loading ? `0 4px 16px ${ACCENT}33` : "none",
-          }}
-        >
-          {loading ? (
-            <><Loader2 className="w-4 h-4 animate-spin" /> Analyzing...</>
-          ) : (
-            <><Wand2 className="w-4 h-4" /> Reverse Engineer</>
-          )}
-        </button>
-
-        {/* Result */}
-        {result && (
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
-            <div className="flex items-center justify-between mb-2">
-              <label className="block text-xs font-bold" style={{ color: "oklch(0.38 0.04 45)" }}>
-                Reverse-Engineered Prompt
-              </label>
-              <div className="flex gap-2">
-                <button
-                  onClick={handleCopyResult}
-                  className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg font-bold transition-all"
-                  style={{ background: "oklch(0.94 0.01 70)", color: "oklch(0.42 0.04 50)" }}
-                >
-                  {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
-                  {copied ? "Copied" : "Copy"}
-                </button>
-                <button
-                  onClick={handleUsePrompt}
-                  className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg font-bold transition-all"
-                  style={{ background: ACCENT, color: "oklch(0.98 0.01 75)" }}
-                >
-                  <ArrowRight className="w-3 h-3" />
-                  Use This Prompt &rarr;
-                </button>
-              </div>
-            </div>
-            <div
-              className="rounded-xl p-5 text-sm leading-relaxed"
-              style={{
-                background: "oklch(0.14 0.02 240)",
-                border: "1px solid oklch(0.25 0.03 240)",
-                fontFamily: "'SF Mono', 'Fira Code', 'Consolas', monospace",
-                fontSize: "13px",
-                color: "oklch(0.80 0.02 70)",
-              }}
-            >
-              {renderResult()}
-            </div>
-          </motion.div>
-        )}
       </div>
     </div>
   );
