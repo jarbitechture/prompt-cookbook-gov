@@ -2,7 +2,7 @@
 
 ## What This Is
 
-An interactive AI prompt training app for county staff. 30 chapters covering prompt engineering from basics to advanced, with 4 game modes and a built-in AI coach. Built with React + Express.
+An interactive AI prompt training app for county staff. 30 chapters covering prompt engineering from basics to advanced, with 4 game modes and a built-in AI prompt coach. Built with React + Express.
 
 ## Deployment Roadmap
 
@@ -14,24 +14,22 @@ An interactive AI prompt training app for county staff. 30 chapters covering pro
 | 4. Pipeline runs (build validates) | Blocked by #3 | Optional |
 | 5. IIS site on Windows App Server | **Done 2026-04-25** | `Default Web Site` → `C:\inetpub\wwwroot\cookbook\public` on bcc-ap-llm01 |
 | 6. Deploy artifact to IIS + Node service | **Done 2026-04-25** | NSSM service `cookbook-node` runs `node dist/index.js` on `localhost:3000`; IIS reverse-proxies `/api/*` via ARR |
-| 7. LLM backend on RHEL | **Done 2026-04-25** | SGLang systemd unit on bcc-ap-infer01, serving Qwen2.5-7B-Instruct-FP8-dynamic on `0.0.0.0:30000`. Replaced original Ollama plan. |
-| 8. Civic-ai governed proxy | Deferred | Direct cookbook → SGLang for POC; civic-ai proxy slots in between for governance once POC accepted. |
-| 9. Cookbook → LLM env vars | **Done 2026-04-25** | `COOKBOOK_LLM_BASE_URL=http://bcc-ap-infer01.bcc.ad.mymanatee.org:30000/v1`, `COOKBOOK_LLM_DEFAULT_MODEL=qwen2.5-7b` |
-| 10. End-to-end verified | **Done 2026-04-25** | Streamed `Hello! How can I assist you today?` from infer01 → llm01:3000 → IIS → curl |
+| 7. LLM backend on RHEL | **Done 2026-04-25** | SGLang systemd unit on bcc-ap-infer01, serving Qwen2.5-7B-Instruct-FP8-dynamic on `0.0.0.0:30000`. |
+| 8. Civic-ai governed proxy | Pending | civic-ai proxy slots in on bcc-ap-infer01:8100; cookbook already wired to `CIVIC_AI_BASE_URL`. |
+| 9. Cookbook → civic-ai env vars | **Done 2026-05-13** | `CIVIC_AI_BASE_URL=http://bcc-ap-infer01...:8100/v1`, `CIVIC_AI_DEFAULT_MODEL=phi4` |
+| 10. End-to-end verified | **Done 2026-04-25** | Streamed response from infer01 → llm01:3000 → IIS → curl |
 | 11. DNS `mcgpt.mymanatee.org` → llm01 | Pending | County DNS ops (Mon) |
 | 12. TLS cert bound to IIS site | Pending | Wildcard cert PFX from ops, IIS HTTPS binding (Mon) |
 
 ## Quick Start (Local)
 
 ```bash
-npm install        # or: pnpm install
-npm run build
-npm start          # app runs on http://localhost:3000
+pnpm install
+pnpm run build
+pnpm start          # app runs on http://localhost:3000
 ```
 
 The app works immediately. All 30 chapters, game modes, and training content load without any configuration.
-
-**Note:** This project uses `pnpm` as its package manager. If `npm install` fails, use `pnpm install` instead.
 
 ## Verify It Works
 
@@ -39,7 +37,7 @@ After building, run these checks:
 
 ```bash
 # Start the server
-npm start &
+pnpm start &
 
 # Health check
 curl http://localhost:3000/api/health
@@ -49,17 +47,11 @@ curl http://localhost:3000/api/health
 curl -o /dev/null -w "HTTP %{http_code}" http://localhost:3000/
 # Expected: HTTP 200
 
-# AI features return helpful message when key not set
-curl -X POST http://localhost:3000/api/try-it \
-  -H "Content-Type: application/json" \
-  -d '{"prompt":"test"}'
-# Expected: {"error":"Live AI features are not configured. Set COOKBOOK_LLM_API_KEY..."}
-
 # Stop the server
 kill %1
 ```
 
-All three checks should pass without any environment variables configured.
+Both checks should pass without any environment variables configured.
 
 ## CI/CD (Azure DevOps)
 
@@ -89,66 +81,18 @@ pool:
 
 ### Governed LLM Integration
 
-When deployed alongside the [Civic AI](https://github.com/jarbitechture/manatee-civic-ai) governed proxy, point the cookbook at the proxy instead of directly at an LLM. Every staff prompt then goes through PII redaction, safety gates, and audit logging — without changing the cookbook's code.
-
-```
-COOKBOOK_LLM_API_KEY=<civic-ai-api-key>
-COOKBOOK_LLM_BASE_URL=http://<civic-ai-server>:8100/v1
-```
+All LLM calls route through the **civic-ai governed proxy** on `bcc-ap-infer01:8100`. Every staff prompt goes through PII redaction, safety gates, and audit logging.
 
 ### Environment Variables
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `COOKBOOK_LLM_API_KEY` | No | API key for AI features (see below) |
-| `COOKBOOK_LLM_BASE_URL` | No | Custom endpoint URL (see below) |
+| `CIVIC_AI_BASE_URL` | No | civic-ai proxy base URL (default: `http://127.0.0.1:8100/v1`) |
+| `CIVIC_AI_API_KEY` | No | API key for the civic-ai proxy (leave blank for open-access dev mode) |
+| `CIVIC_AI_DEFAULT_MODEL` | No | Default model passed to the proxy (default: `phi4`) |
 | `PORT` | No | Defaults to 3000 |
 | `TRUST_PROXY` | No | Set to `1` if behind reverse proxy / load balancer |
 | `SHAREPOINT_ORIGINS` | No | Comma-separated SharePoint origins for iframe embedding |
-
-## AI Features (Optional)
-
-Two features require an LLM API key: **Try It** (test prompts live) and **Chat** (AI prompt coach). Without the key, the app runs normally — these two features return a message saying they need configuration.
-
-### Azure OpenAI
-
-Set both variables:
-
-```
-COOKBOOK_LLM_API_KEY=your-azure-openai-key
-COOKBOOK_LLM_BASE_URL=https://{resource-name}.openai.azure.com/openai/deployments/{deployment-name}
-```
-
-### OpenAI Direct
-
-Set only the key (no base URL needed):
-
-```
-COOKBOOK_LLM_API_KEY=sk-...
-```
-
-### Local LLM (Ollama)
-
-For air-gapped environments where no data should leave the network:
-
-```
-COOKBOOK_LLM_API_KEY=ollama
-COOKBOOK_LLM_BASE_URL=http://localhost:11434/v1
-```
-
-Requires Ollama running on the server with a model pulled (e.g., `ollama pull phi4`).
-
-## What Works Without the API Key
-
-Everything except Try It and Chat:
-
-- All 30 training chapters with lessons and examples
-- 4 game modes (Quiz, Speed Round, Taste Test, Builder)
-- Difficulty filtering (Beginner / Intermediate / Advanced)
-- Department-specific personas and examples
-- Recently viewed tracking
-- Full-text search across all chapters
-- Responsive layout (desktop and mobile)
 
 ## Troubleshooting
 
@@ -156,19 +100,11 @@ Everything except Try It and Chat:
 |---------|-----|
 | App won't start | Check Node version: `node --version` (needs 20+) |
 | Blank page after deploy | Verify `pnpm run build` succeeded in pipeline logs |
-| Try It returns 503 | Set `COOKBOOK_LLM_API_KEY` in environment |
-| Chat returns 503 | Same as above |
-| LLM returns 401 | Verify key and base URL match your LLM provider |
+| Coach returns 503 | civic-ai proxy unreachable — check `CIVIC_AI_BASE_URL` and proxy health |
+| Coach returns 401 | Set `CIVIC_AI_API_KEY` to match the proxy's configured key |
 | Pipeline fails at build | Check Node version (needs 20+) and pnpm lockfile |
 
 ## Architecture
-
-### Single-host (local dev / simple deploy)
-
-```
-Client (React/Vite)  →  Express Server  →  LLM (Azure OpenAI, OpenAI, Ollama, or self-hosted SGLang)
-     port 3000              port 3000
-```
 
 ### County production (live as of 2026-04-25)
 
@@ -184,14 +120,12 @@ https://mcgpt.mymanatee.org/   (CNAME → bcc-ap-llm01, Windows Server 2025, IIS
                                                        ▼
                           cookbook-node (NSSM service)
                           C:\cookbook\dist\index.js, port 3000
-                          env: COOKBOOK_LLM_BASE_URL=http://bcc-ap-infer01...:30000/v1
+                          env: CIVIC_AI_BASE_URL=http://bcc-ap-infer01...:8100/v1
                                                        │  HTTP
                                                        ▼
                           bcc-ap-infer01 (RHEL 10, NVIDIA L4 24GB)
-                          sglang.service systemd unit
-                          /opt/sglang/venv → Qwen2.5-7B-Instruct-FP8-dynamic
-                          0.0.0.0:30000 (firewalled to llm01 only)
-                          OpenAI-compatible /v1/models, /v1/chat/completions
+                          civic-ai governed proxy, port 8100
+                          → Ollama / LLM inference (port 11434)
 ```
 
 ### Live service inventory
@@ -200,7 +134,7 @@ https://mcgpt.mymanatee.org/   (CNAME → bcc-ap-llm01, Windows Server 2025, IIS
 |---|---|---|---|
 | bcc-ap-llm01 | IIS `Default Web Site` | 80 | `iisreset`, IIS Manager |
 | bcc-ap-llm01 | `cookbook-node` (NSSM) | 3000 (loopback) | `nssm {start\|stop\|restart\|status} cookbook-node` |
-| bcc-ap-infer01 | `sglang.service` (systemd) | 30000 | `sudo systemctl {start\|stop\|restart\|status} sglang` |
+| bcc-ap-infer01 | civic-ai proxy | 8100 | `sudo systemctl {start\|stop\|restart\|status} civic-ai` |
 
 ### Logs
 
@@ -208,7 +142,7 @@ https://mcgpt.mymanatee.org/   (CNAME → bcc-ap-llm01, Windows Server 2025, IIS
 |---|---|
 | cookbook stdout/stderr (llm01) | `C:\cookbook\service.out.log`, `service.err.log` (rotated 10MB) |
 | IIS access logs | `C:\inetpub\logs\LogFiles\W3SVC1\` |
-| SGLang (infer01) | `sudo journalctl -u sglang -f` |
+| civic-ai (infer01) | `sudo journalctl -u civic-ai -f` |
 
 ### Update workflow (deploy a new build)
 
@@ -325,8 +259,7 @@ The app has no cloud-specific code. It runs on any server with Node 20.
 ```bash
 docker build -t prompt-cookbook .
 docker run -p 3000:3000 \
-  -e COOKBOOK_LLM_API_KEY=sk-... \
-  -e COOKBOOK_LLM_BASE_URL=https://{resource}.openai.azure.com/... \
+  -e CIVIC_AI_BASE_URL=http://bcc-ap-infer01.bcc.ad.mymanatee.org:8100/v1 \
   -e TRUST_PROXY=1 \
   prompt-cookbook
 ```
@@ -336,11 +269,10 @@ docker run -p 3000:3000 \
 ```bash
 pnpm install --frozen-lockfile
 pnpm run build
-NODE_ENV=production COOKBOOK_LLM_API_KEY=sk-... node dist/index.js
+NODE_ENV=production node dist/index.js
 ```
 
 ### Reverse Proxy Requirements
 
 If behind nginx, IIS, or a load balancer:
 - Set `TRUST_PROXY=1` so rate limiting uses the real client IP
-- **Disable response buffering** for `/api/try-it` and `/api/chat` — these use Server-Sent Events (SSE). In nginx: `proxy_buffering off;`. In IIS: `responseBufferLimit="0"` on the handler
