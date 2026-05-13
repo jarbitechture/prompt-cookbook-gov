@@ -721,30 +721,25 @@ function ResultsScreen({
 // MODE 1: BLIND ARENA
 // ═══════════════════════════════════════════════════════════════════════════
 
-async function fetchSSE(prompt: string, signal: AbortSignal): Promise<string> {
-  const res = await fetch(apiUrl("/api/try-it"), {
+interface PreviewResult {
+  interpretation: string;
+  gaps: string[];
+  unclear: string[];
+}
+
+async function fetchPreview(prompt: string, signal: AbortSignal): Promise<string> {
+  const res = await fetch(apiUrl("/api/preview"), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ prompt }),
     signal,
   });
   if (!res.ok) throw new Error("API error");
-  const reader = res.body?.getReader();
-  if (!reader) throw new Error("No reader");
-  const decoder = new TextDecoder();
-  let text = "";
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    for (const line of decoder.decode(value, { stream: true }).split("\n")) {
-      if (line.startsWith("data: ")) {
-        const d = line.slice(6);
-        if (d === "[DONE]") break;
-        try { text += JSON.parse(d).content || ""; } catch { /* skip */ }
-      }
-    }
-  }
-  return text;
+  const data = (await res.json()) as PreviewResult;
+  const parts: string[] = [data.interpretation];
+  if (data.gaps.length > 0) parts.push("Gaps: " + data.gaps.join("; "));
+  if (data.unclear.length > 0) parts.push("Unclear: " + data.unclear.join("; "));
+  return parts.join("\n\n");
 }
 
 function BlindArena({ onBack }: { onBack: () => void }) {
@@ -773,8 +768,8 @@ function BlindArena({ onBack }: { onBack: () => void }) {
     setLoadingOutputs(true);
 
     Promise.all([
-      fetchSSE(data.weakPrompt, abortRef.current.signal),
-      fetchSSE(data.strongPrompt, abortRef.current.signal),
+      fetchPreview(data.weakPrompt, abortRef.current.signal),
+      fetchPreview(data.strongPrompt, abortRef.current.signal),
     ])
       .then(([weak, strong]) => {
         if (!cancelled) {
@@ -1359,6 +1354,14 @@ function ChallengeMode({ onBack }: { onBack: () => void }) {
 
   const task = challengeTasks[index];
 
+  interface CritiqueResult {
+    rtco: { role: string; task: string; context: string; output: string };
+    anti_hallucination_clause: boolean;
+    specificity_issues: string[];
+    suggestions: string[];
+    cited_chapters: number[];
+  }
+
   const handleSend = useCallback(async () => {
     if (!userPrompt.trim() || streaming) return;
     setStreaming(true);
@@ -1369,7 +1372,7 @@ function ChallengeMode({ onBack }: { onBack: () => void }) {
     abortRef.current = new AbortController();
 
     try {
-      const response = await fetch(apiUrl("/api/try-it"), {
+      const response = await fetch(apiUrl("/api/critique"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ prompt: userPrompt }),
@@ -1378,35 +1381,21 @@ function ChallengeMode({ onBack }: { onBack: () => void }) {
 
       if (!response.ok) throw new Error("Request failed");
 
-      const reader = response.body?.getReader();
-      if (!reader) throw new Error("No reader");
+      const data = (await response.json()) as CritiqueResult;
 
-      const decoder = new TextDecoder();
-      let accumulated = "";
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        const chunk = decoder.decode(value, { stream: true });
-        const lines = chunk.split("\n");
-        for (const line of lines) {
-          if (line.startsWith("data: ")) {
-            const data = line.slice(6);
-            if (data === "[DONE]") break;
-            try {
-              const parsed = JSON.parse(data);
-              const token = parsed.content || parsed.choices?.[0]?.delta?.content || parsed.token || parsed.text || "";
-              accumulated += token;
-              setAiResponse(accumulated);
-            } catch {
-              if (data.trim()) {
-                accumulated += data;
-                setAiResponse(accumulated);
-              }
-            }
-          }
-        }
+      const lines: string[] = [];
+      const rtco = data.rtco;
+      lines.push(`Role: ${rtco.role}  Task: ${rtco.task}  Context: ${rtco.context}  Output: ${rtco.output}`);
+      if (data.specificity_issues.length > 0) {
+        lines.push("Issues: " + data.specificity_issues.join("; "));
       }
+      if (data.suggestions.length > 0) {
+        lines.push("Suggestions:\n" + data.suggestions.map((s) => `• ${s}`).join("\n"));
+      }
+      if (!data.anti_hallucination_clause) {
+        lines.push("Tip: Add a clause like \"Only use information you are certain about.\"");
+      }
+      setAiResponse(lines.join("\n\n"));
     } catch (err: unknown) {
       if (err instanceof Error && err.name !== "AbortError") {
         setAiResponse("Failed to get response. Make sure the server is running.");
@@ -1551,7 +1540,7 @@ function ChallengeMode({ onBack }: { onBack: () => void }) {
                 >
                   {streaming ? (
                     <>
-                      <Loader2 className="w-4 h-4 animate-spin" /> Generating...
+                      <Loader2 className="w-4 h-4 animate-spin" /> Analysing...
                     </>
                   ) : (
                     <>
@@ -1568,7 +1557,7 @@ function ChallengeMode({ onBack }: { onBack: () => void }) {
                 {/* AI response */}
                 <div>
                   <label className="text-xs font-bold uppercase tracking-wider mb-2 block" style={{ color: TEXT_MUTED }}>
-                    AI Response (from your prompt)
+                    Prompt Analysis
                   </label>
                   <div
                     className="rounded-xl p-4 min-h-[200px]"
@@ -1576,15 +1565,6 @@ function ChallengeMode({ onBack }: { onBack: () => void }) {
                   >
                     <p className="text-sm leading-relaxed whitespace-pre-line" style={{ color: TEXT_PRIMARY }}>
                       {aiResponse}
-                      {streaming && (
-                        <motion.span
-                          animate={{ opacity: [1, 0] }}
-                          transition={{ repeat: Infinity, duration: 0.8 }}
-                          style={{ color: ACCENT }}
-                        >
-                          |
-                        </motion.span>
-                      )}
                     </p>
                   </div>
                 </div>
