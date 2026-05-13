@@ -276,3 +276,30 @@ NODE_ENV=production node dist/index.js
 
 If behind nginx, IIS, or a load balancer:
 - Set `TRUST_PROXY=1` so rate limiting uses the real client IP
+
+## GitHub Branch Protection
+
+### What needs to be configured (GitHub admin action — not automated)
+
+These rules are **not set by the scaffold commit**. A GitHub repository admin must configure them manually after the repo is pushed to GitHub:
+
+1. **Settings → Branches → Add branch protection rule** for `main`:
+   - Require a pull request before merging (1 approval required).
+   - Require approvals from CODEOWNERS: enable **"Require review from Code Owners"**.
+   - Require status checks to pass: add `content-checks / Link check`, `content-checks / Banned-claims regex`, `content-checks / Schema validation`, `content-checks / CI gates (test + check + build)`.
+   - Do not allow bypassing the above settings.
+
+2. **Verify CODEOWNERS is parsed**: Settings → Code and automation → CODEOWNERS shows the file loaded with no syntax errors.
+
+### Updating CODEOWNERS placeholder usernames
+
+`.github/CODEOWNERS` was scaffolded with `@matt-TBD`, `@keith-TBD`, `@chris-TBD` as placeholders. Replace these with real GitHub handles once accounts are confirmed:
+
+1. Open `.github/CODEOWNERS`.
+2. Replace each placeholder with the real GitHub username (e.g., `@matt-TBD` → `@real-handle`).
+3. Commit the change on a branch and open a PR (the PR itself will trigger CODEOWNERS review, so at least one of the updated owners must approve).
+4. After merge, verify in Settings → Code and automation → CODEOWNERS that all owners resolve without warnings.
+
+### Primary CI today
+
+Azure DevOps (`azure-pipelines.yml`) is the active build gate for county deployments. The `.github/workflows/content-checks.yml` workflow runs on GitHub-hosted mirrors or forks. Both run `pnpm test + check + build`; the GitHub workflow adds link-check, banned-claims grep, and schema validation.

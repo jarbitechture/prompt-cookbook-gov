@@ -1,0 +1,201 @@
+# content-checks.yml — GitHub Actions workflow
+#
+# NOTE: The primary CI gate for this project today is Azure DevOps
+# (azure-pipelines.yml). This workflow runs when the repo is mirrored
+# to GitHub or when a contributor opens a PR against a GitHub-hosted
+# fork. The `pnpm test` / `pnpm run check` / `pnpm run build` gates
+# below duplicate the Azure DevOps pipeline so that GitHub-side PRs
+# get the same signal.
+#
+# Branch protection that enforces this workflow must be set by a
+# GitHub admin (Settings → Branches → require status checks). See
+# RUNBOOK.md §GitHub Branch Protection for instructions.
+
+name: content-checks
+
+on:
+  pull_request:
+    branches:
+      - main
+      - "feat/**"
+
+jobs:
+  # ── Job 1: Link-check ──────────────────────────────────────────────────
+  link-check:
+    name: Link check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check links in markdown and TSX files
+        uses: lycheeverse/lychee-action@v2
+        with:
+          # Scan markdown files across the repo, plus the two main content files.
+          # server/prompts/*.md intentionally excluded — example URLs in those
+          # files are illustrative text, not navigable links.
+          args: >-
+            --verbose
+            --no-progress
+            --exclude-path server/prompts
+            --exclude "https://www.linkedin.com"
+            --exclude "https://twitter.com"
+            --exclude "https://x.com"
+            --exclude "https://mcgpt.mymanatee.org"
+            --exclude "http://bcc-ap-"
+            --exclude "http://localhost"
+            --exclude "http://127.0.0.1"
+            README.md
+            RUNBOOK.md
+            docs/**/*.md
+            client/src/lib/cookbookData.ts
+            client/src/pages/Resources.tsx
+          fail: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # ── Job 2: Banned-claims regex grep ───────────────────────────────────
+  banned-claims:
+    name: Banned-claims regex
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Grep cookbook content for hallucination patterns
+        # Scoped to the two canonical content files only.
+        # server/prompts/*.md is intentionally excluded: those files contain
+        # example banned-claim phrases as training material for what NOT to do.
+        # Any match outside a [REDACTED:...] marker is a failure.
+        run: |
+          echo "Scanning cookbook content files for banned hallucination patterns..."
+
+          TARGET_FILES=(
+            "client/src/lib/cookbookData.ts"
+            "client/src/pages/Resources.tsx"
+          )
+
+          FAILED=0
+
+          for FILE in "${TARGET_FILES[@]}"; do
+            if [ ! -f "$FILE" ]; then
+              echo "WARNING: expected content file not found: $FILE"
+              continue
+            fi
+
+            # Strip [REDACTED:...] markers before pattern matching so that
+            # properly-redacted content does not trigger a false positive.
+            STRIPPED=$(grep -v '^\s*//' "$FILE" | sed 's/\[REDACTED:[^]]*\]//g')
+
+            # FLORIDA_STATUTE_RE: Fla. Stat. § 286.011, F.S. 119.07, FS §286.011(1)
+            if echo "$STRIPPED" | grep -qiP '(?:Fla\.?\s*Stat\.?|F\.?S\.?A?\.?)\s*§?\s*\d+(?:\.\d+)?(?:\([a-z0-9]+\))?'; then
+              echo "FAIL [$FILE]: Florida statute citation found."
+              echo "$STRIPPED" | grep -inP '(?:Fla\.?\s*Stat\.?|F\.?S\.?A?\.?)\s*§?\s*\d+(?:\.\d+)?(?:\([a-z0-9]+\))?' || true
+              FAILED=1
+            fi
+
+            # DOLLAR_AMOUNT_LARGE_RE: $1.2M, $500 million, $3.5B, $200K
+            if echo "$STRIPPED" | grep -qiP '\$\s*\d+(?:[,.]\d+)*\s*(?:M|million|B|billion|K|thousand)\b'; then
+              echo "FAIL [$FILE]: Large dollar amount found."
+              echo "$STRIPPED" | grep -inP '\$\s*\d+(?:[,.]\d+)*\s*(?:M|million|B|billion|K|thousand)\b' || true
+              FAILED=1
+            fi
+
+            # ORDINANCE_SECTION_RE: Chapter 12.5, Section 47.3.2, Ord. 8.1
+            # Decimal format required — "Chapter 13" alone is safe (cookbook ref).
+            if echo "$STRIPPED" | grep -qiP '\b(?:Chapter|Section|Ord\.?)\s+\d+\.\d+(?:\.\d+)?'; then
+              echo "FAIL [$FILE]: Ordinance/code-section decimal reference found."
+              echo "$STRIPPED" | grep -inP '\b(?:Chapter|Section|Ord\.?)\s+\d+\.\d+(?:\.\d+)?' || true
+              FAILED=1
+            fi
+
+            # FY_BUDGET_YEAR_RE: FY2025 budget, FY 25 appropriation
+            if echo "$STRIPPED" | grep -qiP '\bFY\s*(?:20\d{2}|\d{2})\s+(?:budget|appropriation|allocation|fund)\b'; then
+              echo "FAIL [$FILE]: FY budget reference found."
+              echo "$STRIPPED" | grep -inP '\bFY\s*(?:20\d{2}|\d{2})\s+(?:budget|appropriation|allocation|fund)\b' || true
+              FAILED=1
+            fi
+          done
+
+          if [ "$FAILED" -eq 1 ]; then
+            echo ""
+            echo "Banned-claims check failed. Wrap the matched text in a [REDACTED:name]"
+            echo "marker or remove the reference. See server/lib/output-filter.ts for"
+            echo "the canonical pattern definitions."
+            exit 1
+          fi
+
+          echo "Banned-claims check passed."
+
+  # ── Job 3: Schema validation on system prompts ────────────────────────
+  schema-validation:
+    name: Schema validation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify each server/prompts/*.md references its output schema
+        # Each prompt file must contain the phrase "matching the schema"
+        # (appears in the Output rule section) AND the corresponding
+        # server/schemas/*.ts must export a zod schema (grep for "z.object").
+        run: |
+          echo "Checking system prompt ↔ schema alignment..."
+          FAILED=0
+
+          for PROMPT_FILE in server/prompts/*.md; do
+            BASENAME=$(basename "$PROMPT_FILE" .md)
+
+            # 1. Prompt must reference a schema.
+            if ! grep -q "matching the schema" "$PROMPT_FILE"; then
+              echo "FAIL [$PROMPT_FILE]: missing 'matching the schema' directive in Output rule."
+              FAILED=1
+            fi
+
+            # 2. The corresponding schema file must exist and export a zod object.
+            SCHEMA_FILE="server/schemas/${BASENAME}.ts"
+            if [ ! -f "$SCHEMA_FILE" ]; then
+              echo "FAIL [$PROMPT_FILE]: no matching schema file at $SCHEMA_FILE"
+              FAILED=1
+            elif ! grep -q "z\.object" "$SCHEMA_FILE"; then
+              echo "FAIL [$SCHEMA_FILE]: does not export a zod object schema (grep for 'z.object' found nothing)."
+              FAILED=1
+            else
+              echo "OK  $PROMPT_FILE <-> $SCHEMA_FILE"
+            fi
+          done
+
+          if [ "$FAILED" -eq 1 ]; then
+            echo ""
+            echo "Schema-validation check failed. Ensure every server/prompts/*.md"
+            echo "has a matching server/schemas/*.ts that exports a z.object schema,"
+            echo "and that the prompt's Output rule section contains 'matching the schema'."
+            exit 1
+          fi
+
+          echo "Schema-validation check passed."
+
+  # ── Job 4: Standard CI gates ──────────────────────────────────────────
+  ci-gates:
+    name: CI gates (test + check + build)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Type-check
+        run: pnpm run check
+
+      - name: Tests
+        run: pnpm test
+
+      - name: Build
+        run: pnpm run build

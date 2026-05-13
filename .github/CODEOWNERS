@@ -1,0 +1,35 @@
+# CODEOWNERS — Prompt Cookbook Gov MVP
+#
+# These rules require review from Matt, Keith, and Chris before
+# any change to cookbook content, system prompts, output-filter logic,
+# schemas, ADRs, or the MCP server is merged to main.
+#
+# TODO (before county-wide rollout): replace the three placeholder
+# usernames below with real GitHub handles once accounts are confirmed:
+#   @matt-TBD   → Matt's GitHub username
+#   @keith-TBD  → Keith's GitHub username
+#   @chris-TBD  → Chris's GitHub username
+#
+# After updating, commit the change and re-verify CODEOWNERS is parsed
+# correctly via the GitHub repo Settings → Code and automation → CODEOWNERS.
+
+# ── Cookbook chapter data (30 chapters, personas, task types) ──────────────
+client/src/lib/cookbookData.ts   @matt-TBD @keith-TBD @chris-TBD
+
+# ── Static resource catalog ────────────────────────────────────────────────
+client/src/pages/Resources.tsx   @matt-TBD @keith-TBD @chris-TBD
+
+# ── System prompts (critique / refine / preview modes) ────────────────────
+server/prompts/                  @matt-TBD @keith-TBD @chris-TBD
+
+# ── Output regex post-filter (hallucination defense patterns) ──────────────
+server/lib/output-filter.ts      @matt-TBD @keith-TBD @chris-TBD
+
+# ── Zod schemas (validate LLM JSON output) ────────────────────────────────
+server/schemas/                  @matt-TBD @keith-TBD @chris-TBD
+
+# ── MCP server (exposes chapter retrieval to Copilot / agents) ────────────
+mcp/                             @matt-TBD @keith-TBD @chris-TBD
+
+# ── Architecture Decision Records ─────────────────────────────────────────
+docs/adr/                        @matt-TBD @keith-TBD @chris-TBD
