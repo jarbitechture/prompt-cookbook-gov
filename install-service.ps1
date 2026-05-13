@@ -25,12 +25,12 @@ $ErrorActionPreference = $prevPref
 & nssm install $ServiceName $NodeExe $AppScript
 & nssm set $ServiceName AppDirectory $AppDir
 
-# Env vars
+# Env vars — civic-ai governed proxy (bcc-ap-infer01:8100) is the LLM backend.
+# Set CIVIC_AI_API_KEY to the proxy secret; leave blank for open-access dev mode.
 & nssm set $ServiceName AppEnvironmentExtra `
-    "COOKBOOK_LLM_API_KEY=infer01-poc" `
-    "COOKBOOK_LLM_BASE_URL=http://bcc-ap-infer01.bcc.ad.mymanatee.org:30000/v1" `
-    "COOKBOOK_LLM_DEFAULT_MODEL=qwen2.5-7b" `
-    "COOKBOOK_LLM_ALLOWED_MODELS=qwen2.5-7b" `
+    "CIVIC_AI_BASE_URL=http://bcc-ap-infer01.bcc.ad.mymanatee.org:8100/v1" `
+    "CIVIC_AI_API_KEY=" `
+    "CIVIC_AI_DEFAULT_MODEL=phi4" `
     "NODE_ENV=production" `
     "PORT=3000"
 
