@@ -2,7 +2,6 @@ import express from "express";
 import { createServer } from "http";
 import path from "path";
 import { fileURLToPath } from "url";
-import OpenAI from "openai";
 import helmet from "helmet";
 import cors from "cors";
 import { getBreakerState } from "./lib/breaker.js";
@@ -62,100 +61,6 @@ setInterval(() => {
     }
   }
 }, 5 * 60 * 1000).unref();
-
-// ---------------------------------------------------------------------------
-// OpenAI client
-// ---------------------------------------------------------------------------
-function getOpenAIClient(): OpenAI | null {
-  const apiKey = process.env.COOKBOOK_LLM_API_KEY;
-  if (!apiKey) {
-    return null;
-  }
-  const baseURL = process.env.COOKBOOK_LLM_BASE_URL;
-  return new OpenAI({ apiKey, ...(baseURL && { baseURL }) });
-}
-
-function requireLLM(res: express.Response): boolean {
-  if (!getOpenAIClient()) {
-    res.status(503).json({
-      error: "Live AI features are not configured. Set COOKBOOK_LLM_API_KEY in Application Settings to enable Try It and Chat.",
-    });
-    return false;
-  }
-  return true;
-}
-
-// ---------------------------------------------------------------------------
-// SSE streaming helper
-// ---------------------------------------------------------------------------
-async function streamCompletion(
-  res: express.Response,
-  messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[],
-  model: string,
-) {
-  const client = getOpenAIClient()!;
-
-  res.setHeader("Content-Type", "text/event-stream");
-  res.setHeader("Cache-Control", "no-cache");
-  res.setHeader("Connection", "keep-alive");
-  res.flushHeaders();
-
-  const timeoutMs = 30_000;
-  const timeout = setTimeout(() => {
-    res.write("data: [DONE]\n\n");
-    res.end();
-  }, timeoutMs);
-
-  let disconnected = false;
-  res.on("close", () => {
-    disconnected = true;
-  });
-
-  try {
-    const stream = await client.chat.completions.create({
-      model,
-      messages,
-      stream: true,
-    });
-
-    for await (const chunk of stream) {
-      if (disconnected) {
-        stream.controller.abort();
-        break;
-      }
-      const content = chunk.choices[0]?.delta?.content;
-      if (content) {
-        res.write(`data: ${JSON.stringify({ content })}\n\n`);
-      }
-    }
-
-    if (!disconnected) {
-      res.write("data: [DONE]\n\n");
-      res.end();
-    }
-  } catch (err: unknown) {
-    console.error("streamCompletion error:", err);
-    if (!disconnected) {
-      const message = "An error occurred while generating the response";
-      res.write(`data: ${JSON.stringify({ error: message })}\n\n`);
-      res.write("data: [DONE]\n\n");
-      res.end();
-    }
-  } finally {
-    clearTimeout(timeout);
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Model whitelist
-// ---------------------------------------------------------------------------
-const ALLOWED_MODELS = new Set(
-  (process.env.COOKBOOK_LLM_ALLOWED_MODELS ?? "gpt-4o-mini,gpt-3.5-turbo")
-    .split(",")
-    .map((m) => m.trim())
-    .filter(Boolean),
-);
-const DEFAULT_MODEL = process.env.COOKBOOK_LLM_DEFAULT_MODEL ?? "gpt-4o-mini";
 
 // ---------------------------------------------------------------------------
 // Server
@@ -220,87 +125,6 @@ async function startServer() {
   // ---- Circuit-breaker health endpoint ----
   app.get("/api/health/breakers", (_req, res) => {
     res.json({ civic_ai: getBreakerState() });
-  });
-
-  // ---- Try-it endpoint (single prompt) ----
-  app.post("/api/try-it", (req, res) => {
-    if (!requireLLM(res)) return;
-    const { prompt, model } = req.body ?? {};
-
-    if (!prompt || typeof prompt !== "string") {
-      res.status(400).json({ error: "prompt is required and must be a string" });
-      return;
-    }
-    if (prompt.length > 10_000) {
-      res.status(400).json({ error: "prompt must be 10000 characters or fewer" });
-      return;
-    }
-
-    const safeModel = ALLOWED_MODELS.has(model) ? model : DEFAULT_MODEL;
-
-    const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
-      { role: "user", content: prompt },
-    ];
-
-    streamCompletion(res, messages, safeModel).catch((err) => {
-      console.error("try-it streaming error:", err);
-      if (!res.headersSent) {
-        res.status(500).json({ error: "Internal server error" });
-      }
-    });
-  });
-
-  // ---- Chat endpoint (multi-turn) ----
-  const CHAT_SYSTEM_MESSAGE = `You are Menu Planning, the AI prompt coach for the MCG Prompt Cookbook. You help Manatee County staff learn to write better prompts.
-
-CRITICAL RULES:
-- NEVER write complete prompts for the user. Guide them to build it themselves.
-- Ask questions that help them think through what they need: "What role should the AI play?" "What specific output format do you need?"
-- Give hints, frameworks, and examples of TECHNIQUE — not finished answers.
-- If they ask "write me a prompt for X", respond with: "Let's build that together. First, who is the audience for the output?" Then walk them through RTCO step by step.
-- Reference specific Cookbook chapters when relevant (e.g., "Chapter 23 covers chain-of-thought — try adding 'think step by step' to your prompt").
-- Keep responses under 150 words. Be warm but direct.
-- You are a coach, not a vending machine. The goal is for THEM to learn prompting, not for you to do it for them.`;
-
-  app.post("/api/chat", (req, res) => {
-    if (!requireLLM(res)) return;
-    const { messages, model } = req.body ?? {};
-
-    if (!Array.isArray(messages) || messages.length === 0) {
-      res.status(400).json({ error: "messages array is required and must not be empty" });
-      return;
-    }
-    if (messages.length > 20) {
-      res.status(400).json({ error: "messages array must have 20 or fewer messages" });
-      return;
-    }
-
-    const validRoles = new Set(["user", "assistant"]);
-    const sanitizedMessages = messages
-      .filter((m: any) => validRoles.has(m.role))
-      .map((m: any) => ({
-        role: m.role as "user" | "assistant",
-        content: typeof m.content === "string" ? m.content.slice(0, 10000) : "",
-      }));
-
-    if (sanitizedMessages.length === 0) {
-      res.status(400).json({ error: "No valid messages provided" });
-      return;
-    }
-
-    const safeModel = ALLOWED_MODELS.has(model) ? model : DEFAULT_MODEL;
-
-    const chatMessages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
-      { role: "system", content: CHAT_SYSTEM_MESSAGE },
-      ...sanitizedMessages,
-    ];
-
-    streamCompletion(res, chatMessages, safeModel).catch((err) => {
-      console.error("chat streaming error:", err);
-      if (!res.headersSent) {
-        res.status(500).json({ error: "Internal server error" });
-      }
-    });
   });
 
   // ---- Coach endpoints ----
