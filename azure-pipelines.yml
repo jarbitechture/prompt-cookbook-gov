@@ -27,6 +27,9 @@ stages:
           - script: pnpm install --frozen-lockfile
             displayName: "Install dependencies"
 
+          - script: pnpm test
+            displayName: "Run eval gate (vitest)"
+
           - script: pnpm run build
             displayName: "Build application"
 
