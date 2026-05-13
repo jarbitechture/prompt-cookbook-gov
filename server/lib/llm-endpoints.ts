@@ -197,6 +197,7 @@ export async function handleCritique(
     temperature: TEMPERATURES.critique,
     max_tokens: 600,
     response_format: { type: "json_object" },
+    traceId,
   };
 
   // First attempt
@@ -356,6 +357,7 @@ export async function handleRefine(
     temperature: TEMPERATURES.refine,
     max_tokens: 600,
     response_format: { type: "json_object" },
+    traceId,
   };
 
   // First attempt
@@ -518,6 +520,7 @@ export async function handlePreview(
     temperature: TEMPERATURES.preview,
     max_tokens: 600,
     response_format: { type: "json_object" },
+    traceId,
   };
 
   // First attempt

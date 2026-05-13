@@ -21,6 +21,15 @@ export interface CivicAiOptions {
   temperature?: number;
   max_tokens?: number;
   response_format?: { type: "json_object" };
+  /**
+   * Trace ID generated at request entry in llm-endpoints.ts.
+   * Forwarded to civic-ai as the `x-trace-id` request header so that
+   * civic-ai audit log rows can be joined to cookbook ROI events for the
+   * same request. Header convention: custom `x-trace-id` (simple string
+   * passthrough matching the ROI event field name). W3C `traceparent`
+   * migration is a separate future task.
+   */
+  traceId?: string;
 }
 
 /**
@@ -53,6 +62,9 @@ export async function callCivicAi(
   };
   if (CIVIC_AI_API_KEY) {
     headers["Authorization"] = `Bearer ${CIVIC_AI_API_KEY}`;
+  }
+  if (options?.traceId !== undefined) {
+    headers["x-trace-id"] = options.traceId;
   }
 
   const response = await fetch(`${CIVIC_AI_BASE_URL}/chat/completions`, {
