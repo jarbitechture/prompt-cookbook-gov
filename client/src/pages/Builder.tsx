@@ -46,6 +46,7 @@ import type { Persona } from "@/lib/personas";
 import { getDepartment } from "@/lib/departments";
 import CritiquePanel from "@/components/CritiquePanel";
 import RefineDiff from "@/components/RefineDiff";
+import PreviewPanel from "@/components/PreviewPanel";
 
 /* ─── Color System ─── */
 const ACCENT = "oklch(0.48 0.12 220)";
@@ -1153,6 +1154,11 @@ function BuildMode() {
       {/* Refine Diff — full-width below Critique Panel */}
       <div className="mt-6">
         <RefineDiff prompt={assembledPrompt} />
+      </div>
+
+      {/* Preview Panel — full-width below Refine Diff */}
+      <div className="mt-6">
+        <PreviewPanel prompt={assembledPrompt} />
       </div>
     </div>
   );
