@@ -113,6 +113,17 @@ const internalResources = [
     ],
     icon: "🎓",
   },
+  {
+    title: "Persona & Content Notice",
+    description: "All personas in this cookbook are fictional examples used for illustration. Any resemblance to real Manatee County employees is coincidental unless explicitly attributed.",
+    details: [
+      "Names, roles, and scenarios in each chapter are invented for instructional purposes only",
+      "No real county employee data was used to create cookbook content",
+      "PII audit on file: docs/persona-audit-2026-05-13.md (reviewed 2026-05-13)",
+      "Questions or concerns: itservices@mymanatee.org",
+    ],
+    icon: "🔒",
+  },
 ];
 
 const tabs: { id: TabId; label: string; icon: typeof BookOpen }[] = [

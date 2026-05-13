@@ -3,6 +3,13 @@
 // Sources: manatee_county_prompt_manual.docx, AI governance registry,
 // GovAI Coalition, NACo, NIST
 // ============================================================
+// FICTIONAL PERSONAS NOTICE
+// All persona names and roles in this file are fictional examples created
+// for instructional purposes. Any resemblance to real Manatee County
+// employees is coincidental unless explicitly attributed.
+// Audit log: docs/persona-audit-2026-05-13.md
+// Human cross-check (AMBER entries) required before Phase 2 rollout.
+// ============================================================
 
 export type Difficulty = "beginner" | "intermediate" | "advanced";
 export type RiskTier = "green" | "yellow" | "red";
