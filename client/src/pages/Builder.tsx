@@ -44,6 +44,7 @@ import { apiUrl } from "@/lib/apiUrl";
 import { personas } from "@/lib/personas";
 import type { Persona } from "@/lib/personas";
 import { getDepartment } from "@/lib/departments";
+import CritiquePanel from "@/components/CritiquePanel";
 
 /* ─── Color System ─── */
 const ACCENT = "oklch(0.48 0.12 220)";
@@ -1135,6 +1136,17 @@ function BuildMode() {
             <QualityIndicators blocks={blockValues} />
           </div>
         </div>
+      </div>
+
+      {/* Critique Panel — full-width below both columns */}
+      <div className="mt-6">
+        <CritiquePanel
+          prompt={assembledPrompt}
+          onApplySuggestion={(suggestion) => {
+            const prev = blockValues["constraints"] || "";
+            setBlockValue("constraints", prev ? `${prev}\n\n${suggestion}` : suggestion);
+          }}
+        />
       </div>
     </div>
   );
