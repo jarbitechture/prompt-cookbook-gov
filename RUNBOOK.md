@@ -210,16 +210,30 @@ Remove-Item C:\inetpub\wwwroot\cookbook\public\web.config
 
 ### web.config rules (both PS scripts must agree)
 
-The `web.config` has 4 functional sections: rewrite rules, error mode, static cache, and `<security>`/`<authorization>`. Two PS scripts write it:
+The `web.config` has 5 functional sections: rewrite rules, serverVariables, error mode, static cache, and `<security>`/`<authorization>`. Two PS scripts write it:
 
 | Script | Writes web.config? | Includes `<security>` block? | Triggers `iisreset`? |
 |---|---|---|---|
 | `iis-setup.ps1` | Yes | Preserves existing block (reads before wipe, re-injects) | No |
 | `enable-auth.ps1` | Yes | Yes (full template with allowlist) | Yes |
 
-**Both scripts must include identical rewrite rules**: `ReverseProxyToNode` (for `/api/*`) **AND** `SPA fallback` (for client-side routes like `/builder`, `/resources`). If either rule is missing from either script, deep links 404 after that script runs.
+**Both scripts must include identical rewrite rules and `<serverVariables>`**: `ReverseProxyToNode` (for `/api/*`), `SPA fallback` (for client-side routes like `/builder`, `/resources`), and the three `HTTP_IISAF_*` serverVariable entries. If either rule is missing from either script, deep links 404 or ROI attribution breaks after that script runs.
 
 When editing one script's web.config template, edit the other to match. Future hardening: consolidate the template into a shared dot-sourced PS function.
+
+### iisaf-* header forwarding (ROI user attribution)
+
+IIS Windows Authentication sets the `LOGON_USER` server variable to `DOMAIN\username` (e.g. `BCC\ejarbeadm`). The `<serverVariables>` block in `web.config` forwards this as HTTP headers to the Node backend:
+
+| IIS server variable | HTTP header on Node request | Source | Default in roi-emit.ts |
+|---|---|---|---|
+| `LOGON_USER` | `iisaf-username` | Windows Auth — always populated | `"anonymous"` |
+| *(none)* | `iisaf-dept` | Not populated by IIS Windows Auth | `"unknown"` |
+| *(none)* | `iisaf-roleband` | Not populated by IIS Windows Auth | `"professional"` |
+
+`iisaf-dept` and `iisaf-roleband` require a separate AD LDAP lookup integration (not yet implemented). Until that is wired, both default to `"unknown"` / `"professional"` in `server/lib/roi-emit.ts`.
+
+**Operator verify:** `LOGON_USER` format is `DOMAIN\username`. Confirm this matches the expected format in the ROI dashboard before expanding the pilot. If the dashboard expects UPN format (`user@domain.com`), a transform in `roi-emit.ts extractContext()` will be needed.
 
 ### Verifying the auth gate is live
 
@@ -239,6 +253,61 @@ If both return 200, the `<authorization>` block is missing — re-run `enable-au
 ### Move from allowlist to AD group (later)
 
 When the pilot expands beyond ~10 users, ask ops to create an AD security group (e.g., `BCC-Cookbook-Pilot`) and replace the `<add accessType="Allow" users="..." />` with `<add accessType="Allow" roles="BCC\BCC-Cookbook-Pilot" />`. Group membership is then managed in AD, no code changes needed.
+
+## Subpath Deployment
+
+By default, the cookbook mounts at the IIS site root (`https://mcgpt.mymanatee.org/`). To mount under a subpath (e.g., `https://mcgpt.mymanatee.org/cookbook/`), both the SPA build and the IIS scripts need matching configuration.
+
+### When to use this
+
+Use subpath mounting when the `Default Web Site` is already serving another app at the root and the cookbook must coexist as a separate application alias.
+
+### Prerequisites
+
+1. **Reset Default Web Site's physical path.** If the site is still pointed at the old cookbook directory (`C:\inetpub\wwwroot\cookbook\public`), the IIS Application alias created by `iis-setup.ps1` will nest incorrectly. Reset it first:
+   ```powershell
+   Set-ItemProperty 'IIS:\Sites\Default Web Site' -Name physicalPath -Value 'C:\inetpub\wwwroot'
+   ```
+
+2. **Build the SPA with a matching base.** A root build deployed to a subpath shows a blank page (asset 404s because `src` paths like `/assets/...` don't resolve under `/cookbook/`):
+   ```bash
+   VITE_BASE=/cookbook/ pnpm run build
+   ```
+   Verify asset paths in the built `dist/public/index.html` — they should look like `/cookbook/assets/index-XXXXX.js`, not `/assets/index-XXXXX.js`.
+
+### Deploy steps
+
+On llm01 (Admin PowerShell, from the directory containing `dist\public\`):
+
+```powershell
+# 1. Extract the release tarball
+iwr https://github.com/jarbitechture/prompt-cookbook-gov/releases/.../cookbook-dist.tgz -OutFile cookbook.tgz
+tar -xzf cookbook.tgz
+
+# 2. Run setup with the subpath
+.\iis-setup.ps1 -BasePath "/cookbook"
+
+# 3. Apply the auth gate with the same subpath
+.\enable-auth.ps1 -BasePath "/cookbook"
+
+# 4. Restart the Node service
+nssm restart cookbook-node
+```
+
+`iis-setup.ps1 -BasePath "/cookbook"` creates an IIS Application alias `/cookbook` pointing to `C:\inetpub\wwwroot\cookbook\public`. The SPA fallback rewrites to `/cookbook/index.html` and the API pattern excludes `/cookbook/api/` from the fallback.
+
+### Stop-Website scope note
+
+`iis-setup.ps1` calls `Stop-Website` on `Default Web Site`. This stops **everything** on that site, not just the cookbook application. Coordinate with any other apps sharing the same IIS site before running in production during business hours.
+
+### Reverting to root mount
+
+To move back to root mount, rebuild without `VITE_BASE` and run both scripts without `-BasePath`:
+
+```powershell
+.\iis-setup.ps1
+.\enable-auth.ps1
+```
 
 ## Security Headers
 
