@@ -41,6 +41,7 @@ import {
 import { Link, useLocation } from "wouter";
 import { toast } from "sonner";
 import { apiUrl } from "@/lib/apiUrl";
+import { sendToCopilot } from "@/lib/copilot-handoff";
 import { personas } from "@/lib/personas";
 import type { Persona } from "@/lib/personas";
 import { getDepartment } from "@/lib/departments";
@@ -494,6 +495,7 @@ function BuildMode() {
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
   const [templatePanelOpen, setTemplatePanelOpen] = useState(true);
   const [copied, setCopied] = useState(false);
+  const [copilotSent, setCopilotSent] = useState(false);
   const [tryItResult, setTryItResult] = useState("");
   const [tryItLoading, setTryItLoading] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
@@ -1050,20 +1052,43 @@ function BuildMode() {
                 Live Preview
               </span>
             </div>
-            <button
-              onClick={handleCopy}
-              disabled={!assembledPrompt.trim()}
-              className="flex items-center gap-1.5 text-xs px-4 py-2 rounded-lg font-bold transition-all"
-              style={{
-                background: assembledPrompt.trim() ? ACCENT : "oklch(0.88 0.01 75)",
-                color: assembledPrompt.trim() ? "oklch(0.98 0.01 75)" : "oklch(0.58 0.03 55)",
-                cursor: assembledPrompt.trim() ? "pointer" : "not-allowed",
-                opacity: assembledPrompt.trim() ? 1 : 0.7,
-              }}
-            >
-              {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-              {copied ? "Copied!" : "Copy Prompt"}
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleCopy}
+                disabled={!assembledPrompt.trim()}
+                className="flex items-center gap-1.5 text-xs px-4 py-2 rounded-lg font-bold transition-all"
+                style={{
+                  background: assembledPrompt.trim() ? ACCENT : "oklch(0.88 0.01 75)",
+                  color: assembledPrompt.trim() ? "oklch(0.98 0.01 75)" : "oklch(0.58 0.03 55)",
+                  cursor: assembledPrompt.trim() ? "pointer" : "not-allowed",
+                  opacity: assembledPrompt.trim() ? 1 : 0.7,
+                }}
+              >
+                {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                {copied ? "Copied!" : "Copy Prompt"}
+              </button>
+              <button
+                onClick={() => {
+                  if (!assembledPrompt.trim()) return;
+                  sendToCopilot(assembledPrompt).then(() => {
+                    toast("Prompt copied — paste into Copilot", { duration: 3000 });
+                    setCopilotSent(true);
+                    setTimeout(() => setCopilotSent(false), 3000);
+                  });
+                }}
+                disabled={!assembledPrompt.trim()}
+                className="flex items-center gap-1.5 text-xs px-4 py-2 rounded-lg font-bold transition-all"
+                style={{
+                  background: assembledPrompt.trim() ? "oklch(0.42 0.14 250)" : "oklch(0.88 0.01 75)",
+                  color: assembledPrompt.trim() ? "oklch(0.98 0.01 75)" : "oklch(0.58 0.03 55)",
+                  cursor: assembledPrompt.trim() ? "pointer" : "not-allowed",
+                  opacity: assembledPrompt.trim() ? 1 : 0.7,
+                }}
+              >
+                {copilotSent ? <Check className="w-3.5 h-3.5" /> : <ArrowRight className="w-3.5 h-3.5" />}
+                Send to Copilot ↗
+              </button>
+            </div>
           </div>
 
           {/* Dark preview pane */}
