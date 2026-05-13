@@ -308,20 +308,22 @@ The audit's 10-step pre-deletion checklist + new MVP work yields this execution 
 
 **Files:** `tests/eval/{critique,refine,preview}.test.ts` (3 new), `server/prompts/prompts.test.ts` (new), `vitest.config.ts` (include path expanded), `azure-pipelines.yml` (test step wired).
 
-### Task #19 — Repoint 7 client fetch sites
+### Task #19 — Repoint 7 client fetch sites — SHIPPED
 
-**Acceptance criteria:**
-- TryItSection.tsx:56 — likely → /api/critique with chapter's tryItTemplate as draft prompt, OR delete the inline Try It section in favor of "Open in Builder" link. Decide.
-- ChatbotWidget.tsx:53 — coach role moves to Builder hint system; this widget likely deletes entirely.
-- Builder.tsx:688 (Run) — → /api/preview (was acting as a poor-man's preview anyway).
-- Builder.tsx:1165 (Reverse-Engineer) — → /api/critique (asks "what would improve this prompt").
-- Game.tsx:724 (BlindArena live) — → /api/preview (simulate the prompt).
-- Game.tsx:793 (/api/health) — KEEP, no change.
-- Game.tsx:1371 (Challenge submit) — → /api/critique (score the user's prompt).
-- Each repointed call uses apiUrl() helper.
-- Manual smoke each path before commit.
+**As implemented (commits `fbb7e0d..ab05ba5`):**
+- `TryItSection.tsx:56` — DELETED the inline Run/Stop/AI-Response surface (195 lines). "Open in Builder" is now the sole action.
+- `ChatbotWidget.tsx:53` — entire widget DELETED (367 lines). Coach role lives in CritiquePanel + PreviewPanel (Tasks #6, #8).
+- `Builder.tsx:688` (Run button) — DELETED. PreviewPanel (Task #8) covers the use case.
+- `Builder.tsx:1165` (Reverse-Engineer) — entire `ReverseEngineerMode` function DELETED (213 lines) + the mode tab bar. The plan's original "→ /api/critique" instruction was based on a misreading of this feature: Reverse-Engineer took an AI OUTPUT (e.g., meeting notes) and produced the prompt that might have created it. `/api/critique` takes a prompt DRAFT and scores it — the two are semantically incompatible. Forcing the old input into `/api/critique` would produce nonsense (critiquing meeting notes as if they were a prompt). Deletion preserves the screenshot-defense posture better than a broken repoint. Risk register §7 already framed this as Low/Low.
+- `Game.tsx:724` (BlindArena live) — repointed to `/api/preview`. SSE replaced with JSON; structured response serialized to text blob for in-game display.
+- `Game.tsx:793` (`/api/health`) — UNCHANGED (live-mode gate intact).
+- `Game.tsx:1371` (Challenge submit) — repointed to `/api/critique`. Structured response (RTCO scores + issues + suggestions + anti-hallucination tip) rendered as plain-text analysis.
 
-**Files:** `client/src/components/TryItSection.tsx`, `client/src/components/ChatbotWidget.tsx`, `client/src/pages/Builder.tsx`, `client/src/pages/Game.tsx`.
+All sites use `apiUrl()` helper. Old server routes (`/api/try-it`, `/api/chat`) intentionally REMAIN registered server-side — Task #12 owns their deletion. This task only stops the client from calling them.
+
+**Verification:** 66/66 vitest tests pass. `pnpm run check` + `pnpm run build` clean. No `as any` or `@ts-ignore` introduced. Three commits (one per concern: widget delete, Game repoint, Builder+TryItSection cleanup).
+
+**Files modified:** `client/src/components/TryItSection.tsx`, `client/src/components/ChatbotWidget.tsx` (deleted), `client/src/pages/Builder.tsx`, `client/src/pages/Game.tsx`, `client/src/App.tsx` (widget mount + deptContext stripped).
 
 ### Task #12 — Delete legacy (per audit steps 5-7)
 
