@@ -76,6 +76,7 @@ const PREVIEW_LABEL_COLORS: Record<string, string> = {
 interface BlockDef {
   id: string;
   label: string;
+  subLabel?: string; // kitchen-metaphor sub-label for core RTCO blocks
   previewLabel: string;
   placeholder: string;
   helpText?: string;
@@ -86,11 +87,11 @@ interface BlockDef {
 }
 
 const ALL_BLOCKS: BlockDef[] = [
-  { id: "role", label: "Role", previewLabel: "Role:", placeholder: "e.g. Budget Analyst, IT Help Desk Tech, HR Specialist", helpText: "What role should the AI play? Be specific — 'county budget analyst' beats 'analyst'.", multiline: false },
-  { id: "task", label: "Task", previewLabel: "Task:", placeholder: "What do you need done?", helpText: "What exactly should the AI do? Use action verbs: draft, summarize, analyze, create.", multiline: true, rows: 3 },
-  { id: "context", label: "Context", previewLabel: "Context:", placeholder: "Background information, situation details, relevant data...", helpText: "What does the AI need to know? Department, audience, deadline, data.", multiline: true, rows: 3 },
-  { id: "output", label: "Output Format", previewLabel: "Output:", placeholder: "e.g. bullet list, memo, table, structured report", helpText: "How should the result look? Bullet list, memo, table, email, 3 paragraphs.", multiline: false },
-  { id: "constraints", label: "Constraints", previewLabel: "Constraints:", placeholder: "Limits, rules, requirements, word counts...", helpText: "What should the AI avoid? Word limits, tone rules, things NOT to include.", multiline: true, rows: 2 },
+  { id: "role", label: "Role", subLabel: "🎩 Who should the AI act as? (the chef's hat)", previewLabel: "Role:", placeholder: "e.g. Budget Analyst, IT Help Desk Tech, HR Specialist", helpText: "What role should the AI play? Be specific — 'county budget analyst' beats 'analyst'.", multiline: false },
+  { id: "task", label: "Task", subLabel: "📋 What needs done? (the recipe)", previewLabel: "Task:", placeholder: "What do you need done?", helpText: "What exactly should the AI do? Use action verbs: draft, summarize, analyze, create.", multiline: true, rows: 3 },
+  { id: "context", label: "Context", subLabel: "🥫 Background the AI needs (the pantry)", previewLabel: "Context:", placeholder: "Background information, situation details, relevant data...", helpText: "What does the AI need to know? Department, audience, deadline, data.", multiline: true, rows: 3 },
+  { id: "output", label: "Output Format", subLabel: "🍽️ How should the result look? (the plating)", previewLabel: "Output:", placeholder: "e.g. bullet list, memo, table, structured report", helpText: "How should the result look? Bullet list, memo, table, email, 3 paragraphs.", multiline: false },
+  { id: "constraints", label: "Constraints", subLabel: "🚫 What to avoid (allergies & dietary restrictions)", previewLabel: "Constraints:", placeholder: "Limits, rules, requirements, word counts...", helpText: "What should the AI avoid? Word limits, tone rules, things NOT to include.", multiline: true, rows: 2 },
   { id: "examples", label: "Examples", previewLabel: "Examples:", placeholder: "Provide 1-2 examples of desired output...", helpText: "Show the AI what you want. One good example is worth ten instructions.", multiline: true, rows: 4, technique: "fewshot" },
   { id: "reasoning", label: "Reasoning Steps", previewLabel: "Reasoning:", placeholder: "Think step by step...", helpText: "Forces the AI to show its work. Best for math, analysis, and complex decisions.", multiline: true, rows: 3, technique: "cot", defaultValue: "Think step by step. Before providing your final answer, work through the problem systematically." },
   { id: "steps", label: "Chain Steps", previewLabel: "Steps:", placeholder: "Step 1: Extract key data from the document\nStep 2: Analyze patterns in the extracted data\nStep 3: Generate recommendations based on analysis\nStep 4: Format as executive summary", helpText: "Break your task into numbered steps. Each step's output feeds into the next. Best for analysis, reports, and complex workflows.", multiline: true, rows: 5, technique: "taskchain" },
@@ -216,7 +217,7 @@ function DepartmentBanner() {
       </div>
       {!dept && (
         <Link href="/cookbook" className="text-xs font-bold px-3 py-1 rounded-lg" style={{ color: ACCENT, background: "oklch(0.96 0.03 220)" }}>
-          Select department in sidebar &rarr;
+          Set department in Cookbook &rarr;
         </Link>
       )}
     </div>
@@ -301,8 +302,9 @@ export default function Builder() {
         }}
       >
         <div className="flex items-center gap-3">
-          <Link href="/cookbook" className="text-sm font-medium" style={{ color: "oklch(0.50 0.04 50)" }}>
-            Cookbook
+          <Link href="/cookbook" className="flex items-center gap-1.5 text-sm font-medium hover:opacity-80 transition-opacity" style={{ color: "oklch(0.50 0.04 50)" }}>
+            <span>←</span>
+            <span>Cookbook</span>
           </Link>
           <ChevronRight className="w-3.5 h-3.5" style={{ color: "oklch(0.65 0.03 55)" }} />
           <div className="flex items-center gap-2">
@@ -390,6 +392,9 @@ function BuildMode() {
   const [templatePanelOpen, setTemplatePanelOpen] = useState(true);
   const [copied, setCopied] = useState(false);
   const [copilotSent, setCopilotSent] = useState(false);
+  const [chatgptSent, setChatgptSent] = useState(false);
+  // Welcome hero: show until first block edit or auto-fill fires
+  const [showWelcome, setShowWelcome] = useState(true);
 
   const deptCategoryMap: Record<string, string> = {
     "resident-services": "Resident Services",
@@ -436,6 +441,7 @@ function BuildMode() {
     const imported = localStorage.getItem("cookbook-builder-import");
     if (imported) {
       localStorage.removeItem("cookbook-builder-import");
+      setShowWelcome(false);
       setBlockValues((prev) => ({ ...prev, task: imported }));
       toast.success("Prompt imported! Edit the blocks to refine it.");
     } else {
@@ -447,6 +453,7 @@ function BuildMode() {
           if (dept?.personalization.builderTemplate) {
             setBlockValues((prev) => {
               if (!prev.task && !prev.role) {
+                setShowWelcome(false);
                 return { ...prev, task: dept.personalization.builderTemplate };
               }
               return prev;
@@ -467,6 +474,7 @@ function BuildMode() {
   }, [activeTechniques]);
 
   const setBlockValue = useCallback((id: string, value: string) => {
+    setShowWelcome(false);
     setBlockValues((prev) => ({ ...prev, [id]: value }));
   }, []);
 
@@ -520,6 +528,7 @@ function BuildMode() {
   }, []);
 
   const loadTemplate = useCallback((t: Template) => {
+    setShowWelcome(false);
     setBlockValues({
       role: t.role,
       task: t.task,
@@ -537,6 +546,7 @@ function BuildMode() {
     setSelectedTemplate(null);
     setHiddenBlocks(new Set());
     setCollapsedBlocks(new Set());
+    setShowWelcome(true);
   }, []);
 
   const toggleCategory = useCallback((cat: string) => {
@@ -623,6 +633,57 @@ function BuildMode() {
 
   return (
     <div className="max-w-6xl mx-auto p-4 sm:p-6 lg:p-8">
+
+      {/* Welcome Hero — shown when no draft exists */}
+      <AnimatePresence>
+        {showWelcome && (
+          <motion.div
+            initial={{ opacity: 0, y: -12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -12, height: 0, marginBottom: 0 }}
+            transition={{ duration: 0.3 }}
+            className="mb-8 rounded-2xl px-8 py-10 text-center"
+            style={{
+              background: "linear-gradient(135deg, oklch(0.97 0.015 220) 0%, oklch(0.98 0.01 75) 100%)",
+              border: `1.5px solid ${ACCENT_LIGHT}`,
+              boxShadow: `0 4px 24px ${ACCENT}18`,
+            }}
+          >
+            <div className="text-5xl mb-4">🥘</div>
+            <h2 className="font-serif font-bold text-2xl mb-2" style={{ color: "oklch(0.22 0.04 40)" }}>
+              Mise en place for your Copilot prompt
+            </h2>
+            <p className="text-sm mb-8 max-w-md mx-auto" style={{ color: "oklch(0.48 0.04 50)" }}>
+              Measure your role, task, and context. Coach the draft. Then take it where you cook.
+            </p>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+              <button
+                onClick={() => {
+                  setShowWelcome(false);
+                  setTemplatePanelOpen(true);
+                }}
+                className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all hover:opacity-90"
+                style={{ background: ACCENT, color: "oklch(0.98 0.01 75)", boxShadow: `0 2px 12px ${ACCENT}44` }}
+              >
+                <FileText className="w-4 h-4" />
+                Start with department template ▼
+              </button>
+              <button
+                onClick={() => setShowWelcome(false)}
+                className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all hover:opacity-80"
+                style={{
+                  background: "oklch(0.998 0.002 70)",
+                  color: "oklch(0.38 0.04 50)",
+                  border: "1.5px solid oklch(0.88 0.015 75)",
+                }}
+              >
+                Start blank →
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <DepartmentBanner />
 
       {/* Technique Selector */}
@@ -709,10 +770,17 @@ function BuildMode() {
                   >
                     {block.label[0]}
                   </div>
-                  <span className="text-sm font-bold flex-1" style={{ color: hasContent ? colors?.border || ACCENT : "oklch(0.38 0.04 45)" }}>
-                    {block.label}
-                    {isPersonaHighlighted && <span className="ml-2 text-xs font-medium" style={{ color: colors?.text }}>&#9733; Persona mode</span>}
-                  </span>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-bold" style={{ color: hasContent ? colors?.border || ACCENT : "oklch(0.38 0.04 45)" }}>
+                      {block.label}
+                      {isPersonaHighlighted && <span className="ml-2 text-xs font-medium" style={{ color: colors?.text }}>&#9733; Persona mode</span>}
+                    </div>
+                    {block.subLabel && (
+                      <div className="text-[10px] mt-0.5 leading-tight" style={{ color: "oklch(0.58 0.04 55)" }}>
+                        {block.subLabel}
+                      </div>
+                    )}
+                  </div>
                   <button
                     onClick={() => toggleBlockVisibility(block.id)}
                     className="p-1 rounded transition-opacity hover:opacity-70"
@@ -928,27 +996,59 @@ function BuildMode() {
                 {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
                 {copied ? "Copied!" : "Copy Prompt"}
               </button>
-              <button
-                onClick={() => {
-                  if (!assembledPrompt.trim()) return;
-                  sendToCopilot(assembledPrompt).then(() => {
-                    toast("Prompt copied — paste into Copilot", { duration: 3000 });
-                    setCopilotSent(true);
-                    setTimeout(() => setCopilotSent(false), 3000);
-                  });
-                }}
-                disabled={!assembledPrompt.trim()}
-                className="flex items-center gap-1.5 text-xs px-4 py-2 rounded-lg font-bold transition-all"
-                style={{
-                  background: assembledPrompt.trim() ? "oklch(0.42 0.14 250)" : "oklch(0.88 0.01 75)",
-                  color: assembledPrompt.trim() ? "oklch(0.98 0.01 75)" : "oklch(0.58 0.03 55)",
-                  cursor: assembledPrompt.trim() ? "pointer" : "not-allowed",
-                  opacity: assembledPrompt.trim() ? 1 : 0.7,
-                }}
-              >
-                {copilotSent ? <Check className="w-3.5 h-3.5" /> : <ArrowRight className="w-3.5 h-3.5" />}
-                Send to Copilot ↗
-              </button>
+              <div className="flex flex-col items-end gap-1">
+                <motion.button
+                  animate={assembledPrompt.trim() && !copilotSent ? {
+                    boxShadow: ["0 0 0 0px oklch(0.42 0.14 250 / 0.4)", "0 0 0 6px oklch(0.42 0.14 250 / 0)", "0 0 0 0px oklch(0.42 0.14 250 / 0)"]
+                  } : {}}
+                  transition={{ duration: 2, repeat: Infinity, ease: "easeOut" }}
+                  onClick={() => {
+                    if (!assembledPrompt.trim()) return;
+                    sendToTarget(assembledPrompt, "copilot").then(() => {
+                      toast("Prompt copied — paste into Copilot", { duration: 3000 });
+                      setCopilotSent(true);
+                      setTimeout(() => setCopilotSent(false), 3000);
+                    });
+                  }}
+                  disabled={!assembledPrompt.trim()}
+                  className="flex items-center gap-1.5 text-xs px-4 py-2 rounded-lg font-bold transition-all"
+                  style={{
+                    background: assembledPrompt.trim() ? "oklch(0.42 0.14 250)" : "oklch(0.88 0.01 75)",
+                    color: assembledPrompt.trim() ? "oklch(0.98 0.01 75)" : "oklch(0.58 0.03 55)",
+                    cursor: assembledPrompt.trim() ? "pointer" : "not-allowed",
+                    opacity: assembledPrompt.trim() ? 1 : 0.7,
+                  }}
+                >
+                  {copilotSent ? <Check className="w-3.5 h-3.5" /> : <ArrowRight className="w-3.5 h-3.5" />}
+                  Use in Copilot ↗
+                </motion.button>
+                <span className="text-[10px]" style={{ color: "oklch(0.58 0.03 55)" }}>
+                  Copies your prompt → opens Copilot
+                </span>
+                <button
+                  onClick={() => {
+                    if (!assembledPrompt.trim()) return;
+                    sendToTarget(assembledPrompt, "chatgpt_enterprise").then(() => {
+                      toast("Prompt copied — paste into ChatGPT Enterprise", { duration: 3000 });
+                      setChatgptSent(true);
+                      setTimeout(() => setChatgptSent(false), 3000);
+                    });
+                  }}
+                  disabled={!assembledPrompt.trim()}
+                  className="text-[11px] font-medium transition-opacity hover:opacity-80"
+                  style={{
+                    color: assembledPrompt.trim() ? "oklch(0.48 0.08 155)" : "oklch(0.68 0.03 55)",
+                    cursor: assembledPrompt.trim() ? "pointer" : "not-allowed",
+                    textDecoration: "underline",
+                    textUnderlineOffset: "2px",
+                    background: "none",
+                    border: "none",
+                    padding: 0,
+                  }}
+                >
+                  {chatgptSent ? "✓ Copied for ChatGPT" : "or copy for ChatGPT Enterprise"}
+                </button>
+              </div>
             </div>
           </div>
 
@@ -1006,6 +1106,22 @@ function BuildMode() {
       {/* Preview Panel — full-width below Refine Diff */}
       <div className="mt-6">
         <PreviewPanel prompt={assembledPrompt} />
+      </div>
+
+      {/* Footer cross-link */}
+      <div
+        className="mt-10 py-6 text-center rounded-xl"
+        style={{
+          borderTop: "1px solid oklch(0.90 0.01 70)",
+        }}
+      >
+        <Link
+          href="/cookbook"
+          className="text-sm font-medium hover:opacity-80 transition-opacity"
+          style={{ color: ACCENT }}
+        >
+          Need a refresher? Browse the Cookbook recipes →
+        </Link>
       </div>
     </div>
   );
