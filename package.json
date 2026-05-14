@@ -5,7 +5,10 @@
   "license": "MIT",
   "scripts": {
     "dev": "vite --host",
-    "build": "vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist && cp -r server/prompts dist/prompts",
+    "build:portal":   "VITE_BASE=/ VITE_ENTRY=portal vite build --outDir $PWD/dist/portal",
+    "build:cookbook": "VITE_BASE=/cookbook/ VITE_ENTRY=cookbook vite build --outDir $PWD/dist/cookbook",
+    "build:builder":  "VITE_BASE=/builder/ VITE_ENTRY=builder vite build --outDir $PWD/dist/builder",
+    "build": "rm -rf dist && pnpm run build:portal && pnpm run build:cookbook && pnpm run build:builder && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist && cp -r server/prompts dist/prompts",
     "start": "NODE_ENV=production node dist/index.js",
     "preview": "vite preview --host",
     "check": "tsc --noEmit",

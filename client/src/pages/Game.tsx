@@ -113,7 +113,7 @@ function TechniqueActions({ technique }: { technique: string }) {
         ))}
       </div>
       <a
-        href="/builder"
+        href="/builder/"
         className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg transition-all hover:shadow-sm"
         style={{
           background: `linear-gradient(135deg, ${ACCENT}, oklch(0.36 0.12 170))`,
@@ -554,7 +554,7 @@ function GameHeader({
     >
       <div className="max-w-5xl mx-auto flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Link href="/cookbook" className="text-sm font-medium" style={{ color: TEXT_MUTED }}>
+          <Link href="/" className="text-sm font-medium" style={{ color: TEXT_MUTED }}>
             Cookbook
           </Link>
           <ChevronRight className="w-3.5 h-3.5" style={{ color: "oklch(0.65 0.03 55)" }} />
@@ -704,9 +704,9 @@ function ResultsScreen({
             All Modes
           </button>
           <Link
-            href="/cookbook"
+            href="/"
             className="flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold transition-opacity hover:opacity-90"
-            style={{ background: "oklch(0.88 0.01 70)", color: "oklch(0.45 0.04 50)" }}
+            style={{ background: "oklch(0.88 0.01 70)", color: "oklch(0.45 0.04 50)", textDecoration: "none" }}
           >
             <Home className="w-4 h-4" />
             Cookbook
@@ -1741,7 +1741,7 @@ function CapstoneMode({ onBack }: { onBack: () => void }) {
         >
           <div className="max-w-5xl mx-auto flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <Link href="/cookbook" className="text-sm font-medium" style={{ color: TEXT_MUTED }}>
+              <Link href="/" className="text-sm font-medium" style={{ color: TEXT_MUTED }}>
                 Cookbook
               </Link>
               <ChevronRight className="w-3.5 h-3.5" style={{ color: "oklch(0.65 0.03 55)" }} />
@@ -1803,7 +1803,8 @@ function CapstoneMode({ onBack }: { onBack: () => void }) {
                 {copied ? "Copied!" : "Copy Prompt"}
               </motion.button>
 
-              <Link href="/builder">
+              {/* Cross-bundle nav: plain <a> so IIS routes to /builder/ Application */}
+              <a href="/builder/" style={{ textDecoration: "none" }}>
                 <motion.span
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
@@ -1817,7 +1818,7 @@ function CapstoneMode({ onBack }: { onBack: () => void }) {
                 >
                   <Wrench className="w-4 h-4" /> Try in Builder
                 </motion.span>
-              </Link>
+              </a>
 
               <motion.button
                 whileHover={{ scale: 1.02 }}
@@ -1851,7 +1852,7 @@ function CapstoneMode({ onBack }: { onBack: () => void }) {
       >
         <div className="max-w-5xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Link href="/cookbook" className="text-sm font-medium" style={{ color: TEXT_MUTED }}>
+            <Link href="/" className="text-sm font-medium" style={{ color: TEXT_MUTED }}>
               Cookbook
             </Link>
             <ChevronRight className="w-3.5 h-3.5" style={{ color: "oklch(0.65 0.03 55)" }} />
@@ -2108,7 +2109,7 @@ function ModeSelection({ onSelect }: { onSelect: (mode: GameMode) => void }) {
             Choose your learning mode.
           </p>
           <div className="mt-4">
-            <Link href="/cookbook" className="text-xs font-medium hover:underline" style={{ color: TEXT_MUTED }}>
+            <Link href="/" className="text-xs font-medium hover:underline" style={{ color: TEXT_MUTED }}>
               Back to Cookbook
             </Link>
           </div>

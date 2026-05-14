@@ -1,5 +1,4 @@
 import { motion } from "framer-motion";
-import { Link } from "wouter";
 import { BookOpen, Wrench, Shield, Clock } from "lucide-react";
 import {
   PAGE_BG,
@@ -65,7 +64,8 @@ export default function Portal() {
           {/* Product cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-10">
             {/* Cookbook card */}
-            <Link href="/cookbook">
+            {/* Cross-bundle nav: plain <a> so IIS routes to /cookbook/ Application */}
+            <a href="/cookbook/" style={{ display: "block", textDecoration: "none" }}>
               <motion.div
                 className="rounded-xl border p-6 text-left cursor-pointer focus-visible:ring-2 focus-visible:ring-offset-2"
                 style={{
@@ -103,10 +103,11 @@ export default function Portal() {
                   Open cookbook →
                 </div>
               </motion.div>
-            </Link>
+            </a>
 
             {/* Builder card */}
-            <Link href="/builder">
+            {/* Cross-bundle nav: plain <a> so IIS routes to /builder/ Application */}
+            <a href="/builder/" style={{ display: "block", textDecoration: "none" }}>
               <motion.div
                 className="rounded-xl border p-6 text-left cursor-pointer"
                 style={{
@@ -143,7 +144,7 @@ export default function Portal() {
                   Open builder →
                 </div>
               </motion.div>
-            </Link>
+            </a>
           </div>
 
           {/* Coming soon placeholder */}

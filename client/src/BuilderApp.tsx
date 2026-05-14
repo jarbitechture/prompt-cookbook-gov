@@ -1,0 +1,49 @@
+/**
+ * BuilderApp — entry for the builder bundle
+ * (VITE_ENTRY=builder, VITE_BASE=/builder/)
+ *
+ * Serves only the Builder route at "/".  Cross-bundle links back to
+ * /cookbook/ use plain <a> tags so IIS routes them to the Cookbook
+ * Application.
+ */
+import { Toaster } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { Router, Route, Switch } from "wouter";
+import ErrorBoundary from "./components/ErrorBoundary";
+import { ThemeProvider } from "./contexts/ThemeContext";
+import Builder from "./pages/Builder";
+import NotFound from "./pages/NotFound";
+
+function BuilderRoutes() {
+  return (
+    <Switch>
+      <Route path="/" component={Builder} />
+      <Route component={NotFound} />
+    </Switch>
+  );
+}
+
+export default function BuilderApp() {
+  return (
+    <ErrorBoundary>
+      <ThemeProvider defaultTheme="light">
+        <TooltipProvider>
+          <Toaster
+            position="bottom-right"
+            toastOptions={{
+              style: {
+                background: "oklch(0.22 0.02 40)",
+                color: "oklch(0.90 0.03 75)",
+                border: "1px solid oklch(0.35 0.03 40)",
+              },
+            }}
+          />
+          <a href="#main-content" className="skip-link">Skip to main content</a>
+          <Router base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+            <BuilderRoutes />
+          </Router>
+        </TooltipProvider>
+      </ThemeProvider>
+    </ErrorBoundary>
+  );
+}

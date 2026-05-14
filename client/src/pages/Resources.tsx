@@ -171,7 +171,7 @@ export default function Resources() {
         }}
       >
         <div className="flex items-center gap-3">
-          <Link href="/cookbook" className="text-sm font-medium" style={{ color: TEXT_MUTED }}>
+          <Link href="/" className="text-sm font-medium" style={{ color: TEXT_MUTED }}>
             Cookbook
           </Link>
           <ChevronRight className="w-3.5 h-3.5" style={{ color: "oklch(0.65 0.03 55)" }} />
@@ -183,9 +183,9 @@ export default function Resources() {
           </div>
         </div>
         <Link
-          href="/cookbook"
+          href="/"
           className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg"
-          style={{ background: "oklch(0.94 0.01 70)", color: TEXT_MUTED }}
+          style={{ background: "oklch(0.94 0.01 70)", color: TEXT_MUTED, textDecoration: "none" }}
         >
           <Home className="w-3.5 h-3.5" />
           Home
@@ -237,7 +237,8 @@ export default function Resources() {
 
         {/* Quick Action CTAs — always visible */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
-          <Link href="/builder" className="block">
+          {/* Cross-bundle nav: plain <a> so IIS routes to /builder/ Application */}
+          <a href="/builder/" className="block" style={{ textDecoration: "none" }}>
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -256,7 +257,7 @@ export default function Resources() {
               </div>
               <ArrowRight className="w-5 h-5 shrink-0" style={{ color: "oklch(0.65 0.08 220)" }} />
             </motion.div>
-          </Link>
+          </a>
           <Link href="/game" className="block">
             <motion.div
               initial={{ opacity: 0, y: 10 }}
@@ -478,10 +479,11 @@ function CoursesTab() {
                               📖 Read Recipe
                             </Link>
                           )}
-                          <Link
-                            href="/builder"
+                          {/* Cross-bundle nav: plain <a>; onClick pre-loads template then navigates */}
+                          <a
+                            href="/builder/"
                             className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-md"
-                            style={{ background: "oklch(0.48 0.12 220)", color: "white" }}
+                            style={{ background: "oklch(0.48 0.12 220)", color: "white", textDecoration: "none" }}
                             onClick={() => {
                               try {
                                 // Pre-load a relevant template into the builder
@@ -491,7 +493,7 @@ function CoursesTab() {
                             }}
                           >
                             🔨 Build a Prompt
-                          </Link>
+                          </a>
                           <Link
                             href="/game"
                             className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-md"

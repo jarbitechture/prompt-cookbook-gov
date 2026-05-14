@@ -164,34 +164,58 @@ async function startServer() {
     });
   });
 
-  // ---- Static files ----
-  const staticPath =
+  // ---- Static files (multi-bundle) ----
+  // Production layout (after pnpm build):
+  //   dist/portal/    → served at /
+  //   dist/cookbook/  → served at /cookbook/
+  //   dist/builder/   → served at /builder/
+  //
+  // In production IIS handles routing; Express serves the same paths for
+  // `pnpm start` local testing.  Each mount gets its own SPA fallback so
+  // deep-linking works.
+  const distBase =
     process.env.NODE_ENV === "production"
-      ? path.resolve(__dirname, "public")
-      : path.resolve(__dirname, "..", "dist", "public");
+      ? path.resolve(__dirname) // __dirname = dist/ in the esbuild bundle
+      : path.resolve(__dirname, "..", "dist");
 
-  app.use(
-    express.static(staticPath, {
+  function staticMiddleware(dir: string) {
+    return express.static(dir, {
       etag: true,
       lastModified: true,
       setHeaders(res, filePath) {
         if (filePath.endsWith(".html")) {
           res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
         } else if (/\.(js|css)$/.test(filePath)) {
-          // Hashed assets can be cached long
           res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
         } else {
-          // Images and other assets: no-cache forces revalidation each time
           res.setHeader("Cache-Control", "no-cache");
         }
       },
-    })
-  );
+    });
+  }
 
-  // SPA fallback — serve index.html for all non-API routes
+  // Cookbook bundle — must be mounted before portal so /cookbook/* is matched first
+  const cookbookPath = path.join(distBase, "cookbook");
+  app.use("/cookbook", staticMiddleware(cookbookPath));
+  app.get("/cookbook/*", (_req, res) => {
+    res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+    res.sendFile(path.join(cookbookPath, "index.html"));
+  });
+
+  // Builder bundle
+  const builderPath = path.join(distBase, "builder");
+  app.use("/builder", staticMiddleware(builderPath));
+  app.get("/builder/*", (_req, res) => {
+    res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+    res.sendFile(path.join(builderPath, "index.html"));
+  });
+
+  // Portal bundle — catch-all at root (must be last)
+  const portalPath = path.join(distBase, "portal");
+  app.use(staticMiddleware(portalPath));
   app.get("*", (_req, res) => {
     res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
-    res.sendFile(path.join(staticPath, "index.html"));
+    res.sendFile(path.join(portalPath, "index.html"));
   });
 
   const port = process.env.PORT || 3000;

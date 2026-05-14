@@ -230,7 +230,7 @@ Rules:
           <button
             onClick={() => {
               localStorage.setItem("cookbook-builder-import", prompt.template);
-              navigate("/builder");
+              window.location.href = "/builder/"; // cross-bundle: full navigation
             }}
             className="text-xs font-bold px-3 py-1.5 rounded-lg transition-all"
             style={{
@@ -575,7 +575,7 @@ export default function Home() {
 
               {/* Prompt Builder CTA — prominent tool link in hero area */}
               <motion.button
-                onClick={() => navigate("/builder")}
+                onClick={() => { window.location.href = "/builder/"; }} // cross-bundle: full navigation
                 className="w-full flex items-center justify-between gap-4 rounded-2xl px-6 py-4 mb-5 text-left"
                 style={{
                   background: `linear-gradient(135deg, oklch(0.14 0.06 220), oklch(0.18 0.07 235))`,
@@ -615,7 +615,14 @@ export default function Home() {
                   return (
                     <button
                       key={action.href}
-                      onClick={() => navigate(action.href)}
+                      onClick={() => {
+                        // /builder is cross-bundle; /game and /resources are intra-bundle
+                        if (action.href === "/builder") {
+                          window.location.href = "/builder/";
+                        } else {
+                          navigate(action.href);
+                        }
+                      }}
                       className="group flex flex-col gap-3 p-5 rounded-xl text-left transition-all"
                       style={{
                         background: action.bg,
@@ -715,7 +722,7 @@ export default function Home() {
                           <button
                             onClick={() => {
                               localStorage.setItem("cookbook-builder-import", cs.strongPrompt);
-                              navigate("/builder");
+                              window.location.href = "/builder/"; // cross-bundle: full navigation
                             }}
                             className="text-[11px] font-bold"
                             style={{ color: "oklch(0.48 0.12 220)" }}

@@ -35,7 +35,7 @@ import {
   Heart,
   Database,
 } from "lucide-react";
-import { Link } from "wouter";
+// Link removed: Builder only navigates cross-bundle (to /cookbook/) — use plain <a>
 import { toast } from "sonner";
 import { apiUrl } from "@/lib/apiUrl";
 import { sendToTarget } from "@/lib/copilot-handoff";
@@ -216,9 +216,9 @@ function DepartmentBanner() {
         )}
       </div>
       {!dept && (
-        <Link href="/cookbook" className="text-xs font-bold px-3 py-1 rounded-lg" style={{ color: ACCENT, background: "oklch(0.96 0.03 220)" }}>
+        <a href="/cookbook/" className="text-xs font-bold px-3 py-1 rounded-lg" style={{ color: ACCENT, background: "oklch(0.96 0.03 220)", textDecoration: "none" }}>
           Set department in Cookbook &rarr;
-        </Link>
+        </a>
       )}
     </div>
   );
@@ -302,10 +302,10 @@ export default function Builder() {
         }}
       >
         <div className="flex items-center gap-3">
-          <Link href="/cookbook" className="flex items-center gap-1.5 text-sm font-medium hover:opacity-80 transition-opacity" style={{ color: "oklch(0.50 0.04 50)" }}>
+          <a href="/cookbook/" className="flex items-center gap-1.5 text-sm font-medium hover:opacity-80 transition-opacity" style={{ color: "oklch(0.50 0.04 50)", textDecoration: "none" }}>
             <span>←</span>
             <span>Cookbook</span>
-          </Link>
+          </a>
           <ChevronRight className="w-3.5 h-3.5" style={{ color: "oklch(0.65 0.03 55)" }} />
           <div className="flex items-center gap-2">
             <Wrench className="w-4 h-4" style={{ color: ACCENT }} />
@@ -1125,13 +1125,13 @@ function BuildMode() {
           borderTop: "1px solid oklch(0.90 0.01 70)",
         }}
       >
-        <Link
-          href="/cookbook"
+        <a
+          href="/cookbook/"
           className="text-sm font-medium hover:opacity-80 transition-opacity"
-          style={{ color: ACCENT }}
+          style={{ color: ACCENT, textDecoration: "none" }}
         >
           Need a refresher? Browse the Cookbook recipes →
-        </Link>
+        </a>
       </div>
     </div>
   );
