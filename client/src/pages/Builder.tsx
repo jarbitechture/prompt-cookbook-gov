@@ -356,6 +356,7 @@ function BuildMode() {
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
   const [templatePanelOpen, setTemplatePanelOpen] = useState(false);
+  const [activeCoachTab, setActiveCoachTab] = useState<"critique" | "refine" | "preview">("critique");
   const [copied, setCopied] = useState(false);
   const [copilotSent, setCopilotSent] = useState(false);
   const [chatgptSent, setChatgptSent] = useState(false);
@@ -994,28 +995,61 @@ function BuildMode() {
             </span>
           </div>
 
+          {/* Coach tab strip */}
+          <div className="mt-4">
+            {/* Tab buttons */}
+            <div className="flex gap-1 mb-3">
+              <button
+                onClick={() => setActiveCoachTab("critique")}
+                className="flex-1 py-1.5 px-2 rounded-lg text-xs font-bold transition-all"
+                style={{
+                  background: activeCoachTab === "critique" ? "oklch(0.42 0.14 250)" : "oklch(0.94 0.01 70)",
+                  color: activeCoachTab === "critique" ? "oklch(0.98 0.01 75)" : "oklch(0.45 0.04 50)",
+                }}
+              >
+                Critique
+              </button>
+              <button
+                onClick={() => setActiveCoachTab("refine")}
+                className="flex-1 py-1.5 px-2 rounded-lg text-xs font-bold transition-all"
+                style={{
+                  background: activeCoachTab === "refine" ? "oklch(0.42 0.14 155)" : "oklch(0.94 0.01 70)",
+                  color: activeCoachTab === "refine" ? "oklch(0.98 0.01 75)" : "oklch(0.45 0.04 50)",
+                }}
+              >
+                Refine
+              </button>
+              <button
+                onClick={() => setActiveCoachTab("preview")}
+                className="flex-1 py-1.5 px-2 rounded-lg text-xs font-bold transition-all"
+                style={{
+                  background: activeCoachTab === "preview" ? "oklch(0.45 0.12 310)" : "oklch(0.94 0.01 70)",
+                  color: activeCoachTab === "preview" ? "oklch(0.98 0.01 75)" : "oklch(0.45 0.04 50)",
+                }}
+              >
+                Preview
+              </button>
+            </div>
+
+            {/* Tab panels — use CSS display to preserve component state across tab switches */}
+            <div style={{ display: activeCoachTab === "critique" ? undefined : "none" }}>
+              <CritiquePanel
+                prompt={assembledPrompt}
+                onApplySuggestion={(suggestion) => {
+                  const prev = blockValues["constraints"] || "";
+                  setBlockValue("constraints", prev ? `${prev}\n\n${suggestion}` : suggestion);
+                }}
+              />
+            </div>
+            <div style={{ display: activeCoachTab === "refine" ? undefined : "none" }}>
+              <RefineDiff prompt={assembledPrompt} />
+            </div>
+            <div style={{ display: activeCoachTab === "preview" ? undefined : "none" }}>
+              <PreviewPanel prompt={assembledPrompt} />
+            </div>
+          </div>
+
         </div>
-      </div>
-
-      {/* Critique Panel — full-width below both columns */}
-      <div className="mt-6">
-        <CritiquePanel
-          prompt={assembledPrompt}
-          onApplySuggestion={(suggestion) => {
-            const prev = blockValues["constraints"] || "";
-            setBlockValue("constraints", prev ? `${prev}\n\n${suggestion}` : suggestion);
-          }}
-        />
-      </div>
-
-      {/* Refine Diff — full-width below Critique Panel */}
-      <div className="mt-6">
-        <RefineDiff prompt={assembledPrompt} />
-      </div>
-
-      {/* Preview Panel — full-width below Refine Diff */}
-      <div className="mt-6">
-        <PreviewPanel prompt={assembledPrompt} />
       </div>
 
       {/* Footer cross-link */}
