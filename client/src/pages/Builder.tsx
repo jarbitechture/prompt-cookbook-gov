@@ -393,8 +393,18 @@ function BuildMode() {
   const [copied, setCopied] = useState(false);
   const [copilotSent, setCopilotSent] = useState(false);
   const [chatgptSent, setChatgptSent] = useState(false);
-  // Welcome hero: show until first block edit or auto-fill fires
-  const [showWelcome, setShowWelcome] = useState(true);
+  // Welcome hero: lazy init so auto-filled pages never flash the hero then animate it out
+  const [showWelcome, setShowWelcome] = useState(() => {
+    try {
+      if (localStorage.getItem("cookbook-builder-import")) return false;
+      const deptId = localStorage.getItem("cookbook-department");
+      if (deptId) {
+        const dept = getDepartment(deptId);
+        if (dept?.personalization.builderTemplate) return false;
+      }
+    } catch { /* localStorage unavailable */ }
+    return true;
+  });
 
   const deptCategoryMap: Record<string, string> = {
     "resident-services": "Resident Services",
