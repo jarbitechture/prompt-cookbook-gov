@@ -990,16 +990,6 @@ function BuildMode() {
             </span>
           </div>
 
-          {/* Quality Scoring */}
-          <div
-            className="rounded-xl px-4 py-3 flex items-center justify-between"
-            style={{ background: "oklch(0.96 0.005 70)", border: "1px solid oklch(0.90 0.01 70)" }}
-          >
-            <span className="text-xs font-bold uppercase tracking-wider" style={{ color: "oklch(0.50 0.04 50)" }}>
-              Prompt Quality
-            </span>
-            <QualityIndicators blocks={blockValues} />
-          </div>
         </div>
       </div>
 
