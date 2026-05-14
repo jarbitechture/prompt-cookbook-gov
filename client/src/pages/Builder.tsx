@@ -972,28 +972,6 @@ function BuildMode() {
             </div>
           </div>
 
-          {/* Dark preview pane */}
-          <div
-            className="rounded-xl p-5 min-h-[320px] text-sm leading-relaxed whitespace-pre-wrap"
-            style={{
-              background: "oklch(0.14 0.02 240)",
-              border: "1px solid oklch(0.25 0.03 240)",
-              fontFamily: "'SF Mono', 'Fira Code', 'Consolas', monospace",
-              fontSize: "13px",
-              color: "oklch(0.82 0.02 70)",
-              boxShadow: "inset 0 2px 8px oklch(0.08 0.01 240 / 0.3)",
-            }}
-          >
-            {renderPreview()}
-          </div>
-
-          {/* Token count */}
-          <div className="flex items-center">
-            <span className="text-xs font-medium" style={{ color: "oklch(0.55 0.03 55)" }}>
-              ~{tokenCount} tokens
-            </span>
-          </div>
-
           {/* Coach tab strip */}
           <div className="mt-4">
             {/* Tab buttons */}
@@ -1046,6 +1024,28 @@ function BuildMode() {
             <div style={{ display: activeCoachTab === "preview" ? undefined : "none" }}>
               <PreviewPanel prompt={assembledPrompt} />
             </div>
+          </div>
+
+          {/* Dark preview pane */}
+          <div
+            className="rounded-xl p-5 min-h-[320px] text-sm leading-relaxed whitespace-pre-wrap"
+            style={{
+              background: "oklch(0.14 0.02 240)",
+              border: "1px solid oklch(0.25 0.03 240)",
+              fontFamily: "'SF Mono', 'Fira Code', 'Consolas', monospace",
+              fontSize: "13px",
+              color: "oklch(0.82 0.02 70)",
+              boxShadow: "inset 0 2px 8px oklch(0.08 0.01 240 / 0.3)",
+            }}
+          >
+            {renderPreview()}
+          </div>
+
+          {/* Token count */}
+          <div className="flex items-center">
+            <span className="text-xs font-medium" style={{ color: "oklch(0.55 0.03 55)" }}>
+              ~{tokenCount} tokens
+            </span>
           </div>
 
         </div>
