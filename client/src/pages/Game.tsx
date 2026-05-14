@@ -554,7 +554,7 @@ function GameHeader({
     >
       <div className="max-w-5xl mx-auto flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Link href="/" className="text-sm font-medium" style={{ color: TEXT_MUTED }}>
+          <Link href="/cookbook" className="text-sm font-medium" style={{ color: TEXT_MUTED }}>
             Cookbook
           </Link>
           <ChevronRight className="w-3.5 h-3.5" style={{ color: "oklch(0.65 0.03 55)" }} />
@@ -704,7 +704,7 @@ function ResultsScreen({
             All Modes
           </button>
           <Link
-            href="/"
+            href="/cookbook"
             className="flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold transition-opacity hover:opacity-90"
             style={{ background: "oklch(0.88 0.01 70)", color: "oklch(0.45 0.04 50)" }}
           >
@@ -1741,7 +1741,7 @@ function CapstoneMode({ onBack }: { onBack: () => void }) {
         >
           <div className="max-w-5xl mx-auto flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <Link href="/" className="text-sm font-medium" style={{ color: TEXT_MUTED }}>
+              <Link href="/cookbook" className="text-sm font-medium" style={{ color: TEXT_MUTED }}>
                 Cookbook
               </Link>
               <ChevronRight className="w-3.5 h-3.5" style={{ color: "oklch(0.65 0.03 55)" }} />
@@ -1851,7 +1851,7 @@ function CapstoneMode({ onBack }: { onBack: () => void }) {
       >
         <div className="max-w-5xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Link href="/" className="text-sm font-medium" style={{ color: TEXT_MUTED }}>
+            <Link href="/cookbook" className="text-sm font-medium" style={{ color: TEXT_MUTED }}>
               Cookbook
             </Link>
             <ChevronRight className="w-3.5 h-3.5" style={{ color: "oklch(0.65 0.03 55)" }} />
@@ -2108,7 +2108,7 @@ function ModeSelection({ onSelect }: { onSelect: (mode: GameMode) => void }) {
             Choose your learning mode.
           </p>
           <div className="mt-4">
-            <Link href="/" className="text-xs font-medium hover:underline" style={{ color: TEXT_MUTED }}>
+            <Link href="/cookbook" className="text-xs font-medium hover:underline" style={{ color: TEXT_MUTED }}>
               Back to Cookbook
             </Link>
           </div>

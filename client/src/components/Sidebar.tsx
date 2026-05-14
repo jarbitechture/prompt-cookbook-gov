@@ -62,7 +62,7 @@ export default function Sidebar({ activeChapter, onSelectChapter, recentItems, i
         <div className="p-4 pb-3 flex items-center justify-between" style={{ borderBottom: "1px solid oklch(0.26 0.03 40)" }}>
           <button
             onClick={() => {
-              setLocation("/");
+              setLocation("/cookbook");
               onClose();
             }}
             className="flex items-center gap-2.5 hover:opacity-80 transition-opacity"
@@ -175,7 +175,7 @@ export default function Sidebar({ activeChapter, onSelectChapter, recentItems, i
               className="w-full flex items-center gap-2 px-2 py-1.5 rounded text-sm text-left"
               style={{ color: "oklch(0.75 0.03 55)" }}
               onClick={() => {
-                setLocation("/");
+                setLocation("/cookbook");
                 setTimeout(() => {
                   const el = document.getElementById("recently-viewed");
                   el?.scrollIntoView({ behavior: "smooth" });

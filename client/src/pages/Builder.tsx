@@ -38,7 +38,7 @@ import {
 import { Link } from "wouter";
 import { toast } from "sonner";
 import { apiUrl } from "@/lib/apiUrl";
-import { sendToCopilot } from "@/lib/copilot-handoff";
+import { sendToTarget } from "@/lib/copilot-handoff";
 import { personas } from "@/lib/personas";
 import type { Persona } from "@/lib/personas";
 import { getDepartment } from "@/lib/departments";
@@ -215,7 +215,7 @@ function DepartmentBanner() {
         )}
       </div>
       {!dept && (
-        <Link href="/" className="text-xs font-bold px-3 py-1 rounded-lg" style={{ color: ACCENT, background: "oklch(0.96 0.03 220)" }}>
+        <Link href="/cookbook" className="text-xs font-bold px-3 py-1 rounded-lg" style={{ color: ACCENT, background: "oklch(0.96 0.03 220)" }}>
           Select department in sidebar &rarr;
         </Link>
       )}
@@ -301,7 +301,7 @@ export default function Builder() {
         }}
       >
         <div className="flex items-center gap-3">
-          <Link href="/" className="text-sm font-medium" style={{ color: "oklch(0.50 0.04 50)" }}>
+          <Link href="/cookbook" className="text-sm font-medium" style={{ color: "oklch(0.50 0.04 50)" }}>
             Cookbook
           </Link>
           <ChevronRight className="w-3.5 h-3.5" style={{ color: "oklch(0.65 0.03 55)" }} />

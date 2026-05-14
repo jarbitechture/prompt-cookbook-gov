@@ -171,7 +171,7 @@ export default function Resources() {
         }}
       >
         <div className="flex items-center gap-3">
-          <Link href="/" className="text-sm font-medium" style={{ color: TEXT_MUTED }}>
+          <Link href="/cookbook" className="text-sm font-medium" style={{ color: TEXT_MUTED }}>
             Cookbook
           </Link>
           <ChevronRight className="w-3.5 h-3.5" style={{ color: "oklch(0.65 0.03 55)" }} />
@@ -183,7 +183,7 @@ export default function Resources() {
           </div>
         </div>
         <Link
-          href="/"
+          href="/cookbook"
           className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg"
           style={{ background: "oklch(0.94 0.01 70)", color: TEXT_MUTED }}
         >

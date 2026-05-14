@@ -4,6 +4,7 @@ import NotFound from "@/pages/NotFound";
 import { Router, Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
+import Portal from "./pages/Portal";
 import Home from "./pages/Home";
 import Game from "./pages/Game";
 import Builder from "./pages/Builder";
@@ -12,7 +13,8 @@ import Resources from "./pages/Resources";
 function AppRoutes() {
   return (
     <Switch>
-      <Route path={"/"} component={Home} />
+      <Route path={"/"} component={Portal} />
+      <Route path={"/cookbook"} component={Home} />
       <Route path={"/game"} component={Game} />
       <Route path={"/builder"} component={Builder} />
       <Route path={"/resources"} component={Resources} />
