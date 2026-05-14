@@ -776,27 +776,6 @@ export default function ChapterDetail({ chapter, onBack }: ChapterDetailProps) {
                 </div>
               )}
 
-              {/* Quick stat if quality score exists */}
-              {chapter.qualityScore !== null && (
-                <div className="flex items-center gap-2">
-                  <div className="flex gap-0.5">
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <div
-                        key={i}
-                        className="w-2 h-2 rounded-full"
-                        style={{
-                          background: i < Math.round(chapter.qualityScore! / 2)
-                            ? "oklch(0.72 0.14 55)"
-                            : "oklch(0.30 0.03 50)",
-                        }}
-                      />
-                    ))}
-                  </div>
-                  <span className="text-[10px]" style={{ color: "oklch(0.60 0.04 55)" }}>
-                    Quality: {chapter.qualityScore}/10
-                  </span>
-                </div>
-              )}
             </div>
           </div>
         </motion.section>

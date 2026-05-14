@@ -212,27 +212,6 @@ export default function Resources() {
             </p>
           </motion.div>
 
-          {/* Stat badges */}
-          <motion.div variants={fadeUp} className="flex flex-wrap gap-3">
-            {[
-              { count: 14, label: "Jumpstart chapters", color: ACCENT },
-              { count: promptRecipes.length, label: "Prompt recipes", color: "oklch(0.42 0.14 155)" },
-              { count: 5, label: "Gov resources", color: "oklch(0.50 0.10 155)" },
-            ].map((stat) => (
-              <div
-                key={stat.label}
-                className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl"
-                style={{ background: CARD_BG, border: `1px solid ${CARD_BORDER}` }}
-              >
-                <span className="text-lg font-black tabular-nums" style={{ color: stat.color }}>
-                  {stat.count}
-                </span>
-                <span className="text-xs font-medium" style={{ color: TEXT_SECONDARY }}>
-                  {stat.label}
-                </span>
-              </div>
-            ))}
-          </motion.div>
         </motion.section>
 
         {/* Quick Action CTAs — always visible */}

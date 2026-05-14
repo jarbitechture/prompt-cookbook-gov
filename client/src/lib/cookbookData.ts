@@ -157,9 +157,9 @@ export const chapters: Chapter[] = [
     icon: "✉️",
     cardType: "template",
     riskTier: "green",
-    qualityScore: 9.6,
+    qualityScore: null,
     summary: "A production-tested template that transforms informal email drafts into polished, professional communications suitable for county business.",
-    source: "Governance Registry: email-tone-adjuster v1 — Tested, Quality Score 9.6/10",
+    source: "Manatee County AI Working Group template registry",
     persona: "Lisa Morales",
     personaRole: "Communications Officer, Manatee County Public Affairs",
     content: [
@@ -201,9 +201,9 @@ export const chapters: Chapter[] = [
     icon: "📋",
     cardType: "template",
     riskTier: "green",
-    qualityScore: 9.48,
+    qualityScore: null,
     summary: "Extracts key decisions, action items, and discussion topics from meeting notes into a clean, structured format.",
-    source: "Governance Registry: meeting-notes-summarizer v1 — Tested, Quality Score 9.48/10",
+    source: "Manatee County AI Working Group template registry",
     persona: "David Park",
     personaRole: "Emergency Management Coordinator, Manatee County Public Safety",
     content: [
@@ -244,9 +244,9 @@ export const chapters: Chapter[] = [
     icon: "💬",
     cardType: "template",
     riskTier: "green",
-    qualityScore: 9.32,
+    qualityScore: null,
     summary: "Converts technical or bureaucratic language into plain English that residents can actually understand, targeting an 8th-grade reading level.",
-    source: "Governance Registry: plain-language-converter v1 — Tested, Quality Score 9.32/10",
+    source: "Manatee County AI Working Group template registry",
     persona: "Rachel Kim",
     personaRole: "PIO, Manatee County Public Information Office",
     content: [
@@ -288,9 +288,9 @@ export const chapters: Chapter[] = [
     icon: "📊",
     cardType: "template",
     riskTier: "green",
-    qualityScore: 9.4,
+    qualityScore: null,
     summary: "Takes informal project updates and formats them into a standard template with Progress, Blockers, Next Steps, and Timeline Status.",
-    source: "Governance Registry: status-update-formatter v1 — Tested, Quality Score 9.4/10",
+    source: "Manatee County AI Working Group template registry",
     persona: "Carlos Rivera",
     personaRole: "Department Director, Manatee County Public Works",
     content: [
@@ -330,9 +330,9 @@ export const chapters: Chapter[] = [
     icon: "🔍",
     cardType: "template",
     riskTier: "green",
-    qualityScore: 9.4,
+    qualityScore: null,
     summary: "Identifies and corrects errors while maintaining the original voice and style. Marks uncertain corrections with [CHECK] flags.",
-    source: "Governance Registry: document-proofreader v1 — Tested, Quality Score 9.4/10",
+    source: "Manatee County AI Working Group template registry",
     persona: "Angela Foster",
     personaRole: "HR Coordinator, Manatee County Human Resources",
     content: [
@@ -371,9 +371,9 @@ export const chapters: Chapter[] = [
     icon: "❓",
     cardType: "template",
     riskTier: "green",
-    qualityScore: 9.32,
+    qualityScore: null,
     summary: "Drafts clear, direct FAQ answers with a friendly but professional tone, including relevant contacts and links.",
-    source: "Governance Registry: faq-answer-generator v1 — Tested, Quality Score 9.32/10",
+    source: "Manatee County AI Working Group template registry",
     persona: "Rachel Kim",
     personaRole: "PIO, Manatee County Public Information Office",
     content: [
@@ -412,9 +412,9 @@ export const chapters: Chapter[] = [
     icon: "📅",
     cardType: "template",
     riskTier: "green",
-    qualityScore: 9.2,
+    qualityScore: null,
     summary: "Organizes topics into logical order with time estimates, standard sections, and professional formatting.",
-    source: "Governance Registry: meeting-agenda-generator v1 — Tested, Quality Score 9.2/10",
+    source: "Manatee County AI Working Group template registry",
     persona: "David Park",
     personaRole: "Emergency Management Coordinator, Manatee County Public Safety",
     content: [
@@ -454,9 +454,9 @@ export const chapters: Chapter[] = [
     icon: "🔤",
     cardType: "template",
     riskTier: "green",
-    qualityScore: 9.28,
+    qualityScore: null,
     summary: "Finds acronyms in your text and expands them on first use, making documents accessible to people outside your department.",
-    source: "Governance Registry: acronym-expander v1 — Tested, Quality Score 9.28/10",
+    source: "Manatee County AI Working Group template registry",
     persona: "Tom Bradley",
     personaRole: "Utilities Field Supervisor, Manatee County Utilities",
     content: [
@@ -495,9 +495,9 @@ export const chapters: Chapter[] = [
     icon: "📄",
     cardType: "template",
     riskTier: "green",
-    qualityScore: 9.32,
+    qualityScore: null,
     summary: "Converts rough bullet points into polished narrative text while preserving all information and logical flow.",
-    source: "Governance Registry: bullet-to-paragraph v1 — Tested, Quality Score 9.32/10",
+    source: "Manatee County AI Working Group template registry",
     persona: "Angela Foster",
     personaRole: "HR Coordinator, Manatee County Human Resources",
     content: [
@@ -537,9 +537,9 @@ export const chapters: Chapter[] = [
     icon: "🗓️",
     cardType: "template",
     riskTier: "green",
-    qualityScore: 9.2,
+    qualityScore: null,
     summary: "Extracts event details from casual text (emails, messages, notes) and formats them into structured calendar entries.",
-    source: "Governance Registry: calendar-event-creator v1 — Tested, Quality Score 9.2/10",
+    source: "Manatee County AI Working Group template registry",
     persona: "Maria Chen",
     personaRole: "HR Coordinator, Manatee County Human Resources",
     content: [
@@ -750,135 +750,6 @@ export const chapters: Chapter[] = [
     ]
   },
 
-  // ── PART IV: GOVERNANCE & HORIZON (from manual Ch. 8-9 + governance system) ──
-  {
-    id: "ch17",
-    number: 17,
-    title: "The 9-Dimension Scoring Rubric",
-    subtitle: "How Manatee County scores and approves prompt templates for production use",
-    part: "part4",
-    partLabel: "Part IV: Governance & Horizon",
-    difficulty: "advanced",
-    icon: "📐",
-    cardType: "governance",
-    riskTier: "green",
-    qualityScore: null,
-    summary: "Every template in Part II was scored on 9 dimensions before approval. Here is how the scoring works and why it matters.",
-    source: "AI Governance Registry: 9-Dimension Rubric (Feb 2026)",
-    persona: "Tom Bradley",
-    personaRole: "Utilities Field Supervisor, Manatee County Utilities",
-    content: [
-      "Every prompt template in Part II of this cookbook was evaluated using the AI Working Group's 9-Dimension Scoring Rubric before being approved for production use. A template must score 8.0 or higher to be published.",
-      "The nine dimensions and their weights: Accuracy (30%) — correctness of outputs; Safety (25%) — risk and compliance adherence; Business Value (15%) — impact and ROI; Time Saved (8%) — efficiency gains; Relevance (6%) — appropriateness to context; Format Fidelity (6%) — output structure quality; Readability (4%) — clarity and accessibility; Policy Alignment (4%) — county policy compliance; Consistency (2%) — reproducibility of results.",
-      "Each dimension is scored 0-10. The weighted average produces the overall quality score. For example, the Email Tone Adjuster scored: Accuracy 9.0, Safety 10.0, Time Saved 10.0, Reusability 10.0 — for an overall 9.6/10.",
-      "The rubric was adopted in the February 9, 2026 AI Working Group meeting, replacing the earlier 4-dimension rubric. It aligns with the SharePoint governance requirements for prompt management."
-    ],
-    promptExamples: [
-      "\"I want to submit a new prompt template for the governance registry. Walk me through the 9-dimension scoring rubric and tell me what I need to prepare for each dimension.\"",
-      "\"Score this prompt template on the 9 dimensions: [paste template]. Provide a score for each dimension with justification, and calculate the weighted overall score.\"",
-      "\"Compare the scoring profiles of the Meeting Notes Summarizer (9.48) and the Calendar Event Creator (9.2). What dimensions account for the difference?\""
-    ],
-    keyTakeaways: [
-      "Templates must score 8.0/10 or higher to be published",
-      "Accuracy (30%) and Safety (25%) carry the most weight",
-      "All 10 templates in Part II passed this rubric",
-      "The rubric replaced the earlier 4-dimension version in Feb 2026",
-      "Any county employee can submit a template for scoring"
-    ],
-    tryItTemplate: "I want to create a new prompt template for {{use_case}} in the {{department}} department. Walk me through what I need to prepare for the 9-dimension scoring rubric. Focus especially on the {{priority_dimension}} dimension. The template will be used by {{users}}.",
-    tryItVariables: [
-      { name: "use_case", label: "Use Case", placeholder: "e.g., summarizing public comments", suggestions: ["summarizing public comments", "drafting inspection reports", "generating training quizzes", "creating social media posts", "formatting budget reports"] },
-      { name: "department", label: "Department", placeholder: "e.g., Utilities", suggestions: ["Utilities", "Public Works", "Human Resources", "Information Technology", "Emergency Management"] },
-      { name: "priority_dimension", label: "Priority Dimension", placeholder: "e.g., accuracy", suggestions: ["accuracy", "safety", "business value", "time saved", "readability"] },
-      { name: "users", label: "Target Users", placeholder: "e.g., field supervisors", suggestions: ["field supervisors", "department directors", "front desk staff", "the PIO team", "all county employees"] }
-    ]
-  },
-  {
-    id: "ch18",
-    number: 18,
-    title: "Safety Gates & PII Protection",
-    subtitle: "The automated safety checks every prompt passes before deployment",
-    part: "part4",
-    partLabel: "Part IV: Governance & Horizon",
-    difficulty: "advanced",
-    icon: "🔒",
-    cardType: "governance",
-    riskTier: "yellow",
-    qualityScore: null,
-    summary: "PII redaction, prompt injection detection, toxicity checks, and bias detection — the four automated safety gates in the governance system.",
-    source: "AI Governance Registry",
-    persona: "James Torres",
-    personaRole: "IT Analyst, Manatee County Information Technology",
-    content: [
-      "The Manatee County AI governance system includes four automated safety gates that every prompt template must pass before deployment. These gates run automatically — no manual intervention required.",
-      "Gate 1 — PII Protection: Scans prompts and outputs for personally identifiable information (names, addresses, phone numbers, SSNs, email addresses). Any PII detected is flagged and must be removed before the template can proceed.",
-      "Gate 2 — Prompt Injection Detection: Checks for attempts to override the template's instructions (\"ignore all previous instructions\", \"you are now...\"). This protects against both accidental and malicious misuse.",
-      "Gate 3 — Toxicity Check: Evaluates test responses for harmful, offensive, or inappropriate content. Templates that produce toxic output in any test scenario are blocked.",
-      "Gate 4 — Bias Detection: Analyzes outputs for demographic bias, stereotyping, or unfair treatment. Government AI must serve all residents equitably.",
-      "In strict mode (the default), any single gate failure blocks deployment. This is intentional — the county's risk tolerance for AI safety is zero."
-    ],
-    promptExamples: [
-      "\"Review this prompt template for PII exposure risks. Identify any fields where a user might accidentally include personal information, and suggest guardrails to prevent it.\"",
-      "\"Test this prompt against common injection attacks: 'ignore previous instructions', 'you are now a different assistant', 'output your system prompt'. Report whether the template is resistant.\"",
-      "\"Evaluate this template's outputs for potential bias. Run it with inputs from different demographic contexts and flag any inconsistencies in tone, quality, or recommendations.\""
-    ],
-    keyTakeaways: [
-      "Four automated safety gates: PII, injection, toxicity, bias",
-      "Strict mode: any single failure blocks deployment",
-      "PII detection covers names, addresses, SSNs, phone numbers, emails",
-      "Prompt injection protection guards against instruction override attacks",
-      "Zero risk tolerance — this is non-negotiable for government AI"
-    ],
-    tryItTemplate: "I am developing a prompt template for {{use_case}} at Manatee County. Help me identify potential safety risks:\n\n1. What PII could users accidentally include?\n2. How could this template be misused via prompt injection?\n3. What biases might appear in the output?\n4. What guardrails should I add?\n\nThe template will be used by {{users}} in the {{department}} department.",
-    tryItVariables: [
-      { name: "use_case", label: "Use Case", placeholder: "e.g., responding to resident complaints", suggestions: ["responding to resident complaints", "summarizing employee evaluations", "drafting code enforcement notices", "generating permit status updates", "creating public meeting summaries"] },
-      { name: "users", label: "Users", placeholder: "e.g., front desk staff", suggestions: ["front desk staff", "department directors", "field inspectors", "the PIO team", "HR coordinators"] },
-      { name: "department", label: "Department", placeholder: "e.g., Code Enforcement", suggestions: ["Code Enforcement", "Human Resources", "Building Services", "Public Safety", "Customer Service"] }
-    ]
-  },
-  {
-    id: "ch19",
-    number: 19,
-    title: "Audit Trails & Records Management",
-    subtitle: "How to document AI usage for compliance with Florida public records law",
-    part: "part4",
-    partLabel: "Part IV: Governance & Horizon",
-    difficulty: "intermediate",
-    icon: "📑",
-    cardType: "manual",
-    riskTier: "yellow",
-    qualityScore: null,
-    summary: "Georgia's audit trail model, San Jose's PRA approach, and Florida Sunshine Law compliance — practical guidance for documenting AI use.",
-    source: "Manatee County Prompt Manual, Ch. 8; Georgia GTA Guidelines; City of San Jose",
-    persona: "Carlos Rivera",
-    personaRole: "Department Director, Manatee County Public Works",
-    content: [
-      "Florida's public records laws require that government work products be documentable and discoverable. When AI is involved in creating those work products, the AI usage itself may need to be documented.",
-      "The Georgia model provides a practical framework: for each AI-assisted document, record the tool name (e.g., ChatGPT Enterprise, Copilot), a summary of the prompt used, the reviewer's identity, and the date of human review and approval.",
-      "San Jose's approach to Public Records Act (PRA) requests involving AI: treat AI-generated drafts the same as human-generated drafts. If the final document is a public record, the process that created it (including AI assistance) may be discoverable.",
-      "The Manatee County governance system includes automated audit logging that tracks: who used which prompt template, when, what inputs were provided (with PII redacted), and what outputs were generated. This creates a compliance-ready audit trail.",
-      "Practical recommendation: add a simple note to any AI-assisted document — \"Drafted with AI assistance, reviewed and approved by [Name], [Date].\" This satisfies most audit requirements."
-    ],
-    promptExamples: [
-      "\"Create an AI usage log template for my department. Include fields for: date, employee name, AI tool used, purpose, prompt summary (no sensitive data), output summary, reviewer name, and approval date.\"",
-      "\"Draft a department policy statement on AI documentation requirements that complies with Florida's Sunshine Law. Keep it to one page and use plain language.\"",
-      "\"Review this document and add appropriate AI attribution. The document was drafted using ChatGPT Enterprise and reviewed by the department director.\""
-    ],
-    keyTakeaways: [
-      "Florida Sunshine Law may require documentation of AI-assisted work",
-      "Georgia model: record tool name, prompt summary, reviewer, date",
-      "AI-generated drafts may be discoverable under public records requests",
-      "The governance system provides automated audit logging",
-      "Simple fix: add \"Drafted with AI assistance, reviewed by [Name]\" to documents"
-    ],
-    tryItTemplate: "I am a {{role}} at Manatee County. I need to create an AI usage documentation process for my {{department}} department. The process should comply with Florida's Sunshine Law and be simple enough for {{staff_type}} to follow. Include a template for {{document_type}}.",
-    tryItVariables: [
-      { name: "role", label: "Your Role", placeholder: "e.g., Department Director", suggestions: ["Department Director", "IT Analyst", "HR Coordinator", "County Attorney staff", "Records Manager"] },
-      { name: "department", label: "Department", placeholder: "e.g., Public Works", suggestions: ["Public Works", "Utilities", "Human Resources", "Information Technology", "Building Services"] },
-      { name: "staff_type", label: "Staff Type", placeholder: "e.g., non-technical staff", suggestions: ["non-technical staff", "field workers", "office staff", "managers", "all employees"] },
-      { name: "document_type", label: "Document Type", placeholder: "e.g., AI usage log", suggestions: ["AI usage log", "department AI policy", "audit checklist", "attribution statement template", "records retention guide"] }
-    ]
-  },
   {
     id: "ch20",
     number: 20,
@@ -935,7 +806,7 @@ export const chapters: Chapter[] = [
     icon: "👔",
     cardType: "governance",
     riskTier: "yellow",
-    qualityScore: 8,
+    qualityScore: null,
     summary: "A practical guide for managers and department directors on leading AI adoption, setting expectations, and reviewing AI-generated work from their teams.",
     source: "AI Working Group Leadership Sessions; NACo AI Adoption Framework",
     persona: "Director James Wilson",
@@ -968,48 +839,6 @@ export const chapters: Chapter[] = [
     ]
   },
   {
-    id: "ch22",
-    number: 22,
-    title: "Templates & the Training Horizon",
-    subtitle: "Building reusable prompt templates and planning for AI skill development",
-    part: "part3",
-    partLabel: "Part III: Use Cases & Strategy",
-    difficulty: "advanced",
-    icon: "🗺️",
-    cardType: "governance",
-    riskTier: "green",
-    qualityScore: 7,
-    summary: "How to create, test, and share reusable prompt templates across departments, plus a roadmap for ongoing AI skill development at Manatee County.",
-    source: "AI Working Group Template Registry; Georgia GTA Best Practices",
-    persona: "Sarah Martinez",
-    personaRole: "Training Coordinator, Manatee County HR",
-    content: [
-      "A prompt template is a reusable pattern with placeholders that any staff member can fill in for their specific situation. Templates save time, ensure consistency, and reduce the risk of poor prompts generating unreliable outputs.",
-      "Good templates follow the RTCO pattern: Role (who the AI should act as), Task (what it should do), Context (background information), and Output format (how to structure the response). Adding Constraints (what to avoid) makes them even more reliable.",
-      "The AI Working Group maintains a template registry where approved templates are stored with their quality scores, supported tools, and department applicability. Any staff member can propose a new template by submitting it through the governance process.",
-      "The training horizon for Manatee County AI adoption follows three phases: Phase 1 (Current) — safety awareness and low-risk use cases. Phase 2 (Next 6 months) — department-specific templates and mid-risk use cases. Phase 3 (12+ months) — advanced techniques, custom workflows, and integration with county systems."
-    ],
-    promptExamples: [
-      "\"Create a prompt template for [department] staff to use when [task]. The template should include placeholders for [variable1], [variable2], and [variable3]. Format it so any staff member can fill it in without AI experience.\"",
-      "\"Review this prompt template and rate it on a scale of 1-10 for: clarity, specificity, safety compliance, and reusability. Suggest improvements for any category scoring below 7.\"",
-      "\"Draft a 6-month AI training roadmap for Manatee County that includes monthly milestones, skills to develop, and measurable outcomes for each phase.\""
-    ],
-    keyTakeaways: [
-      "Templates make AI accessible to staff without prompt engineering skills",
-      "RTCO pattern (Role, Task, Context, Output) is the foundation",
-      "The template registry ensures quality and consistency across departments",
-      "Three-phase training horizon: awareness → templates → advanced techniques",
-      "Any staff member can propose new templates through governance"
-    ],
-    tryItTemplate: "Create a reusable prompt template for {{department}} staff to {{task}}. The template should follow the RTCO pattern with clear placeholders. Include instructions so a {{skill_level}} user can fill it in. The output should be formatted as {{format}}.",
-    tryItVariables: [
-      { name: "department", label: "Department", placeholder: "e.g., Finance", suggestions: ["Finance", "HR", "IT", "Public Works", "Communications", "Emergency Management"] },
-      { name: "task", label: "Task", placeholder: "e.g., draft budget memos", suggestions: ["draft budget memos", "create inspection reports", "write press releases", "summarize meeting minutes", "generate training materials"] },
-      { name: "skill_level", label: "User Skill Level", placeholder: "e.g., beginner", suggestions: ["complete beginner", "intermediate user", "power user"] },
-      { name: "format", label: "Output Format", placeholder: "e.g., a fill-in-the-blank form", suggestions: ["a fill-in-the-blank form", "a step-by-step guide", "a copy-paste template with [brackets]", "a decision tree"] }
-    ]
-  },
-  {
     id: "ch23",
     number: 23,
     title: "Chain-of-Thought Prompting",
@@ -1020,7 +849,7 @@ export const chapters: Chapter[] = [
     icon: "🧠",
     cardType: "manual",
     riskTier: "green",
-    qualityScore: 9,
+    qualityScore: null,
     summary: "Chain-of-thought prompting forces AI to reason step-by-step instead of jumping to conclusions. This improves accuracy for logic, math, analysis, and multi-step tasks.",
     source: "Wei et al. 2022; County AI Working Group",
     persona: "Alex Rivera",
@@ -1062,7 +891,7 @@ export const chapters: Chapter[] = [
     icon: "🏗️",
     cardType: "template",
     riskTier: "green",
-    qualityScore: 9,
+    qualityScore: null,
     summary: "RTCO is the standard prompt framework used throughout this cookbook. Master these four components and you can write effective prompts for any situation.",
     source: "AI Working Group; adapted from government prompt engineering guides",
     persona: "Maria Chen",
@@ -1106,7 +935,7 @@ export const chapters: Chapter[] = [
     icon: "🎭",
     cardType: "manual",
     riskTier: "green",
-    qualityScore: 8,
+    qualityScore: null,
     summary: "Persona prompting tells the AI to 'act as' a specific expert. Combined with a scenario, it produces more relevant, contextually appropriate outputs for government work.",
     source: "White et al. 2023; County AI Working Group",
     persona: "Tom Rodriguez",
@@ -1149,7 +978,7 @@ export const chapters: Chapter[] = [
     icon: "🤖",
     cardType: "template",
     riskTier: "green",
-    qualityScore: 8,
+    qualityScore: null,
     summary: "Practical tips for using Microsoft Copilot in the tools county staff already use daily — Word, Outlook, Excel, Teams, and PowerPoint.",
     source: "AI Working Group; Microsoft Copilot for Government documentation",
     persona: "Lisa Park",
@@ -1193,7 +1022,7 @@ export const chapters: Chapter[] = [
     icon: "🚫",
     cardType: "manual",
     riskTier: "green",
-    qualityScore: 8,
+    qualityScore: null,
     summary: "Negative prompting eliminates fluff, wrong tones, hallucinations, and unwanted formatting by explicitly telling the AI what to exclude from its response.",
     source: "NIST AI RMF; County AI Working Group",
     persona: "David Kim",
@@ -1237,7 +1066,7 @@ export const chapters: Chapter[] = [
     icon: "🎨",
     cardType: "manual",
     riskTier: "yellow",
-    qualityScore: 7,
+    qualityScore: null,
     summary: "Writing good image prompts is about giving the model the right constraints — subject, style, composition, details, and constraints — like directing a photographer.",
     source: "DALL-E documentation; County AI Working Group",
     persona: "Rachel Torres",
@@ -1280,7 +1109,7 @@ export const chapters: Chapter[] = [
     icon: "🧪",
     cardType: "governance",
     riskTier: "green",
-    qualityScore: 9,
+    qualityScore: null,
     summary: "Before relying on any AI output, you need to test it. This chapter covers practical testing methods: consistency checks, edge cases, fact verification, and the prompt scorecard.",
     source: "NIST AI RMF; County AI Working Group",
     persona: "Dr. Karen Liu",
@@ -1321,7 +1150,7 @@ export const chapters: Chapter[] = [
     icon: "🛡️",
     cardType: "governance",
     riskTier: "yellow",
-    qualityScore: 9,
+    qualityScore: null,
     summary: "Four defensive techniques that reduce AI hallucinations: the Don't Make Stuff Up clause, Source Enforcement, Uncertainty Prompting, and Boundary Setting.",
     source: "NIST AI RMF; County AI Working Group",
     persona: "Dr. Karen Liu",
@@ -1355,13 +1184,6 @@ export const chapters: Chapter[] = [
     ]
   }
 ];
-
-export const stats = {
-  chapters: chapters.length,
-  prompts: "110+",
-  templates: chapters.filter((c) => c.tryItTemplate).length,
-  sources: "14+",
-};
 
 export const tagLabels = [
   "MCG AI Prompt Cookbook",

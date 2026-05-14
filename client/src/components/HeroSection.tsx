@@ -1,6 +1,4 @@
 import { useState } from "react";
-import { chapters, stats } from "@/lib/cookbookData";
-import { departments } from "@/lib/departments";
 
 const HERO_IMAGE = "https://d2xsxph8kpxj0f.cloudfront.net/310519663269100577/iNoee2hzjbmnACpdRetr7a/robot-chef-hero-CDn5BTigHTzYxm8RQw7AGt.webp";
 
@@ -67,27 +65,6 @@ export default function HeroSection({ greeting }: HeroSectionProps) {
             Practical prompt recipes for Manatee County staff.
           </p>
         )}
-
-        {/* Stats strip */}
-        <div
-          className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-4 pt-3"
-          style={{ borderTop: "1px solid oklch(0.30 0.03 45 / 0.5)" }}
-        >
-          {[
-            { value: String(chapters.length), label: "recipes" },
-            { value: String(stats.templates), label: "templates" },
-            { value: String(departments.length), label: "departments" },
-          ].map(({ value, label }) => (
-            <div key={label} className="flex items-baseline gap-1.5">
-              <span className="text-lg font-black font-serif" style={{ color: "oklch(0.85 0.14 58)" }}>
-                {value}
-              </span>
-              <span className="text-xs font-medium" style={{ color: "oklch(0.65 0.04 60)" }}>
-                {label}
-              </span>
-            </div>
-          ))}
-        </div>
       </div>
     </section>
   );

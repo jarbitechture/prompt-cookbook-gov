@@ -55,7 +55,7 @@ const TECHNIQUE_LINKS: Record<string, { chapters: { id: string; title: string }[
     builderTip: "Use the Constraints block in the Prompt Builder to set word limits and required sections.",
   },
   "Format + Structure": {
-    chapters: [{ id: "ch24", title: "The RTCO Framework" }, { id: "ch22", title: "Templates & the Training Horizon" }],
+    chapters: [{ id: "ch24", title: "The RTCO Framework" }],
     builderTip: "The Output Format block in the Builder helps you specify exactly how results should be structured.",
   },
   "Persona + Negative Constraints": {

@@ -437,7 +437,7 @@ export const departments: Category[] = [
         ],
       },
     ],
-    relevantChapters: ["ch01", "ch02", "ch04", "ch12", "ch15", "ch16", "ch17", "ch24", "ch29"],
+    relevantChapters: ["ch01", "ch02", "ch04", "ch12", "ch15", "ch16", "ch24", "ch29"],
     caseStudies: [
       {
         title: "Public Records Request Response",
@@ -653,7 +653,7 @@ export const departments: Category[] = [
         ],
       },
     ],
-    relevantChapters: ["ch01", "ch02", "ch04", "ch15", "ch16", "ch17", "ch29", "ch30"],
+    relevantChapters: ["ch01", "ch02", "ch04", "ch15", "ch16", "ch29", "ch30"],
     caseStudies: [
       {
         title: "Phishing Advisory to County Staff",
