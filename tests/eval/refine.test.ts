@@ -126,6 +126,7 @@ describe("handleRefine — eval fixtures", () => {
     fireMock.mockResolvedValueOnce(JSON.stringify(PLACEHOLDER_REFINE));
     const req = mockReq({
       prompt: "What is the FY2025 Parks department budget? Write a summary.",
+      technique: "set-role",
     });
     const res = mockRes();
     await handleRefine(req, res as unknown as express.Response);
@@ -141,6 +142,7 @@ describe("handleRefine — eval fixtures", () => {
     fireMock.mockResolvedValueOnce(JSON.stringify(VALID_REFINE));
     const req = mockReq({
       prompt: "Summarize the public records request.",
+      technique: "specify-output",
     });
     const res = mockRes();
     await handleRefine(req, res as unknown as express.Response);
@@ -154,7 +156,7 @@ describe("handleRefine — eval fixtures", () => {
   // F3 — missing RTCO: coach adds structure
   it("F3: bare prompt with no RTCO → 200 with structured rewritten field", async () => {
     fireMock.mockResolvedValueOnce(JSON.stringify(STRUCTURED_REFINE));
-    const req = mockReq({ prompt: "check the agenda" });
+    const req = mockReq({ prompt: "check the agenda", technique: "more-specific" });
     const res = mockRes();
     await handleRefine(req, res as unknown as express.Response);
     expect(res.statusCode).toBe(200);
@@ -173,6 +175,7 @@ describe("handleRefine — eval fixtures", () => {
     const req = mockReq({
       prompt:
         "You are a county attorney. Review the public records request and advise on exemptions.",
+      technique: "set-role",
     });
     const res = mockRes();
     await handleRefine(req, res as unknown as express.Response);
@@ -189,7 +192,7 @@ describe("handleRefine — eval fixtures", () => {
   // F5 — breaker open: 503
   it("F5: breaker open → 503 with unavailable message", async () => {
     fireMock.mockResolvedValueOnce({ __breaker_open: true });
-    const req = mockReq({ prompt: "Rewrite the budget memo prompt." });
+    const req = mockReq({ prompt: "Rewrite the budget memo prompt.", technique: "more-specific" });
     const res = mockRes();
     await handleRefine(req, res as unknown as express.Response);
     expect(res.statusCode).toBe(503);

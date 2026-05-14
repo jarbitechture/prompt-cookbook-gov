@@ -40,6 +40,11 @@ import { PreviewSchema } from "../schemas/preview.js";
 import type { Preview } from "../schemas/preview.js";
 import { newTraceId } from "../../api/src/lib/roi-sidecar.js";
 import { emitPromptEvent, emitLlmCallEvent } from "./roi-emit.js";
+import {
+  TECHNIQUE_KEYS,
+  TECHNIQUE_TO_CHAPTER,
+  type TechniqueKey,
+} from "./technique-map.js";
 
 // ─── Prompt template cache ────────────────────────────────────────────────────
 
@@ -74,9 +79,22 @@ const CritiqueBodySchema = z
 const RefineBodySchema = z
   .object({
     prompt: z.string().min(1).max(10_000),
+    /**
+     * Plain-language Refine card key (preferred path from the Builder UI).
+     * Resolved to a pinned chapter via TECHNIQUE_TO_CHAPTER.
+     */
+    technique: z.enum(TECHNIQUE_KEYS as readonly [TechniqueKey, ...TechniqueKey[]]).optional(),
+    /**
+     * Legacy direct chapter pin — kept for back-compat with any caller that
+     * still posts numeric chapter ids. Mutually exclusive with `technique`.
+     */
     chapter_id: z.number().int().min(1).max(30).optional(),
   })
-  .strict();
+  .strict()
+  .refine(
+    (body) => !(body.technique !== undefined && body.chapter_id !== undefined),
+    { message: "technique and chapter_id are mutually exclusive", path: ["technique"] }
+  );
 
 const PreviewBodySchema = z
   .object({ prompt: z.string().min(1).max(10_000) })
@@ -292,56 +310,65 @@ export async function handleRefine(
     res.status(400).json({ error: parsed.error.issues[0]?.message ?? "Invalid request body" });
     return;
   }
-  const { prompt, chapter_id } = parsed.data;
+  const { prompt, technique } = parsed.data;
+  // Resolve technique key → numeric chapter id before the retrieval branch.
+  // Result: a single nullable `chapter_id`, regardless of which input shape
+  // the caller used. Exactly-one-of contract is enforced below.
+  const chapter_id: number | undefined =
+    technique !== undefined ? TECHNIQUE_TO_CHAPTER[technique] : parsed.data.chapter_id;
 
-  // Chapter retrieval — with optional chapter_id override
+  if (chapter_id === undefined) {
+    emitPromptEvent(req, "refine", false, startTs, traceId);
+    res.status(400).json({
+      error: "technique or chapter_id required",
+      code: "missing_refine_target",
+    });
+    return;
+  }
+
+  // Chapter retrieval — always pinned, since chapter_id is now required.
   let formattedContext: string;
 
-  if (chapter_id !== undefined) {
-    const pinnedChapter = chapters.find((c) => c.number === chapter_id);
-    if (!pinnedChapter) {
-      emitPromptEvent(req, "refine", false, startTs, traceId);
-      res.status(400).json({ error: `Unknown chapter_id: ${chapter_id}` });
-      return;
-    }
-    // Use pinned chapter as the full chapter; fill summaries from keyword retrieval,
-    // excluding the pinned chapter to avoid duplication.
-    const keywordRetrieval = retrieveContext(prompt, 3);
-    const summaries = keywordRetrieval.summaries.filter(
-      (s) => s.chapterNumber !== chapter_id
+  const pinnedChapter = chapters.find((c) => c.number === chapter_id);
+  if (!pinnedChapter) {
+    emitPromptEvent(req, "refine", false, startTs, traceId);
+    res.status(400).json({ error: `Unknown chapter_id: ${chapter_id}` });
+    return;
+  }
+  // Use pinned chapter as the full chapter; fill summaries from keyword retrieval,
+  // excluding the pinned chapter to avoid duplication.
+  const keywordRetrieval = retrieveContext(prompt, 3);
+  const summaries = keywordRetrieval.summaries.filter(
+    (s) => s.chapterNumber !== chapter_id
+  );
+  // Also exclude pinnedChapter from keyword fullChapter if it happens to be the same
+  if (
+    keywordRetrieval.fullChapter !== null &&
+    keywordRetrieval.fullChapter.number === chapter_id
+  ) {
+    // fullChapter is already pinned; keep summaries as-is
+    formattedContext = buildFormattedContext(
+      pinnedChapter.content,
+      pinnedChapter.number,
+      pinnedChapter.title,
+      summaries
     );
-    // Also exclude pinnedChapter from keyword fullChapter if it happens to be the same
-    if (
-      keywordRetrieval.fullChapter !== null &&
-      keywordRetrieval.fullChapter.number === chapter_id
-    ) {
-      // fullChapter is already pinned; keep summaries as-is
-      formattedContext = buildFormattedContext(
-        pinnedChapter.content,
-        pinnedChapter.number,
-        pinnedChapter.title,
-        summaries
-      );
-    } else {
-      // Keyword retrieval returned a different fullChapter — add it as a summary too
-      const extraSummaries = [...summaries];
-      if (keywordRetrieval.fullChapter !== null) {
-        extraSummaries.unshift({
-          chapterNumber: keywordRetrieval.fullChapter.number,
-          title: keywordRetrieval.fullChapter.title,
-          summary: keywordRetrieval.fullChapter.summary,
-        });
-      }
-      formattedContext = buildFormattedContext(
-        pinnedChapter.content,
-        pinnedChapter.number,
-        pinnedChapter.title,
-        extraSummaries.slice(0, 2)
-      );
-    }
   } else {
-    const retrieval = retrieveContext(prompt);
-    formattedContext = retrieval.formatted;
+    // Keyword retrieval returned a different fullChapter — add it as a summary too
+    const extraSummaries = [...summaries];
+    if (keywordRetrieval.fullChapter !== null) {
+      extraSummaries.unshift({
+        chapterNumber: keywordRetrieval.fullChapter.number,
+        title: keywordRetrieval.fullChapter.title,
+        summary: keywordRetrieval.fullChapter.summary,
+      });
+    }
+    formattedContext = buildFormattedContext(
+      pinnedChapter.content,
+      pinnedChapter.number,
+      pinnedChapter.title,
+      extraSummaries.slice(0, 2)
+    );
   }
 
   const systemPrompt = TEMPLATES.refine.replace(
