@@ -14,6 +14,7 @@ import { describe, it, expect } from "vitest";
 import {
   TECHNIQUE_KEYS,
   TECHNIQUE_TO_CHAPTER,
+  TECHNIQUE_FOCUS,
   isTechniqueKey,
   type TechniqueKey,
 } from "./technique-map.js";
@@ -79,5 +80,28 @@ describe("technique-map", () => {
       }
     }
     expect(seen.size).toBe(6);
+  });
+
+  it("TECHNIQUE_FOCUS defines a directive for every TechniqueKey", () => {
+    for (const key of TECHNIQUE_KEYS) {
+      const focus = TECHNIQUE_FOCUS[key];
+      expect(focus, `${key} missing focus directive`).toBeTruthy();
+      expect(focus.length).toBeGreaterThan(40); // not a stub
+      // Every directive starts with FOCUS — gives the LLM a clear cue
+      expect(focus).toMatch(/^FOCUS THIS REFINEMENT/);
+    }
+  });
+
+  it("TECHNIQUE_FOCUS directives avoid jargon the LLM might recurse on", () => {
+    // The focus directives must use plain-language verbs that map to user-card
+    // wording, not LLM/prompt-engineering jargon like "few-shot" or "zero-shot"
+    // (those could send the model into recursive jargon territory).
+    const bannedJargon = ["few-shot", "zero-shot", "one-shot", "n-shot"];
+    for (const key of TECHNIQUE_KEYS) {
+      const focus = TECHNIQUE_FOCUS[key].toLowerCase();
+      for (const banned of bannedJargon) {
+        expect(focus, `${key} uses banned jargon: ${banned}`).not.toContain(banned);
+      }
+    }
   });
 });

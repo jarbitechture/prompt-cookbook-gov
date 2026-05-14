@@ -43,6 +43,7 @@ import { emitPromptEvent, emitLlmCallEvent } from "./roi-emit.js";
 import {
   TECHNIQUE_KEYS,
   TECHNIQUE_TO_CHAPTER,
+  TECHNIQUE_FOCUS,
   type TechniqueKey,
 } from "./technique-map.js";
 
@@ -371,10 +372,17 @@ export async function handleRefine(
     );
   }
 
-  const systemPrompt = TEMPLATES.refine.replace(
-    "{{retrieved_chapters}}",
-    formattedContext
-  );
+  // If the request came in via a technique card, append the technique-specific
+  // focus directive so the LLM knows the user's intent (not just the chapter
+  // context). Legacy chapter_id-only callers get the original prompt unchanged.
+  const focusBlock =
+    technique !== undefined
+      ? `\n\n---\n\n## USER-SELECTED TECHNIQUE FOCUS\n\n${TECHNIQUE_FOCUS[technique]}\n`
+      : "";
+
+  const systemPrompt =
+    TEMPLATES.refine.replace("{{retrieved_chapters}}", formattedContext) +
+    focusBlock;
 
   const messages: CivicAiMessage[] = [
     { role: "system", content: systemPrompt },
