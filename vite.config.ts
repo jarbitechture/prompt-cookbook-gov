@@ -24,6 +24,17 @@ export default defineConfig({
     strictPort: false, // Will find next available port if 3000 is busy
     host: true,
     allowedHosts: true,
+    // Proxy /api/* and /health to the cookbook-node Express server so dev
+    // browser fetches reach the real backend instead of hitting Vite's
+    // SPA fallback (returns index.html → client JSON.parse fails silently).
+    // In production IIS handles this reverse-proxy; this only affects `pnpm dev`.
+    proxy: {
+      "/api": {
+        target: process.env.VITE_API_TARGET ?? "http://127.0.0.1:3030",
+        changeOrigin: true,
+        secure: false,
+      },
+    },
     fs: {
       strict: true,
       deny: ["**/.*"],
