@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { Menu, ChevronDown, ChevronRight as ChevronRightIcon, FlaskConical, Wrench, BookOpen, ChefHat, ArrowRight } from "lucide-react";
 import { useLocation } from "wouter";
 import { AnimatePresence, motion } from "framer-motion";
@@ -6,10 +6,8 @@ import { ACCENT_BUILDER } from "@/lib/theme";
 import { chapters, parts } from "@/lib/cookbookData";
 import type { Difficulty } from "@/lib/cookbookData";
 import { personas } from "@/lib/personas";
-import { tasteTests, tierLabels } from "@/lib/tasteTests";
 import { useRecentlyViewed } from "@/hooks/useRecentlyViewed";
 import { usePersona } from "@/hooks/usePersona";
-import { useTasteTests } from "@/hooks/useTasteTests";
 import { getDepartment, departments } from "@/lib/departments";
 import type { Category } from "@/lib/departments";
 import Sidebar from "@/components/Sidebar";
@@ -18,7 +16,6 @@ import DifficultyFilter from "@/components/DifficultyFilter";
 import RecipeCard from "@/components/RecipeCard";
 import ChapterDetail from "@/components/ChapterDetail";
 import RecentlyViewed from "@/components/RecentlyViewed";
-import TasteTestModal from "@/components/TasteTestModal";
 
 const quickActions = [
   { label: "Prompt Lab", desc: "Practice improving prompts with 10 real scenarios", icon: FlaskConical, href: "/game", color: "oklch(0.50 0.14 155)", bg: "linear-gradient(135deg, oklch(0.18 0.06 155), oklch(0.22 0.04 145))", border: "oklch(0.30 0.08 155)" },
@@ -252,8 +249,6 @@ export default function Home() {
   const [activeChapter, setActiveChapter] = useState<string | null>(null);
   const [difficultyFilter, setDifficultyFilter] = useState<Difficulty | "all">("all");
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [tierDropdownOpen, setTierDropdownOpen] = useState(false);
-  const [activeTestId, setActiveTestId] = useState<string | null>(null);
   const [showAllChapters, setShowAllChapters] = useState(false);
   const [selectedDept, setSelectedDeptState] = useState<Category | null>(() => {
     try {
@@ -271,22 +266,8 @@ export default function Home() {
     // Notify App-level listeners (storage event only fires cross-tab)
     window.dispatchEvent(new Event("cookbook-department-changed"));
   }, []);
-  const tierRef = useRef<HTMLDivElement>(null);
-
   const { recentItems, addRecentItem, clearRecent } = useRecentlyViewed();
   const { persona, setPersona } = usePersona();
-  const { completedTests, currentTier, tierLabel, markComplete, resetTests } = useTasteTests();
-
-  // Close tier dropdown on outside click
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (tierRef.current && !tierRef.current.contains(e.target as Node)) {
-        setTierDropdownOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, []);
 
   // Handle hash-based deep linking
   useEffect(() => {
@@ -333,10 +314,6 @@ export default function Home() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, []);
 
-  const handleOpenTest = useCallback((testId: string) => {
-    setActiveTestId(testId);
-  }, []);
-
   // Apply difficulty filter first
   const difficultyFiltered =
     difficultyFilter === "all"
@@ -377,8 +354,6 @@ export default function Home() {
     ? chapters.find((ch) => ch.id === activeChapter)
     : null;
 
-  const activeTest = activeTestId ? tasteTests.find((t) => t.id === activeTestId) : null;
-
   return (
     <div className="flex min-h-screen" style={{ background: "oklch(0.97 0.008 75)" }}>
       {/* Sidebar */}
@@ -388,8 +363,6 @@ export default function Home() {
         recentItems={recentItems}
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
-        completedTests={completedTests}
-        onOpenTest={handleOpenTest}
         selectedDepartment={selectedDept}
         onSelectDepartment={setSelectedDept}
       />
@@ -449,125 +422,34 @@ export default function Home() {
               {/* First-visit onboarding */}
               <OnboardingBanner onSelectChapter={handleSelectChapter} />
 
-              {/* Department banner + Tier badge row */}
-              <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-4">
-                {/* Department indicator */}
-                <div className="flex-1">
-                  {selectedDept ? (
-                    <div className="flex items-center gap-2">
-                      <span className="text-lg">{selectedDept.icon}</span>
-                      <div>
-                        <span className="text-sm font-bold" style={{ color: "oklch(0.25 0.04 40)" }}>
-                          {selectedDept.name}
-                        </span>
-                        <span className="text-xs ml-2" style={{ color: "oklch(0.55 0.04 50)" }}>
-                          Showing {selectedDept.relevantChapters.length} relevant chapters
-                        </span>
-                      </div>
-                    </div>
-                  ) : (
-                    <div
-                      className="flex items-center gap-2 px-3 py-2 rounded-lg"
-                      style={{
-                        background: "oklch(0.92 0.02 55 / 0.5)",
-                        border: "1px solid oklch(0.85 0.04 55)",
-                      }}
-                    >
-                      <span className="text-sm">👋</span>
-                      <span className="text-xs font-medium" style={{ color: "oklch(0.35 0.06 45)" }}>
-                        Pick your department to see relevant recipes first
+              {/* Department indicator */}
+              <div className="mb-4">
+                {selectedDept ? (
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">{selectedDept.icon}</span>
+                    <div>
+                      <span className="text-sm font-bold" style={{ color: "oklch(0.25 0.04 40)" }}>
+                        {selectedDept.name}
+                      </span>
+                      <span className="text-xs ml-2" style={{ color: "oklch(0.55 0.04 50)" }}>
+                        Showing {selectedDept.relevantChapters.length} relevant chapters
                       </span>
                     </div>
-                  )}
-                </div>
-
-                {/* Tier badge */}
-                <div className="relative flex-shrink-0" ref={tierRef}>
-                  <button
-                    onClick={() => setTierDropdownOpen(!tierDropdownOpen)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all"
+                  </div>
+                ) : (
+                  <div
+                    className="flex items-center gap-2 px-3 py-2 rounded-lg"
                     style={{
-                      background: "oklch(0.22 0.03 45)",
-                      color: "oklch(0.78 0.12 55)",
-                      border: "1px solid oklch(0.32 0.04 45)",
+                      background: "oklch(0.92 0.02 55 / 0.5)",
+                      border: "1px solid oklch(0.85 0.04 55)",
                     }}
                   >
-                    <TierStar tier={currentTier} />
-                    {tierLabel}
-                    <ChevronDown className="w-3 h-3" />
-                  </button>
-
-                  {/* Tier dropdown */}
-                  {tierDropdownOpen && (
-                    <div
-                      className="absolute right-0 top-full mt-2 w-56 rounded-xl shadow-xl z-50 overflow-hidden"
-                      style={{
-                        background: "oklch(0.998 0.002 70)",
-                        border: "1px solid oklch(0.90 0.01 70)",
-                      }}
-                    >
-                      <div className="px-4 py-3" style={{ borderBottom: "1px solid oklch(0.92 0.01 70)" }}>
-                        <p className="text-xs font-semibold" style={{ color: "oklch(0.30 0.03 40)" }}>
-                          Your Progress
-                        </p>
-                        <p className="text-[10px] mt-0.5" style={{ color: "oklch(0.55 0.04 50)" }}>
-                          {completedTests.length} of {tasteTests.length} taste tests passed
-                        </p>
-                      </div>
-                      <div className="py-1">
-                        {tierLabels.map((label, i) => {
-                          const isCurrent = i === currentTier;
-                          const isUnlocked = i <= currentTier;
-                          return (
-                            <div
-                              key={label}
-                              className="flex items-center gap-2 px-4 py-2"
-                              style={{
-                                background: isCurrent ? "oklch(0.55 0.12 45 / 0.08)" : "transparent",
-                                opacity: isUnlocked ? 1 : 0.4,
-                              }}
-                            >
-                              <TierStar tier={i} />
-                              <span
-                                className="text-xs font-medium"
-                                style={{
-                                  color: isCurrent ? "oklch(0.40 0.10 45)" : "oklch(0.45 0.03 48)",
-                                }}
-                              >
-                                {label}
-                              </span>
-                              {isCurrent && (
-                                <span
-                                  className="ml-auto text-[10px] font-bold px-1.5 py-0.5 rounded"
-                                  style={{
-                                    background: "oklch(0.55 0.12 45 / 0.15)",
-                                    color: "oklch(0.45 0.12 45)",
-                                  }}
-                                >
-                                  Current
-                                </span>
-                              )}
-                            </div>
-                          );
-                        })}
-                      </div>
-                      {completedTests.length > 0 && (
-                        <div className="px-4 py-2" style={{ borderTop: "1px solid oklch(0.92 0.01 70)" }}>
-                          <button
-                            onClick={() => {
-                              resetTests();
-                              setTierDropdownOpen(false);
-                            }}
-                            className="text-[10px] font-medium"
-                            style={{ color: "oklch(0.55 0.15 25)" }}
-                          >
-                            Reset progress
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
+                    <span className="text-sm">👋</span>
+                    <span className="text-xs font-medium" style={{ color: "oklch(0.35 0.06 45)" }}>
+                      Pick your department to see relevant recipes first
+                    </span>
+                  </div>
+                )}
               </div>
 
               {/* Hero */}
@@ -849,23 +731,6 @@ export default function Home() {
         </div>
       </main>
 
-      {/* Taste Test Modal */}
-      <AnimatePresence>
-        {activeTest && (
-          <TasteTestModal
-            key={activeTest.id}
-            test={activeTest}
-            onClose={() => setActiveTestId(null)}
-            onPass={markComplete}
-          />
-        )}
-      </AnimatePresence>
     </div>
   );
-}
-
-/** Small star indicator per tier level */
-function TierStar({ tier }: { tier: number }) {
-  const stars = ["🌱", "🍳", "🔪", "👨‍🍳", "⭐"];
-  return <span className="text-sm leading-none">{stars[tier] || stars[0]}</span>;
 }

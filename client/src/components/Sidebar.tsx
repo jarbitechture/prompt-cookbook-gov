@@ -2,7 +2,6 @@ import { useState, useMemo } from "react";
 import { useLocation } from "wouter";
 import { Search, BookOpen, ChefHat, FlaskConical, Wrench, Clock, ChevronDown, ChevronRight, X } from "lucide-react";
 import { chapters, parts } from "@/lib/cookbookData";
-import { tasteTests } from "@/lib/tasteTests";
 import { departments } from "@/lib/departments";
 import type { Category } from "@/lib/departments";
 import type { RecentItem } from "@/hooks/useRecentlyViewed";
@@ -14,13 +13,11 @@ interface SidebarProps {
   recentItems: RecentItem[];
   isOpen: boolean;
   onClose: () => void;
-  completedTests?: string[];
-  onOpenTest?: (testId: string) => void;
   selectedDepartment?: Category | null;
   onSelectDepartment?: (dept: Category | null) => void;
 }
 
-export default function Sidebar({ activeChapter, onSelectChapter, recentItems, isOpen, onClose, completedTests = [], onOpenTest, selectedDepartment, onSelectDepartment }: SidebarProps) {
+export default function Sidebar({ activeChapter, onSelectChapter, recentItems, isOpen, onClose, selectedDepartment, onSelectDepartment }: SidebarProps) {
   const [, setLocation] = useLocation();
   const [deptDropdownOpen, setDeptDropdownOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -303,7 +300,7 @@ export default function Sidebar({ activeChapter, onSelectChapter, recentItems, i
                       </span>
                     </button>
 
-                    {/* Chapter items + taste test */}
+                    {/* Chapter items */}
                     {isExpanded && (
                       <div className="mt-1 space-y-px">
                         {partChapters.map((ch) => {
@@ -323,26 +320,6 @@ export default function Sidebar({ activeChapter, onSelectChapter, recentItems, i
                             </button>
                           );
                         })}
-                        {/* Taste test for this part */}
-                        {(() => {
-                          const partTest = tasteTests.find((t) => t.requiredParts.includes(part.id));
-                          if (!partTest || !onOpenTest) return null;
-                          const done = completedTests.includes(partTest.id);
-                          return (
-                            <button
-                              onClick={() => onOpenTest(partTest.id)}
-                              className="w-full flex items-center gap-2 pl-5 pr-3 py-[6px] rounded-lg text-left transition-all duration-150"
-                              style={{
-                                color: done ? "oklch(0.58 0.14 145)" : "oklch(0.58 0.10 55)",
-                              }}
-                            >
-                              <span className="text-[10px] flex-shrink-0">{done ? "✅" : "📝"}</span>
-                              <span className="truncate text-[11px] font-medium">
-                                {done ? "Test passed" : "Take quiz →"}
-                              </span>
-                            </button>
-                          );
-                        })()}
                       </div>
                     )}
                   </div>
