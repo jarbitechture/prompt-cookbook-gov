@@ -34,6 +34,7 @@ import PiiWarningModal from "@/components/PiiWarningModal";
 import { personas } from "@/lib/personas";
 import type { Persona } from "@/lib/personas";
 import { getDepartment } from "@/lib/departments";
+import { getWelcomeSeen, setWelcomeSeen } from "@/lib/welcomeStorage";
 import CritiquePanel from "@/components/CritiquePanel";
 import RefineDiff from "@/components/RefineDiff";
 import PreviewPanel from "@/components/PreviewPanel";
@@ -365,10 +366,12 @@ function BuildMode() {
     redacted: string;
     target: "copilot" | "chatgpt_enterprise";
   } | null>(null);
-  // Welcome hero: lazy init so auto-filled pages never flash the hero then animate it out
+  // Welcome hero: lazy init so auto-filled pages never flash the hero then animate it out.
+  // Init order: import present → false; welcome-seen → false; dept template → false; else true
   const [showWelcome, setShowWelcome] = useState(() => {
     try {
       if (localStorage.getItem("cookbook-builder-import")) return false;
+      if (getWelcomeSeen()) return false;
       const deptId = localStorage.getItem("cookbook-department");
       if (deptId) {
         const dept = getDepartment(deptId);
@@ -624,6 +627,7 @@ function BuildMode() {
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
               <button
                 onClick={() => {
+                  setWelcomeSeen(true);
                   setShowWelcome(false);
                   setTemplatePanelOpen(true);
                 }}
@@ -634,7 +638,7 @@ function BuildMode() {
                 Start with department template ▼
               </button>
               <button
-                onClick={() => setShowWelcome(false)}
+                onClick={() => { setWelcomeSeen(true); setShowWelcome(false); }}
                 className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all hover:opacity-80"
                 style={{
                   background: "oklch(0.998 0.002 70)",
