@@ -603,6 +603,70 @@ function BuildMode() {
   return (
     <div className="max-w-6xl mx-auto p-4 sm:p-6 lg:p-8">
 
+      {/* Sticky CTA bar — fixed below the site nav, always in view */}
+      <div
+        className="flex items-center justify-end gap-2 py-2 px-4 rounded-xl mb-4"
+        style={{
+          position: "sticky",
+          top: "48px",
+          zIndex: 20,
+          background: "oklch(0.99 0.005 75 / 0.92)",
+          backdropFilter: "blur(8px)",
+          WebkitBackdropFilter: "blur(8px)",
+          border: "1px solid oklch(0.90 0.015 75)",
+          boxShadow: "0 2px 8px oklch(0.50 0.04 50 / 0.08)",
+        }}
+      >
+        <button
+          onClick={handleCopy}
+          disabled={!assembledPrompt.trim()}
+          className="flex items-center gap-1.5 text-xs px-4 py-2 rounded-lg font-bold transition-all"
+          style={{
+            background: assembledPrompt.trim() ? ACCENT : "oklch(0.88 0.01 75)",
+            color: assembledPrompt.trim() ? "oklch(0.98 0.01 75)" : "oklch(0.58 0.03 55)",
+            cursor: assembledPrompt.trim() ? "pointer" : "not-allowed",
+            opacity: assembledPrompt.trim() ? 1 : 0.7,
+          }}
+        >
+          {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+          {copied ? "Copied!" : "Copy Prompt"}
+        </button>
+        <motion.button
+          animate={assembledPrompt.trim() && !copilotSent ? {
+            boxShadow: ["0 0 0 0px oklch(0.42 0.14 250 / 0.4)", "0 0 0 6px oklch(0.42 0.14 250 / 0)", "0 0 0 0px oklch(0.42 0.14 250 / 0)"]
+          } : {}}
+          transition={{ duration: 2, repeat: Infinity, ease: "easeOut" }}
+          onClick={() => handleSendToTarget("copilot")}
+          disabled={!assembledPrompt.trim()}
+          className="flex items-center gap-1.5 text-xs px-4 py-2 rounded-lg font-bold transition-all"
+          style={{
+            background: assembledPrompt.trim() ? "oklch(0.42 0.14 250)" : "oklch(0.88 0.01 75)",
+            color: assembledPrompt.trim() ? "oklch(0.98 0.01 75)" : "oklch(0.58 0.03 55)",
+            cursor: assembledPrompt.trim() ? "pointer" : "not-allowed",
+            opacity: assembledPrompt.trim() ? 1 : 0.7,
+          }}
+        >
+          {copilotSent ? <Check className="w-3.5 h-3.5" /> : <ArrowRight className="w-3.5 h-3.5" />}
+          Use in Copilot ↗
+        </motion.button>
+        <button
+          onClick={() => handleSendToTarget("chatgpt_enterprise")}
+          disabled={!assembledPrompt.trim()}
+          className="text-[11px] font-medium transition-opacity hover:opacity-80"
+          style={{
+            color: assembledPrompt.trim() ? "oklch(0.48 0.08 155)" : "oklch(0.68 0.03 55)",
+            cursor: assembledPrompt.trim() ? "pointer" : "not-allowed",
+            textDecoration: "underline",
+            textUnderlineOffset: "2px",
+            background: "none",
+            border: "none",
+            padding: 0,
+          }}
+        >
+          {chatgptSent ? "✓ Copied for ChatGPT" : "or copy for ChatGPT Enterprise"}
+        </button>
+      </div>
+
       {/* Welcome Hero — shown when no draft exists */}
       <AnimatePresence>
         {showWelcome && (
@@ -909,67 +973,10 @@ function BuildMode() {
 
         {/* Right: Live Preview */}
         <div className="space-y-4">
-          <div className="flex items-center justify-between mb-1">
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-bold uppercase tracking-wider" style={{ color: "oklch(0.40 0.04 45)" }}>
-                Live Preview
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={handleCopy}
-                disabled={!assembledPrompt.trim()}
-                className="flex items-center gap-1.5 text-xs px-4 py-2 rounded-lg font-bold transition-all"
-                style={{
-                  background: assembledPrompt.trim() ? ACCENT : "oklch(0.88 0.01 75)",
-                  color: assembledPrompt.trim() ? "oklch(0.98 0.01 75)" : "oklch(0.58 0.03 55)",
-                  cursor: assembledPrompt.trim() ? "pointer" : "not-allowed",
-                  opacity: assembledPrompt.trim() ? 1 : 0.7,
-                }}
-              >
-                {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-                {copied ? "Copied!" : "Copy Prompt"}
-              </button>
-              <div className="flex flex-col items-end gap-1">
-                <motion.button
-                  animate={assembledPrompt.trim() && !copilotSent ? {
-                    boxShadow: ["0 0 0 0px oklch(0.42 0.14 250 / 0.4)", "0 0 0 6px oklch(0.42 0.14 250 / 0)", "0 0 0 0px oklch(0.42 0.14 250 / 0)"]
-                  } : {}}
-                  transition={{ duration: 2, repeat: Infinity, ease: "easeOut" }}
-                  onClick={() => handleSendToTarget("copilot")}
-                  disabled={!assembledPrompt.trim()}
-                  className="flex items-center gap-1.5 text-xs px-4 py-2 rounded-lg font-bold transition-all"
-                  style={{
-                    background: assembledPrompt.trim() ? "oklch(0.42 0.14 250)" : "oklch(0.88 0.01 75)",
-                    color: assembledPrompt.trim() ? "oklch(0.98 0.01 75)" : "oklch(0.58 0.03 55)",
-                    cursor: assembledPrompt.trim() ? "pointer" : "not-allowed",
-                    opacity: assembledPrompt.trim() ? 1 : 0.7,
-                  }}
-                >
-                  {copilotSent ? <Check className="w-3.5 h-3.5" /> : <ArrowRight className="w-3.5 h-3.5" />}
-                  Use in Copilot ↗
-                </motion.button>
-                <span className="text-[10px]" style={{ color: "oklch(0.58 0.03 55)" }}>
-                  Copies your prompt → opens Copilot
-                </span>
-                <button
-                  onClick={() => handleSendToTarget("chatgpt_enterprise")}
-                  disabled={!assembledPrompt.trim()}
-                  className="text-[11px] font-medium transition-opacity hover:opacity-80"
-                  style={{
-                    color: assembledPrompt.trim() ? "oklch(0.48 0.08 155)" : "oklch(0.68 0.03 55)",
-                    cursor: assembledPrompt.trim() ? "pointer" : "not-allowed",
-                    textDecoration: "underline",
-                    textUnderlineOffset: "2px",
-                    background: "none",
-                    border: "none",
-                    padding: 0,
-                  }}
-                >
-                  {chatgptSent ? "✓ Copied for ChatGPT" : "or copy for ChatGPT Enterprise"}
-                </button>
-              </div>
-            </div>
+          <div className="flex items-center mb-1">
+            <span className="text-xs font-bold uppercase tracking-wider" style={{ color: "oklch(0.40 0.04 45)" }}>
+              Live Preview
+            </span>
           </div>
 
           {/* Coach tab strip */}
