@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { Menu, ChevronDown, ChevronRight as ChevronRightIcon, FlaskConical, Wrench, BookOpen, ChefHat, ArrowRight } from "lucide-react";
 import { useLocation } from "wouter";
-import { AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
+import { ACCENT_BUILDER } from "@/lib/theme";
 import { chapters, parts } from "@/lib/cookbookData";
 import type { Difficulty } from "@/lib/cookbookData";
 import { personas } from "@/lib/personas";
@@ -571,6 +572,36 @@ export default function Home() {
 
               {/* Hero */}
               <HeroSection greeting={selectedDept?.personalization.heroGreeting || persona?.greeting} />
+
+              {/* Prompt Builder CTA — prominent tool link in hero area */}
+              <motion.button
+                onClick={() => navigate("/builder")}
+                className="w-full flex items-center justify-between gap-4 rounded-2xl px-6 py-4 mb-5 text-left"
+                style={{
+                  background: `linear-gradient(135deg, oklch(0.14 0.06 220), oklch(0.18 0.07 235))`,
+                  border: `1.5px solid ${ACCENT_BUILDER}`,
+                  boxShadow: `0 2px 14px oklch(0.48 0.12 220 / 0.18)`,
+                }}
+                whileHover={{
+                  scale: 1.012,
+                  boxShadow: `0 8px 28px oklch(0.48 0.12 220 / 0.32)`,
+                }}
+                whileTap={{ scale: 0.995 }}
+                transition={{ type: "spring", stiffness: 340, damping: 26 }}
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <span className="text-2xl flex-shrink-0" aria-hidden="true">🛠️</span>
+                  <div className="min-w-0">
+                    <p className="text-sm font-bold leading-tight" style={{ color: "oklch(0.95 0.01 70)" }}>
+                      Open Prompt Builder ↗
+                    </p>
+                    <p className="text-xs mt-0.5" style={{ color: "oklch(0.68 0.06 220)" }}>
+                      Build a Copilot-ready prompt in 2 minutes
+                    </p>
+                  </div>
+                </div>
+                <ArrowRight className="w-5 h-5 flex-shrink-0" style={{ color: ACCENT_BUILDER }} />
+              </motion.button>
 
               {/* Quick Action Cards */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-8">
