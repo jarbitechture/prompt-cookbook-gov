@@ -654,12 +654,11 @@ function BuildMode() {
         )}
       </AnimatePresence>
 
-      <DepartmentBanner />
-
       {/* Two-column layout */}
       <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr] gap-6">
         {/* Left: Builder */}
         <div className="space-y-3">
+          <DepartmentBanner />
           <div className="flex items-center justify-between mb-1">
             <h3 className="font-bold text-base" style={{ color: "oklch(0.25 0.04 45)" }}>Prompt Blocks</h3>
             <div className="flex items-center gap-3">
