@@ -7,32 +7,18 @@ import {
   Clock,
   ChevronRight,
   ChevronDown,
-  Loader2,
   RotateCcw,
   ArrowRight,
   FileText,
   Building2,
-  Monitor,
-  BarChart3,
-  Truck,
-  Landmark,
-  Siren,
-  Mail,
-  Table2,
   Eye,
   EyeOff,
   GripVertical,
-  Zap,
-  Brain,
-  UserCircle,
-  Ban,
-  Layers,
-  Lightbulb,
-  GitBranch,
   Home,
   Shield,
   HardHat,
   Heart,
+  Landmark,
   Database,
 } from "lucide-react";
 // Link removed: Builder only navigates cross-bundle (to /cookbook/) — use plain <a>
@@ -62,9 +48,6 @@ const BLOCK_COLORS: Record<string, { border: string; text: string; bg: string }>
   context:     { border: "oklch(0.50 0.14 75)",  text: "oklch(0.58 0.14 75)",  bg: "oklch(0.96 0.03 75)" },
   output:      { border: "oklch(0.45 0.12 310)", text: "oklch(0.55 0.12 310)", bg: "oklch(0.95 0.03 310)" },
   constraints: { border: "oklch(0.50 0.16 25)",  text: "oklch(0.58 0.16 25)",  bg: "oklch(0.96 0.03 25)" },
-  examples:    { border: "oklch(0.45 0.12 180)", text: "oklch(0.52 0.12 180)", bg: "oklch(0.95 0.03 180)" },
-  reasoning:   { border: "oklch(0.40 0.12 270)", text: "oklch(0.50 0.12 270)", bg: "oklch(0.95 0.03 270)" },
-  steps:       { border: "oklch(0.42 0.14 265)", text: "oklch(0.52 0.14 265)", bg: "oklch(0.95 0.03 265)" },
 };
 
 const PREVIEW_LABEL_COLORS: Record<string, string> = {
@@ -73,9 +56,6 @@ const PREVIEW_LABEL_COLORS: Record<string, string> = {
   context: "oklch(0.68 0.14 75)",
   output: "oklch(0.65 0.12 310)",
   constraints: "oklch(0.68 0.16 25)",
-  examples: "oklch(0.62 0.12 180)",
-  reasoning: "oklch(0.60 0.12 270)",
-  steps: "oklch(0.60 0.14 265)",
 };
 
 /* ─── Block Definitions ─── */
@@ -88,39 +68,19 @@ interface BlockDef {
   helpText?: string;
   multiline: boolean;
   rows?: number;
-  defaultValue?: string;
-  technique?: string; // which technique adds this block
 }
 
+// RTCO core blocks. The previous Builder also offered three technique-gated
+// optional blocks (examples, reasoning, steps). Those were removed alongside
+// the top TECHNIQUES chip row — technique-specific refinements now happen
+// inside the RefineDiff card grid, which speaks plain language and doesn't
+// require the user to learn dev jargon ("Few-Shot", "CoT", "Task Chain").
 const ALL_BLOCKS: BlockDef[] = [
   { id: "role", label: "Role", subLabel: "🎩 Who should the AI act as? (the chef's hat)", previewLabel: "Role:", placeholder: "e.g. Budget Analyst, IT Help Desk Tech, HR Specialist", helpText: "What role should the AI play? Be specific — 'county budget analyst' beats 'analyst'.", multiline: false },
   { id: "task", label: "Task", subLabel: "📋 What needs done? (the recipe)", previewLabel: "Task:", placeholder: "What do you need done?", helpText: "What exactly should the AI do? Use action verbs: draft, summarize, analyze, create.", multiline: true, rows: 3 },
   { id: "context", label: "Context", subLabel: "🥫 Background the AI needs (the pantry)", previewLabel: "Context:", placeholder: "Background information, situation details, relevant data...", helpText: "What does the AI need to know? Department, audience, deadline, data.", multiline: true, rows: 3 },
   { id: "output", label: "Output Format", subLabel: "🍽️ How should the result look? (the plating)", previewLabel: "Output:", placeholder: "e.g. bullet list, memo, table, structured report", helpText: "How should the result look? Bullet list, memo, table, email, 3 paragraphs.", multiline: false },
   { id: "constraints", label: "Constraints", subLabel: "🚫 What to avoid (allergies & dietary restrictions)", previewLabel: "Constraints:", placeholder: "Limits, rules, requirements, word counts...", helpText: "What should the AI avoid? Word limits, tone rules, things NOT to include.", multiline: true, rows: 2 },
-  { id: "examples", label: "Examples", previewLabel: "Examples:", placeholder: "Provide 1-2 examples of desired output...", helpText: "Show the AI what you want. One good example is worth ten instructions.", multiline: true, rows: 4, technique: "fewshot" },
-  { id: "reasoning", label: "Reasoning Steps", previewLabel: "Reasoning:", placeholder: "Think step by step...", helpText: "Forces the AI to show its work. Best for math, analysis, and complex decisions.", multiline: true, rows: 3, technique: "cot", defaultValue: "Think step by step. Before providing your final answer, work through the problem systematically." },
-  { id: "steps", label: "Chain Steps", previewLabel: "Steps:", placeholder: "Step 1: Extract key data from the document\nStep 2: Analyze patterns in the extracted data\nStep 3: Generate recommendations based on analysis\nStep 4: Format as executive summary", helpText: "Break your task into numbered steps. Each step's output feeds into the next. Best for analysis, reports, and complex workflows.", multiline: true, rows: 5, technique: "taskchain" },
-];
-
-const CORE_BLOCK_IDS = ["role", "task", "context", "output", "constraints"];
-
-/* ─── Technique Definitions ─── */
-interface Technique {
-  id: string;
-  label: string;
-  icon: typeof Zap;
-  description: string;
-}
-
-const TECHNIQUES: Technique[] = [
-  { id: "zeroshot", label: "Zero-Shot", icon: Zap, description: "Direct instruction, no examples" },
-  { id: "fewshot", label: "Few-Shot", icon: Lightbulb, description: "Add examples for the model" },
-  { id: "cot", label: "Chain-of-Thought", icon: Brain, description: "Step-by-step reasoning" },
-  { id: "persona", label: "Persona", icon: UserCircle, description: "Emphasize the role identity" },
-  { id: "negative", label: "Negative", icon: Ban, description: 'Add "Do Not..." constraints' },
-  { id: "rtco", label: "RTCO", icon: Layers, description: "Toggle all 4 core blocks" },
-  { id: "taskchain", label: "Task Chain", icon: GitBranch, description: "Break complex tasks into sequential steps where each output feeds the next" },
 ];
 
 /* ─── Template Data ─── */
@@ -392,7 +352,6 @@ function BuildMode() {
   const [blockValues, setBlockValues] = useState<Record<string, string>>({});
   const [hiddenBlocks, setHiddenBlocks] = useState<Set<string>>(new Set());
   const [collapsedBlocks, setCollapsedBlocks] = useState<Set<string>>(new Set());
-  const [activeTechniques, setActiveTechniques] = useState<Set<string>>(new Set(["zeroshot"]));
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
   const [templatePanelOpen, setTemplatePanelOpen] = useState(true);
@@ -487,49 +446,14 @@ function BuildMode() {
     }
   }, []);
 
-  // Determine visible blocks based on active techniques
-  const visibleBlocks = useMemo(() => {
-    const ids = new Set(CORE_BLOCK_IDS);
-    if (activeTechniques.has("fewshot")) ids.add("examples");
-    if (activeTechniques.has("cot")) ids.add("reasoning");
-    if (activeTechniques.has("taskchain")) ids.add("steps");
-    return ALL_BLOCKS.filter((b) => ids.has(b.id));
-  }, [activeTechniques]);
+  // Builder now shows all 5 core RTCO blocks at all times. Technique-specific
+  // refinements (few-shot examples, chain-of-thought, etc.) happen via the
+  // plain-language card grid in the Refine panel below.
+  const visibleBlocks = ALL_BLOCKS;
 
   const setBlockValue = useCallback((id: string, value: string) => {
     setShowWelcome(false);
     setBlockValues((prev) => ({ ...prev, [id]: value }));
-  }, []);
-
-  const toggleTechnique = useCallback((id: string) => {
-    setActiveTechniques((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
-        // If removing cot, clear reasoning default
-      } else {
-        next.add(id);
-        // If adding cot, pre-fill reasoning
-        if (id === "cot") {
-          setBlockValues((bv) => {
-            if (!bv.reasoning?.trim()) {
-              return { ...bv, reasoning: "Think step by step. Before providing your final answer, work through the problem systematically." };
-            }
-            return bv;
-          });
-        }
-        // If adding negative, pre-fill constraints with "Do Not..." prefix if empty
-        if (id === "negative") {
-          setBlockValues((bv) => {
-            if (!bv.constraints?.trim()) {
-              return { ...bv, constraints: "Do NOT " };
-            }
-            return bv;
-          });
-        }
-      }
-      return next;
-    });
   }, []);
 
   const toggleBlockVisibility = useCallback((id: string) => {
@@ -655,36 +579,16 @@ function BuildMode() {
       const color = PREVIEW_LABEL_COLORS[block.id] || "oklch(0.75 0.02 70)";
       const textColor = hidden ? "oklch(0.40 0.02 240)" : "oklch(0.82 0.02 70)";
       if (parts.length > 0) parts.push(<span key={`sep-${block.id}`}>{"\n\n"}</span>);
-      if (block.id === "steps") {
-        const lines = val.split("\n").map((l: string) => l.trim()).filter(Boolean);
-        parts.push(
-          <span key={block.id} style={{ textDecoration: hidden ? "line-through" : "none", opacity: hidden ? 0.4 : 1 }}>
-            <span style={{ color: "oklch(0.60 0.14 265)", fontWeight: 700 }}>Steps:{"\n"}</span>
-            {lines.map((line: string, i: number) => {
-              const cleaned = line.replace(/^(Step\s+)?\d+[:.]\s*/i, "");
-              return (
-                <span key={i} style={{ display: "block", marginLeft: 8, marginBottom: 2 }}>
-                  <span style={{ color: "oklch(0.55 0.18 265)", fontWeight: 700, fontFamily: "monospace", fontSize: "0.85em" }}>
-                    {`${i + 1}. `}
-                  </span>
-                  <span style={{ color: textColor }}>{cleaned}</span>
-                </span>
-              );
-            })}
+      parts.push(
+        <span key={block.id} style={{ textDecoration: hidden ? "line-through" : "none", opacity: hidden ? 0.4 : 1 }}>
+          <span style={{ color, fontWeight: 700 }}>
+            {block.id === "role" ? "You are a " : `${block.previewLabel} `}
           </span>
-        );
-      } else {
-        parts.push(
-          <span key={block.id} style={{ textDecoration: hidden ? "line-through" : "none", opacity: hidden ? 0.4 : 1 }}>
-            <span style={{ color, fontWeight: 700 }}>
-              {block.id === "role" ? "You are a " : `${block.previewLabel} `}
-            </span>
-            <span style={{ color: textColor }}>
-              {block.id === "role" ? `${val}.` : val}
-            </span>
+          <span style={{ color: textColor }}>
+            {block.id === "role" ? `${val}.` : val}
           </span>
-        );
-      }
+        </span>
+      );
     }
     if (parts.length === 0) {
       return <span style={{ color: "oklch(0.45 0.03 240)" }}>Your assembled prompt will appear here as you fill in the blocks...</span>;
@@ -747,37 +651,6 @@ function BuildMode() {
 
       <DepartmentBanner />
 
-      {/* Technique Selector */}
-      <div className="mb-6">
-        <label className="text-xs font-bold uppercase tracking-wider mb-2.5 block" style={{ color: "oklch(0.50 0.04 50)" }}>
-          Techniques
-        </label>
-        <div className="flex flex-wrap gap-2">
-          {TECHNIQUES.map((tech) => {
-            const Icon = tech.icon;
-            const active = activeTechniques.has(tech.id);
-            return (
-              <motion.button
-                key={tech.id}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={() => toggleTechnique(tech.id)}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all"
-                title={tech.description}
-                style={{
-                  background: active ? "oklch(0.96 0.04 220)" : "oklch(0.998 0.002 70)",
-                  color: active ? ACCENT : "oklch(0.45 0.04 50)",
-                  border: active ? `2px solid ${ACCENT}` : "2px solid oklch(0.88 0.015 75)",
-                }}
-              >
-                <Icon className="w-3.5 h-3.5" />
-                {tech.label}
-              </motion.button>
-            );
-          })}
-        </div>
-      </div>
-
       {/* Two-column layout */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Left: Builder */}
@@ -803,7 +676,6 @@ function BuildMode() {
             const collapsed = collapsedBlocks.has(block.id);
             const hidden = hiddenBlocks.has(block.id);
             const hasContent = (blockValues[block.id] || "").trim().length > 0;
-            const isPersonaHighlighted = activeTechniques.has("persona") && block.id === "role";
 
             return (
               <motion.div
@@ -817,9 +689,7 @@ function BuildMode() {
                   background: "oklch(1 0 0)",
                   border: `1px solid oklch(0.90 0.01 70)`,
                   borderLeft: `4px solid ${colors?.border || ACCENT}`,
-                  boxShadow: isPersonaHighlighted
-                    ? `0 0 0 2px ${colors?.border || ACCENT}44, 0 2px 8px oklch(0.18 0.02 38 / 0.06)`
-                    : "0 1px 4px oklch(0.18 0.02 38 / 0.04)",
+                  boxShadow: "0 1px 4px oklch(0.18 0.02 38 / 0.04)",
                 }}
               >
                 {/* Block header */}
@@ -834,7 +704,6 @@ function BuildMode() {
                   <div className="flex-1 min-w-0">
                     <div className="text-sm font-bold" style={{ color: hasContent ? colors?.border || ACCENT : "oklch(0.38 0.04 45)" }}>
                       {block.label}
-                      {isPersonaHighlighted && <span className="ml-2 text-xs font-medium" style={{ color: colors?.text }}>&#9733; Persona mode</span>}
                     </div>
                     {block.subLabel && (
                       <div className="text-[10px] mt-0.5 leading-tight" style={{ color: "oklch(0.58 0.04 55)" }}>
