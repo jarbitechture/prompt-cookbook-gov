@@ -34,6 +34,11 @@ const DIFFICULTY_COLORS: Record<string, { text: string; bg: string }> = {
 
 type TabId = "courses" | "government" | "internal" | "recipes";
 
+// Maintained alongside cookbookData.ts chapters — when a technique changes,
+// update BOTH the Jumpstart `lesson` text below AND the corresponding
+// chapter `content[]` paragraphs in cookbookData.ts. The two are parallel
+// teaching surfaces (per Q6 in docs/cookbook-v2-spec-2026-05-14.md) and
+// drift between them is a known content-quality risk.
 const jumpstartChapters = [
   { title: "The 5-Minute Mindset", subtitle: "Stop guessing, start targeting", description: "Change your entire approach to talking with AI. Vague prompt = vague answer. Specific prompt = useful answer.", image: "/chapters/ch1-Specificity_small.png", chapterId: "ch01",
     lesson: "The single biggest mistake people make with AI: they type vague requests and expect specific answers. \"Help me with this report\" gives you generic filler. \"Summarize the Q3 budget variance report in 3 bullet points for the County Administrator\" gets you something you can actually use.\n\nThe fix takes 5 minutes to learn: before you type anything, answer the 5W+H — Who needs this? What exactly do I need? When/where will it be used? Why does it matter? How should it look?\n\nCounty example: Instead of \"Write an email about the meeting,\" try \"Write a 3-paragraph email to department directors summarizing today's budget workshop. Include the three decisions that were made and the April 15 deadline for submitting revised numbers.\"" },
