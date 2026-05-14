@@ -652,7 +652,7 @@ function BuildMode() {
       <DepartmentBanner />
 
       {/* Two-column layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr] gap-6">
         {/* Left: Builder */}
         <div className="space-y-3">
           <div className="flex items-center justify-between mb-1">
