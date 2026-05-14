@@ -354,7 +354,7 @@ function BuildMode() {
   const [collapsedBlocks, setCollapsedBlocks] = useState<Set<string>>(new Set());
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
-  const [templatePanelOpen, setTemplatePanelOpen] = useState(true);
+  const [templatePanelOpen, setTemplatePanelOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [copilotSent, setCopilotSent] = useState(false);
   const [chatgptSent, setChatgptSent] = useState(false);
