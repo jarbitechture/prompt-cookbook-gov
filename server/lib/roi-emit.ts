@@ -116,6 +116,54 @@ export function emitTemplateExportEvent(
 }
 
 /**
+ * Emit one PII_FLAGGED event for a client-side pre-send-scan hit.
+ *
+ * The client's pre-send-scan.ts runs PII regexes against the assembled
+ * prompt BEFORE writing it to the clipboard. When matches are found, the
+ * client POSTs to /api/roi/pii-flagged with the pattern types it hit
+ * (e.g. ["ssn", "us_phone"]) and the match count. Raw matched text is
+ * NEVER transmitted — that would defeat the purpose of the scan.
+ *
+ * Privacy contract:
+ *   - `pattern_types` is a deduplicated list of pattern names only
+ *   - `match_count` is the total number of matches across all patterns
+ *   - No `match`, no excerpt, no redacted snippet of any kind
+ *
+ * @param req           — Express request (for header extraction)
+ * @param patternTypes  — distinct pattern names that fired
+ * @param matchCount    — total match count
+ * @param action        — what the user chose: "blocked" | "send_anyway" | "redact_and_send"
+ * @param targetTool    — handoff destination (or undefined if scan ran without one)
+ * @param startTs       — `Date.now()` captured at handler entry
+ */
+export function emitPiiFlaggedEvent(
+  req: express.Request,
+  patternTypes: string[],
+  matchCount: number,
+  action: "blocked" | "send_anyway" | "redact_and_send",
+  targetTool: "copilot" | "chatgpt_enterprise" | undefined,
+  startTs: number,
+): void {
+  const { user_id, dept, role_band } = extractContext(req);
+  emitEvent({
+    event_kind:    EventKind.PII_FLAGGED,
+    workflow:      "cookbook",
+    user_id,
+    dept,
+    role_band,
+    task_type:     "pii_preflight",
+    tool:          "cookbook",
+    surface:       "web",
+    duration_s:    Number(((Date.now() - startTs) / 1000).toFixed(3)),
+    success:       true,
+    pattern_types: patternTypes,
+    match_count:   matchCount,
+    pii_action:    action,
+    ...(targetTool !== undefined ? { target_tool: targetTool } : {}),
+  });
+}
+
+/**
  * Emit one LLM_CALL event for a single civic-ai breaker call.
  *
  * Called once per `callAndParse` invocation (including retries).

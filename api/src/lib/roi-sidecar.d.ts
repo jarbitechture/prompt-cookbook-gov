@@ -28,6 +28,7 @@ export declare const EventKind: {
   readonly PROMPT_REFINE: "prompt_refine";
   readonly PROMPT_PREVIEW: "prompt_preview";
   readonly TEMPLATE_EXPORT: "template_export";
+  readonly PII_FLAGGED: "pii_flagged";
 };
 
 /** Generate a W3C-compatible trace_id (32 lowercase hex chars). */

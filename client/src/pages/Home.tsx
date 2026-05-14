@@ -108,7 +108,7 @@ function OnboardingBanner({ onSelectChapter: _onSelectChapter }: { onSelectChapt
             <strong>5. Stay compliant</strong> — All prompts follow the AI Governance Handbook (v1.0). See Resources → Internal for the full policy, risk classification, and approved tools list.
           </p>
           <p style={{ color: "oklch(0.30 0.04 40)" }}>
-            <strong>6. Get help</strong> — Click "Menu Planning" in the bottom right for AI prompt assistance. Contact ITS at itservices@mymanatee.org for policy questions.
+            <strong>6. Get help</strong> — Open the Prompt Builder from the hero CTA to coach a prompt block-by-block. Contact ITS at itservices@mymanatee.org for policy questions.
           </p>
         </div>
       )}

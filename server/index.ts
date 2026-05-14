@@ -7,6 +7,8 @@ import cors from "cors";
 import { getBreakerState } from "./lib/breaker.js";
 import { handleCritique, handleRefine, handlePreview } from "./lib/llm-endpoints.js";
 import { handleTemplateExport } from "./routes/roi-template-export.js";
+import { handlePiiFlagged } from "./routes/roi-pii-flagged.js";
+import { errorHandler } from "./lib/error-handler.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -164,6 +166,15 @@ async function startServer() {
     });
   });
 
+  app.post("/api/roi/pii-flagged", (req, res) => {
+    handlePiiFlagged(req, res).catch((err) => {
+      console.error("pii-flagged error:", err);
+      if (!res.headersSent) {
+        res.status(500).json({ error: "Internal server error" });
+      }
+    });
+  });
+
   // ---- Static files (multi-bundle) ----
   // Production layout (after pnpm build):
   //   dist/portal/    → served at /
@@ -217,6 +228,12 @@ async function startServer() {
     res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
     res.sendFile(path.join(portalPath, "index.html"));
   });
+
+  // ---- Global error handler (P0-B) ----
+  // MUST be registered last so Express recognises the 4-arg signature
+  // and routes 413 / 400 / uncaught 500s through the JSON-only scrubber
+  // instead of body-parser's default HTML+stack response.
+  app.use(errorHandler);
 
   const port = process.env.PORT || 3000;
 

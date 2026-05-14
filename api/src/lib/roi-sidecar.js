@@ -56,6 +56,10 @@ export const EventKind = Object.freeze({
   PROMPT_PREVIEW: "prompt_preview",
   // Cookbook handoff kind (Task #11)
   TEMPLATE_EXPORT: "template_export",
+  // Cookbook PII pre-flight scan kind (P0-A demo-block patch 2026-05-14).
+  // Emitted when the client-side scanner flags potential PII before a
+  // clipboard handoff. NEVER includes raw matches — only pattern names + count.
+  PII_FLAGGED: "pii_flagged",
 });
 
 /** Generate a fresh W3C-compatible trace_id (32 lowercase hex chars). */

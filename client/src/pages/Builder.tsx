@@ -38,7 +38,13 @@ import {
 // Link removed: Builder only navigates cross-bundle (to /cookbook/) — use plain <a>
 import { toast } from "sonner";
 import { apiUrl } from "@/lib/apiUrl";
-import { sendToTarget } from "@/lib/copilot-handoff";
+import {
+  sendToTarget,
+  sendRedactedToTarget,
+  PiiDetectedError,
+} from "@/lib/copilot-handoff";
+import type { ScanMatch } from "@/lib/pre-send-scan";
+import PiiWarningModal from "@/components/PiiWarningModal";
 import { personas } from "@/lib/personas";
 import type { Persona } from "@/lib/personas";
 import { getDepartment } from "@/lib/departments";
@@ -393,6 +399,13 @@ function BuildMode() {
   const [copied, setCopied] = useState(false);
   const [copilotSent, setCopilotSent] = useState(false);
   const [chatgptSent, setChatgptSent] = useState(false);
+  // P0-A: PII pre-flight modal state — populated when sendToTarget throws
+  // PiiDetectedError, cleared on cancel / send-anyway / redact-and-send.
+  const [piiModal, setPiiModal] = useState<{
+    matches: ScanMatch[];
+    redacted: string;
+    target: "copilot" | "chatgpt_enterprise";
+  } | null>(null);
   // Welcome hero: lazy init so auto-filled pages never flash the hero then animate it out
   const [showWelcome, setShowWelcome] = useState(() => {
     try {
@@ -593,6 +606,44 @@ function BuildMode() {
       setTimeout(() => setCopied(false), 2000);
     });
   }, [assembledPrompt]);
+
+  /**
+   * P0-A: unified send handler with PII pre-flight. On detection, opens
+   * the PII warning modal; on clean, proceeds to clipboard + window.open.
+   * Both Copilot and ChatGPT buttons share this path.
+   */
+  const handleSendToTarget = useCallback(
+    (target: "copilot" | "chatgpt_enterprise") => {
+      if (!assembledPrompt.trim()) return;
+      sendToTarget(assembledPrompt, target)
+        .then(() => {
+          if (target === "copilot") {
+            toast("Prompt copied — paste into Copilot", { duration: 3000 });
+            setCopilotSent(true);
+            setTimeout(() => setCopilotSent(false), 3000);
+          } else {
+            toast("Prompt copied — paste into ChatGPT Enterprise", { duration: 3000 });
+            setChatgptSent(true);
+            setTimeout(() => setChatgptSent(false), 3000);
+          }
+        })
+        .catch((err) => {
+          if (err instanceof PiiDetectedError) {
+            // Open the warning modal — no clipboard write, no tab opened.
+            setPiiModal({
+              matches: err.matches,
+              redacted: err.redacted,
+              target: err.target,
+            });
+            return;
+          }
+          // Unexpected — surface as a toast but don't crash.
+          console.error("[handleSendToTarget]", err);
+          toast.error("Could not copy to clipboard");
+        });
+    },
+    [assembledPrompt],
+  );
 
   // Render preview with color-coded labels
   const renderPreview = () => {
@@ -1012,14 +1063,7 @@ function BuildMode() {
                     boxShadow: ["0 0 0 0px oklch(0.42 0.14 250 / 0.4)", "0 0 0 6px oklch(0.42 0.14 250 / 0)", "0 0 0 0px oklch(0.42 0.14 250 / 0)"]
                   } : {}}
                   transition={{ duration: 2, repeat: Infinity, ease: "easeOut" }}
-                  onClick={() => {
-                    if (!assembledPrompt.trim()) return;
-                    sendToTarget(assembledPrompt, "copilot").then(() => {
-                      toast("Prompt copied — paste into Copilot", { duration: 3000 });
-                      setCopilotSent(true);
-                      setTimeout(() => setCopilotSent(false), 3000);
-                    });
-                  }}
+                  onClick={() => handleSendToTarget("copilot")}
                   disabled={!assembledPrompt.trim()}
                   className="flex items-center gap-1.5 text-xs px-4 py-2 rounded-lg font-bold transition-all"
                   style={{
@@ -1036,14 +1080,7 @@ function BuildMode() {
                   Copies your prompt → opens Copilot
                 </span>
                 <button
-                  onClick={() => {
-                    if (!assembledPrompt.trim()) return;
-                    sendToTarget(assembledPrompt, "chatgpt_enterprise").then(() => {
-                      toast("Prompt copied — paste into ChatGPT Enterprise", { duration: 3000 });
-                      setChatgptSent(true);
-                      setTimeout(() => setChatgptSent(false), 3000);
-                    });
-                  }}
+                  onClick={() => handleSendToTarget("chatgpt_enterprise")}
                   disabled={!assembledPrompt.trim()}
                   className="text-[11px] font-medium transition-opacity hover:opacity-80"
                   style={{
@@ -1133,6 +1170,57 @@ function BuildMode() {
           Need a refresher? Browse the Cookbook recipes →
         </a>
       </div>
+
+      {/* P0-A: PII pre-flight warning modal — opens when sendToTarget throws PiiDetectedError */}
+      {piiModal && (
+        <PiiWarningModal
+          matches={piiModal.matches}
+          redacted={piiModal.redacted}
+          onClose={() => setPiiModal(null)}
+          onSendAnyway={() => {
+            const target = piiModal.target;
+            setPiiModal(null);
+            sendToTarget(assembledPrompt, target, undefined, { skipPiiScan: true })
+              .then(() => {
+                if (target === "copilot") {
+                  toast("Prompt copied — paste into Copilot", { duration: 3000 });
+                  setCopilotSent(true);
+                  setTimeout(() => setCopilotSent(false), 3000);
+                } else {
+                  toast("Prompt copied — paste into ChatGPT Enterprise", { duration: 3000 });
+                  setChatgptSent(true);
+                  setTimeout(() => setChatgptSent(false), 3000);
+                }
+              })
+              .catch((err) => {
+                console.error("[send-anyway]", err);
+                toast.error("Could not copy to clipboard");
+              });
+          }}
+          onRedactAndSend={() => {
+            const target = piiModal.target;
+            const redacted = piiModal.redacted;
+            const matches = piiModal.matches;
+            setPiiModal(null);
+            sendRedactedToTarget(redacted, matches, target)
+              .then(() => {
+                if (target === "copilot") {
+                  toast("Redacted prompt copied — paste into Copilot", { duration: 3000 });
+                  setCopilotSent(true);
+                  setTimeout(() => setCopilotSent(false), 3000);
+                } else {
+                  toast("Redacted prompt copied — paste into ChatGPT Enterprise", { duration: 3000 });
+                  setChatgptSent(true);
+                  setTimeout(() => setChatgptSent(false), 3000);
+                }
+              })
+              .catch((err) => {
+                console.error("[redact-and-send]", err);
+                toast.error("Could not copy redacted prompt");
+              });
+          }}
+        />
+      )}
     </div>
   );
 }
