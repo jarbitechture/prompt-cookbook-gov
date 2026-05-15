@@ -34,6 +34,7 @@ import PiiWarningModal from "@/components/PiiWarningModal";
 import { personas } from "@/lib/personas";
 import type { Persona } from "@/lib/personas";
 import { getDepartment } from "@/lib/departments";
+import { getWelcomeSeen, setWelcomeSeen } from "@/lib/welcomeStorage";
 import CritiquePanel from "@/components/CritiquePanel";
 import RefineDiff from "@/components/RefineDiff";
 import PreviewPanel from "@/components/PreviewPanel";
@@ -354,7 +355,8 @@ function BuildMode() {
   const [collapsedBlocks, setCollapsedBlocks] = useState<Set<string>>(new Set());
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
-  const [templatePanelOpen, setTemplatePanelOpen] = useState(true);
+  const [templatePanelOpen, setTemplatePanelOpen] = useState(false);
+  const [activeCoachTab, setActiveCoachTab] = useState<"critique" | "refine" | "preview">("critique");
   const [copied, setCopied] = useState(false);
   const [copilotSent, setCopilotSent] = useState(false);
   const [chatgptSent, setChatgptSent] = useState(false);
@@ -365,10 +367,12 @@ function BuildMode() {
     redacted: string;
     target: "copilot" | "chatgpt_enterprise";
   } | null>(null);
-  // Welcome hero: lazy init so auto-filled pages never flash the hero then animate it out
+  // Welcome hero: lazy init so auto-filled pages never flash the hero then animate it out.
+  // Init order: import present → false; welcome-seen → false; dept template → false; else true
   const [showWelcome, setShowWelcome] = useState(() => {
     try {
       if (localStorage.getItem("cookbook-builder-import")) return false;
+      if (getWelcomeSeen()) return false;
       const deptId = localStorage.getItem("cookbook-department");
       if (deptId) {
         const dept = getDepartment(deptId);
@@ -599,6 +603,70 @@ function BuildMode() {
   return (
     <div className="max-w-6xl mx-auto p-4 sm:p-6 lg:p-8">
 
+      {/* Sticky CTA bar — fixed below the site nav, always in view */}
+      <div
+        className="flex items-center justify-end gap-2 py-2 px-4 rounded-xl mb-4"
+        style={{
+          position: "sticky",
+          top: "48px",
+          zIndex: 20,
+          background: "oklch(0.99 0.005 75 / 0.92)",
+          backdropFilter: "blur(8px)",
+          WebkitBackdropFilter: "blur(8px)",
+          border: "1px solid oklch(0.90 0.015 75)",
+          boxShadow: "0 2px 8px oklch(0.50 0.04 50 / 0.08)",
+        }}
+      >
+        <button
+          onClick={handleCopy}
+          disabled={!assembledPrompt.trim()}
+          className="flex items-center gap-1.5 text-xs px-4 py-2 rounded-lg font-bold transition-all"
+          style={{
+            background: assembledPrompt.trim() ? ACCENT : "oklch(0.88 0.01 75)",
+            color: assembledPrompt.trim() ? "oklch(0.98 0.01 75)" : "oklch(0.58 0.03 55)",
+            cursor: assembledPrompt.trim() ? "pointer" : "not-allowed",
+            opacity: assembledPrompt.trim() ? 1 : 0.7,
+          }}
+        >
+          {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+          {copied ? "Copied!" : "Copy Prompt"}
+        </button>
+        <motion.button
+          animate={assembledPrompt.trim() && !copilotSent ? {
+            boxShadow: ["0 0 0 0px oklch(0.42 0.14 250 / 0.4)", "0 0 0 6px oklch(0.42 0.14 250 / 0)", "0 0 0 0px oklch(0.42 0.14 250 / 0)"]
+          } : {}}
+          transition={{ duration: 2, repeat: Infinity, ease: "easeOut" }}
+          onClick={() => handleSendToTarget("copilot")}
+          disabled={!assembledPrompt.trim()}
+          className="flex items-center gap-1.5 text-xs px-4 py-2 rounded-lg font-bold transition-all"
+          style={{
+            background: assembledPrompt.trim() ? "oklch(0.42 0.14 250)" : "oklch(0.88 0.01 75)",
+            color: assembledPrompt.trim() ? "oklch(0.98 0.01 75)" : "oklch(0.58 0.03 55)",
+            cursor: assembledPrompt.trim() ? "pointer" : "not-allowed",
+            opacity: assembledPrompt.trim() ? 1 : 0.7,
+          }}
+        >
+          {copilotSent ? <Check className="w-3.5 h-3.5" /> : <ArrowRight className="w-3.5 h-3.5" />}
+          Use in Copilot ↗
+        </motion.button>
+        <button
+          onClick={() => handleSendToTarget("chatgpt_enterprise")}
+          disabled={!assembledPrompt.trim()}
+          className="text-[11px] font-medium transition-opacity hover:opacity-80"
+          style={{
+            color: assembledPrompt.trim() ? "oklch(0.48 0.08 155)" : "oklch(0.68 0.03 55)",
+            cursor: assembledPrompt.trim() ? "pointer" : "not-allowed",
+            textDecoration: "underline",
+            textUnderlineOffset: "2px",
+            background: "none",
+            border: "none",
+            padding: 0,
+          }}
+        >
+          {chatgptSent ? "✓ Copied for ChatGPT" : "or copy for ChatGPT Enterprise"}
+        </button>
+      </div>
+
       {/* Welcome Hero — shown when no draft exists */}
       <AnimatePresence>
         {showWelcome && (
@@ -624,6 +692,7 @@ function BuildMode() {
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
               <button
                 onClick={() => {
+                  setWelcomeSeen(true);
                   setShowWelcome(false);
                   setTemplatePanelOpen(true);
                 }}
@@ -634,7 +703,7 @@ function BuildMode() {
                 Start with department template ▼
               </button>
               <button
-                onClick={() => setShowWelcome(false)}
+                onClick={() => { setWelcomeSeen(true); setShowWelcome(false); }}
                 className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all hover:opacity-80"
                 style={{
                   background: "oklch(0.998 0.002 70)",
@@ -649,12 +718,11 @@ function BuildMode() {
         )}
       </AnimatePresence>
 
-      <DepartmentBanner />
-
       {/* Two-column layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr] gap-6">
         {/* Left: Builder */}
         <div className="space-y-3">
+          <DepartmentBanner />
           <div className="flex items-center justify-between mb-1">
             <h3 className="font-bold text-base" style={{ color: "oklch(0.25 0.04 45)" }}>Prompt Blocks</h3>
             <div className="flex items-center gap-3">
@@ -905,66 +973,63 @@ function BuildMode() {
 
         {/* Right: Live Preview */}
         <div className="space-y-4">
-          <div className="flex items-center justify-between mb-1">
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-bold uppercase tracking-wider" style={{ color: "oklch(0.40 0.04 45)" }}>
-                Live Preview
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
+          <div className="flex items-center mb-1">
+            <span className="text-xs font-bold uppercase tracking-wider" style={{ color: "oklch(0.40 0.04 45)" }}>
+              Live Preview
+            </span>
+          </div>
+
+          {/* Coach tab strip */}
+          <div className="mt-4">
+            {/* Tab buttons */}
+            <div className="flex gap-1 mb-3">
               <button
-                onClick={handleCopy}
-                disabled={!assembledPrompt.trim()}
-                className="flex items-center gap-1.5 text-xs px-4 py-2 rounded-lg font-bold transition-all"
+                onClick={() => setActiveCoachTab("critique")}
+                className="flex-1 py-1.5 px-2 rounded-lg text-xs font-bold transition-all"
                 style={{
-                  background: assembledPrompt.trim() ? ACCENT : "oklch(0.88 0.01 75)",
-                  color: assembledPrompt.trim() ? "oklch(0.98 0.01 75)" : "oklch(0.58 0.03 55)",
-                  cursor: assembledPrompt.trim() ? "pointer" : "not-allowed",
-                  opacity: assembledPrompt.trim() ? 1 : 0.7,
+                  background: activeCoachTab === "critique" ? "oklch(0.42 0.14 250)" : "oklch(0.94 0.01 70)",
+                  color: activeCoachTab === "critique" ? "oklch(0.98 0.01 75)" : "oklch(0.45 0.04 50)",
                 }}
               >
-                {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-                {copied ? "Copied!" : "Copy Prompt"}
+                Critique
               </button>
-              <div className="flex flex-col items-end gap-1">
-                <motion.button
-                  animate={assembledPrompt.trim() && !copilotSent ? {
-                    boxShadow: ["0 0 0 0px oklch(0.42 0.14 250 / 0.4)", "0 0 0 6px oklch(0.42 0.14 250 / 0)", "0 0 0 0px oklch(0.42 0.14 250 / 0)"]
-                  } : {}}
-                  transition={{ duration: 2, repeat: Infinity, ease: "easeOut" }}
-                  onClick={() => handleSendToTarget("copilot")}
-                  disabled={!assembledPrompt.trim()}
-                  className="flex items-center gap-1.5 text-xs px-4 py-2 rounded-lg font-bold transition-all"
-                  style={{
-                    background: assembledPrompt.trim() ? "oklch(0.42 0.14 250)" : "oklch(0.88 0.01 75)",
-                    color: assembledPrompt.trim() ? "oklch(0.98 0.01 75)" : "oklch(0.58 0.03 55)",
-                    cursor: assembledPrompt.trim() ? "pointer" : "not-allowed",
-                    opacity: assembledPrompt.trim() ? 1 : 0.7,
-                  }}
-                >
-                  {copilotSent ? <Check className="w-3.5 h-3.5" /> : <ArrowRight className="w-3.5 h-3.5" />}
-                  Use in Copilot ↗
-                </motion.button>
-                <span className="text-[10px]" style={{ color: "oklch(0.58 0.03 55)" }}>
-                  Copies your prompt → opens Copilot
-                </span>
-                <button
-                  onClick={() => handleSendToTarget("chatgpt_enterprise")}
-                  disabled={!assembledPrompt.trim()}
-                  className="text-[11px] font-medium transition-opacity hover:opacity-80"
-                  style={{
-                    color: assembledPrompt.trim() ? "oklch(0.48 0.08 155)" : "oklch(0.68 0.03 55)",
-                    cursor: assembledPrompt.trim() ? "pointer" : "not-allowed",
-                    textDecoration: "underline",
-                    textUnderlineOffset: "2px",
-                    background: "none",
-                    border: "none",
-                    padding: 0,
-                  }}
-                >
-                  {chatgptSent ? "✓ Copied for ChatGPT" : "or copy for ChatGPT Enterprise"}
-                </button>
-              </div>
+              <button
+                onClick={() => setActiveCoachTab("refine")}
+                className="flex-1 py-1.5 px-2 rounded-lg text-xs font-bold transition-all"
+                style={{
+                  background: activeCoachTab === "refine" ? "oklch(0.42 0.14 155)" : "oklch(0.94 0.01 70)",
+                  color: activeCoachTab === "refine" ? "oklch(0.98 0.01 75)" : "oklch(0.45 0.04 50)",
+                }}
+              >
+                Refine
+              </button>
+              <button
+                onClick={() => setActiveCoachTab("preview")}
+                className="flex-1 py-1.5 px-2 rounded-lg text-xs font-bold transition-all"
+                style={{
+                  background: activeCoachTab === "preview" ? "oklch(0.45 0.12 310)" : "oklch(0.94 0.01 70)",
+                  color: activeCoachTab === "preview" ? "oklch(0.98 0.01 75)" : "oklch(0.45 0.04 50)",
+                }}
+              >
+                Preview
+              </button>
+            </div>
+
+            {/* Tab panels — use CSS display to preserve component state across tab switches */}
+            <div style={{ display: activeCoachTab === "critique" ? undefined : "none" }}>
+              <CritiquePanel
+                prompt={assembledPrompt}
+                onApplySuggestion={(suggestion) => {
+                  const prev = blockValues["constraints"] || "";
+                  setBlockValue("constraints", prev ? `${prev}\n\n${suggestion}` : suggestion);
+                }}
+              />
+            </div>
+            <div style={{ display: activeCoachTab === "refine" ? undefined : "none" }}>
+              <RefineDiff prompt={assembledPrompt} />
+            </div>
+            <div style={{ display: activeCoachTab === "preview" ? undefined : "none" }}>
+              <PreviewPanel prompt={assembledPrompt} />
             </div>
           </div>
 
@@ -990,38 +1055,7 @@ function BuildMode() {
             </span>
           </div>
 
-          {/* Quality Scoring */}
-          <div
-            className="rounded-xl px-4 py-3 flex items-center justify-between"
-            style={{ background: "oklch(0.96 0.005 70)", border: "1px solid oklch(0.90 0.01 70)" }}
-          >
-            <span className="text-xs font-bold uppercase tracking-wider" style={{ color: "oklch(0.50 0.04 50)" }}>
-              Prompt Quality
-            </span>
-            <QualityIndicators blocks={blockValues} />
-          </div>
         </div>
-      </div>
-
-      {/* Critique Panel — full-width below both columns */}
-      <div className="mt-6">
-        <CritiquePanel
-          prompt={assembledPrompt}
-          onApplySuggestion={(suggestion) => {
-            const prev = blockValues["constraints"] || "";
-            setBlockValue("constraints", prev ? `${prev}\n\n${suggestion}` : suggestion);
-          }}
-        />
-      </div>
-
-      {/* Refine Diff — full-width below Critique Panel */}
-      <div className="mt-6">
-        <RefineDiff prompt={assembledPrompt} />
-      </div>
-
-      {/* Preview Panel — full-width below Refine Diff */}
-      <div className="mt-6">
-        <PreviewPanel prompt={assembledPrompt} />
       </div>
 
       {/* Footer cross-link */}
