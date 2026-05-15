@@ -1,3 +1,18 @@
+> # ⛔ KILLED 2026-05-15 — DO NOT EXECUTE
+>
+> This spec's entire premise — "the two-column workbench fails the first-time
+> clerk / makes no sense" — was a **rendering artifact**, not a real layout
+> defect. Servo on a Retina Mac could not produce a ≥1024px CSS viewport, so
+> every screenshot was the mobile single-column fallback. The two-column layout
+> was later proven correct via deterministic Playwright geometry (1440px:
+> grid-template-columns 585/479px, columns side-by-side) and merged as #37.
+>
+> D1–D3 (guided first-run) and D5–D7 (margin-coach) were both justified solely
+> by that false premise — no independent evidence. The guided-first-run idea
+> survives ONLY as a falsifiable hypothesis, gated on direct observation of a
+> real first-time county clerk failing the working two-column layout. Until
+> that observation exists, this is not work. Kept for history, not as a plan.
+
 # Direction D — Progressive Workbench + Margin Coach (SDD spec)
 
 **Date:** 2026-05-15
