@@ -38,7 +38,7 @@ import { getWelcomeSeen, setWelcomeSeen } from "@/lib/welcomeStorage";
 import CritiquePanel from "@/components/CritiquePanel";
 import RefineDiff from "@/components/RefineDiff";
 import PreviewPanel from "@/components/PreviewPanel";
-import { accent as ACCENT, accentSoft as ACCENT_LIGHT } from "@/builder-theme";
+import { accent as ACCENT, accentSoft as ACCENT_LIGHT, bg as BG, surface as SURFACE, ink as INK, inkMuted as INK_MUTED, hairline as HAIRLINE } from "@/builder-theme";
 
 /* ─── Color System ─── */
 
@@ -202,17 +202,17 @@ function DepartmentBanner() {
     <div
       className="flex items-center gap-3 px-4 py-3 rounded-xl mb-5"
       style={{
-        background: dept ? ACCENT_LIGHT : "oklch(0.96 0.01 70)",
-        border: dept ? `1.5px solid ${dept.color}` : "1.5px solid oklch(0.90 0.01 70)",
+        background: dept ? ACCENT_LIGHT : SURFACE,
+        border: dept ? `1.5px solid ${dept.color}` : HAIRLINE,
       }}
     >
       <span className="text-xl">{dept ? dept.icon : "🏛️"}</span>
       <div className="flex-1">
-        <span className="text-sm font-medium" style={{ color: dept ? ACCENT : "oklch(0.45 0.04 50)" }}>
+        <span className="text-sm font-medium" style={{ color: dept ? ACCENT : INK }}>
           Building for: <strong>{dept ? dept.name : "All Departments"}</strong>
         </span>
         {dept && (
-          <span className="text-xs block mt-0.5" style={{ color: "oklch(0.55 0.04 50)" }}>
+          <span className="text-xs block mt-0.5" style={{ color: INK_MUTED }}>
             {dept.description}
           </span>
         )}
@@ -239,10 +239,10 @@ function QualityIndicators({ blocks }: { blocks: Record<string, string> }) {
   const filled = indicators.filter((ind) => (blocks[ind.key] || "").trim().length > 0).length;
   const qualityLabels = ["Needs Work", "Needs Work", "Basic", "Good", "Strong", "Excellent", "Excellent"];
   const qualityColors = [
-    "oklch(0.55 0.16 25)",
-    "oklch(0.55 0.16 25)",
-    "oklch(0.58 0.14 55)",
-    "oklch(0.55 0.12 155)",
+    INK_MUTED,
+    INK_MUTED,
+    INK_MUTED,
+    "oklch(0.55 0.12 220)",
     "oklch(0.50 0.12 220)",
     ACCENT,
     ACCENT,
@@ -262,7 +262,7 @@ function QualityIndicators({ blocks }: { blocks: Record<string, string> }) {
               title={ind.label}
               className="w-3.5 h-3.5 rounded-full border-2 transition-colors"
               style={{
-                borderColor: active ? color?.border || ACCENT : "oklch(0.82 0.02 70)",
+                borderColor: active ? color?.border || ACCENT : "oklch(0.85 0.01 250)",
                 background: active ? color?.border || ACCENT : "transparent",
               }}
             />
@@ -293,25 +293,25 @@ function estimateTokens(text: string): number {
    ═══════════════════════════════════════════════════════════════ */
 export default function Builder() {
   return (
-    <div className="min-h-screen" style={{ background: "oklch(0.97 0.008 75)" }}>
+    <div className="min-h-screen" style={{ background: BG }}>
       {/* Header */}
       <header
         className="sticky top-0 z-30 flex items-center justify-between px-4 sm:px-6 py-3"
         style={{
-          background: "oklch(0.97 0.008 75 / 0.95)",
+          background: SURFACE,
           backdropFilter: "blur(8px)",
-          borderBottom: "1px solid oklch(0.90 0.02 75)",
+          borderBottom: HAIRLINE,
         }}
       >
         <div className="flex items-center gap-3">
-          <a href="/cookbook/" className="flex items-center gap-1.5 text-sm font-medium hover:opacity-80 transition-opacity" style={{ color: "oklch(0.50 0.04 50)", textDecoration: "none" }}>
+          <a href="/cookbook/" className="flex items-center gap-1.5 text-sm font-medium hover:opacity-80 transition-opacity" style={{ color: INK_MUTED, textDecoration: "none" }}>
             <span>←</span>
             <span>Cookbook</span>
           </a>
-          <ChevronRight className="w-3.5 h-3.5" style={{ color: "oklch(0.65 0.03 55)" }} />
+          <ChevronRight className="w-3.5 h-3.5" style={{ color: INK_MUTED }} />
           <div className="flex items-center gap-2">
             <Wrench className="w-4 h-4" style={{ color: ACCENT }} />
-            <span className="font-serif font-bold text-sm" style={{ color: "oklch(0.25 0.03 40)" }}>
+            <span className="font-sans font-semibold text-sm" style={{ color: INK }}>
               Prompt Builder
             </span>
           </div>
@@ -645,11 +645,10 @@ function BuildMode() {
           position: "sticky",
           top: "48px",
           zIndex: 20,
-          background: "oklch(0.99 0.005 75 / 0.92)",
+          background: SURFACE,
           backdropFilter: "blur(8px)",
           WebkitBackdropFilter: "blur(8px)",
-          border: "1px solid oklch(0.90 0.015 75)",
-          boxShadow: "0 2px 8px oklch(0.50 0.04 50 / 0.08)",
+          border: HAIRLINE,
         }}
       >
         <button
@@ -657,8 +656,8 @@ function BuildMode() {
           disabled={!assembledPrompt.trim()}
           className="flex items-center gap-1.5 text-xs px-4 py-2 rounded-lg font-bold transition-all"
           style={{
-            background: assembledPrompt.trim() ? ACCENT : "oklch(0.88 0.01 75)",
-            color: assembledPrompt.trim() ? "oklch(0.98 0.01 75)" : "oklch(0.58 0.03 55)",
+            background: assembledPrompt.trim() ? ACCENT : "oklch(0.92 0.005 250)",
+            color: assembledPrompt.trim() ? "oklch(0.98 0.01 75)" : INK_MUTED,
             cursor: assembledPrompt.trim() ? "pointer" : "not-allowed",
             opacity: assembledPrompt.trim() ? 1 : 0.7,
           }}
@@ -668,15 +667,15 @@ function BuildMode() {
         </button>
         <motion.button
           animate={assembledPrompt.trim() && !copilotSent ? {
-            boxShadow: ["0 0 0 0px oklch(0.42 0.14 250 / 0.4)", "0 0 0 6px oklch(0.42 0.14 250 / 0)", "0 0 0 0px oklch(0.42 0.14 250 / 0)"]
+            boxShadow: [`0 0 0 0px ${ACCENT}66`, `0 0 0 6px ${ACCENT}00`, `0 0 0 0px ${ACCENT}00`]
           } : {}}
           transition={{ duration: 2, repeat: Infinity, ease: "easeOut" }}
           onClick={() => handleSendToTarget("copilot")}
           disabled={!assembledPrompt.trim()}
           className="flex items-center gap-1.5 text-xs px-4 py-2 rounded-lg font-bold transition-all"
           style={{
-            background: assembledPrompt.trim() ? "oklch(0.42 0.14 250)" : "oklch(0.88 0.01 75)",
-            color: assembledPrompt.trim() ? "oklch(0.98 0.01 75)" : "oklch(0.58 0.03 55)",
+            background: assembledPrompt.trim() ? ACCENT : "oklch(0.92 0.005 250)",
+            color: assembledPrompt.trim() ? "oklch(0.98 0.01 75)" : INK_MUTED,
             cursor: assembledPrompt.trim() ? "pointer" : "not-allowed",
             opacity: assembledPrompt.trim() ? 1 : 0.7,
           }}
@@ -689,7 +688,7 @@ function BuildMode() {
           disabled={!assembledPrompt.trim()}
           className="text-[11px] font-medium transition-opacity hover:opacity-80"
           style={{
-            color: assembledPrompt.trim() ? "oklch(0.48 0.08 155)" : "oklch(0.68 0.03 55)",
+            color: assembledPrompt.trim() ? INK_MUTED : "oklch(0.68 0.01 250)",
             cursor: assembledPrompt.trim() ? "pointer" : "not-allowed",
             textDecoration: "underline",
             textUnderlineOffset: "2px",
@@ -759,13 +758,13 @@ function BuildMode() {
         <div className="space-y-3">
           <DepartmentBanner />
           <div className="flex items-center justify-between mb-1">
-            <h3 className="font-bold text-base" style={{ color: "oklch(0.25 0.04 45)" }}>Prompt Blocks</h3>
+            <h3 className="font-bold text-base" style={{ color: INK }}>Prompt Blocks</h3>
             <div className="flex items-center gap-3">
               <QualityIndicators blocks={blockValues} />
               <button
                 onClick={handleReset}
                 className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg transition-opacity hover:opacity-80"
-                style={{ color: "oklch(0.50 0.04 50)", background: "oklch(0.94 0.01 70)" }}
+                style={{ color: INK_MUTED, background: SURFACE, border: HAIRLINE }}
               >
                 <RotateCcw className="w-3 h-3" />
                 Reset
