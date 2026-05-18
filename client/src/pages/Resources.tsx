@@ -657,6 +657,8 @@ function InternalTab() {
   const [formData, setFormData] = useState({ name: "", email: "", department: "", format: "1-hour workshop", topic: "", teamSize: "", preferredDates: "", notes: "" });
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [requestText, setRequestText] = useState("");
+  const [copied, setCopied] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -676,6 +678,7 @@ function InternalTab() {
       "",
       `Submitted: ${new Date().toLocaleString()}`,
     ].join("\n");
+    setRequestText(`To: ${TRAINING_RECIPIENT}\nSubject: ${subject}\n\n${body}`);
     window.location.href = `mailto:${TRAINING_RECIPIENT}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
     setSubmitted(true);
     setSubmitting(false);
@@ -752,7 +755,21 @@ function InternalTab() {
                   <div className="rounded-lg p-6 text-center" style={{ background: "oklch(0.96 0.02 145)" }}>
                     <span className="text-3xl block mb-2">✅</span>
                     <p className="text-sm font-bold" style={{ color: "oklch(0.30 0.10 145)" }}>Email prepared in your mail client</p>
-                    <p className="text-xs mt-1" style={{ color: TEXT_SECONDARY }}>Review the prefilled email and click <strong>Send</strong> to submit your request. The AI Working Group will follow up within 5 business days. If your mail app didn't open, copy the request to <strong>elliot.jarbe@mymanatee.org</strong> directly.</p>
+                    <p className="text-xs mt-1" style={{ color: TEXT_SECONDARY }}>Review the prefilled email and click <strong>Send</strong>. The AI Working Group follows up within 5 business days.</p>
+                    <p className="text-xs mt-2" style={{ color: TEXT_SECONDARY }}>Mail app didn't open? Copy the full request and email it to <strong>{TRAINING_RECIPIENT}</strong>:</p>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        navigator.clipboard.writeText(requestText).then(() => {
+                          setCopied(true);
+                          setTimeout(() => setCopied(false), 2000);
+                        });
+                      }}
+                      className="mt-2 text-xs font-bold px-4 py-2 rounded-lg"
+                      style={{ background: "oklch(0.45 0.12 145)", color: "oklch(0.98 0.01 70)" }}
+                    >
+                      {copied ? "Copied ✓" : "Copy request"}
+                    </button>
                   </div>
                 ) : (
                   <form onSubmit={handleSubmit} className="space-y-3">
