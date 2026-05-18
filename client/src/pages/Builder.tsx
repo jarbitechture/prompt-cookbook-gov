@@ -1029,8 +1029,9 @@ function BuildMode() {
                 onClick={() => setActiveCoachTab("critique")}
                 className="flex-1 py-1.5 px-2 rounded-lg text-xs font-bold transition-all"
                 style={{
-                  background: activeCoachTab === "critique" ? "oklch(0.42 0.14 250)" : "oklch(0.94 0.01 70)",
-                  color: activeCoachTab === "critique" ? "oklch(0.98 0.01 75)" : "oklch(0.45 0.04 50)",
+                  background: activeCoachTab === "critique" ? ACCENT : withAlpha(ACCENT, 0.06),
+                  color: activeCoachTab === "critique" ? "oklch(0.98 0.01 75)" : INK_MUTED,
+                  border: activeCoachTab === "critique" ? "none" : HAIRLINE,
                 }}
               >
                 Critique
@@ -1039,8 +1040,9 @@ function BuildMode() {
                 onClick={() => setActiveCoachTab("refine")}
                 className="flex-1 py-1.5 px-2 rounded-lg text-xs font-bold transition-all"
                 style={{
-                  background: activeCoachTab === "refine" ? "oklch(0.42 0.14 155)" : "oklch(0.94 0.01 70)",
-                  color: activeCoachTab === "refine" ? "oklch(0.98 0.01 75)" : "oklch(0.45 0.04 50)",
+                  background: activeCoachTab === "refine" ? ACCENT : withAlpha(ACCENT, 0.06),
+                  color: activeCoachTab === "refine" ? "oklch(0.98 0.01 75)" : INK_MUTED,
+                  border: activeCoachTab === "refine" ? "none" : HAIRLINE,
                 }}
               >
                 Refine
@@ -1049,8 +1051,9 @@ function BuildMode() {
                 onClick={() => setActiveCoachTab("preview")}
                 className="flex-1 py-1.5 px-2 rounded-lg text-xs font-bold transition-all"
                 style={{
-                  background: activeCoachTab === "preview" ? "oklch(0.45 0.12 310)" : "oklch(0.94 0.01 70)",
-                  color: activeCoachTab === "preview" ? "oklch(0.98 0.01 75)" : "oklch(0.45 0.04 50)",
+                  background: activeCoachTab === "preview" ? ACCENT : withAlpha(ACCENT, 0.06),
+                  color: activeCoachTab === "preview" ? "oklch(0.98 0.01 75)" : INK_MUTED,
+                  border: activeCoachTab === "preview" ? "none" : HAIRLINE,
                 }}
               >
                 Preview

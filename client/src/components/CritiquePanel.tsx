@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Copy, Check, AlertTriangle, RotateCcw, Loader2, ShieldCheck, ShieldOff, ChevronDown, ChevronUp } from "lucide-react";
 import { toast } from "sonner";
 import { apiUrl } from "@/lib/apiUrl";
+import { accent, accentSoft, surface, ink, inkMuted, hairline, hairlineColor, withAlpha } from "@/builder-theme";
 
 // ─── Local type mirror of server/schemas/critique.ts ──────────────────────────
 type RtcoStatus = "present" | "weak" | "missing";
@@ -27,34 +28,32 @@ interface CritiquePanelProps {
 }
 
 // ─── Color helpers ─────────────────────────────────────────────────────────────
-const ACCENT = "oklch(0.48 0.12 220)";
-
 const RTCO_STATUS_STYLES: Record<RtcoStatus, { bg: string; border: string; text: string; label: string }> = {
   present: {
-    bg: "oklch(0.94 0.04 155)",
-    border: "oklch(0.42 0.14 155)",
-    text: "oklch(0.32 0.12 155)",
+    bg: accentSoft,
+    border: accent,
+    text: ink,
     label: "Present",
   },
   weak: {
-    bg: "oklch(0.95 0.04 75)",
-    border: "oklch(0.58 0.14 75)",
-    text: "oklch(0.42 0.12 75)",
+    bg: withAlpha(accentSoft, 0.6),
+    border: hairlineColor,
+    text: inkMuted,
     label: "Weak",
   },
   missing: {
-    bg: "oklch(0.95 0.04 25)",
-    border: "oklch(0.52 0.18 25)",
-    text: "oklch(0.40 0.14 25)",
+    bg: surface,
+    border: accent,
+    text: ink,
     label: "Missing",
   },
 };
 
 const RTCO_FIELD_COLORS: Record<keyof Critique["rtco"], string> = {
-  role: "oklch(0.45 0.14 250)",
-  task: "oklch(0.42 0.14 155)",
-  context: "oklch(0.50 0.14 75)",
-  output: "oklch(0.45 0.12 310)",
+  role: accent,
+  task: accent,
+  context: inkMuted,
+  output: accent,
 };
 
 // ─── Sub-components ────────────────────────────────────────────────────────────
@@ -103,11 +102,11 @@ function CopiedButton({ text, onApply }: { text: string; onApply?: (s: string) =
     <div className="flex items-start gap-3">
       <span
         className="mt-0.5 shrink-0 w-1.5 h-1.5 rounded-full"
-        style={{ background: ACCENT, marginTop: "6px" }}
+        style={{ background: accent, marginTop: "6px" }}
       />
       <span
         className="flex-1 text-sm leading-relaxed"
-        style={{ color: "oklch(0.28 0.025 38)" }}
+        style={{ color: ink }}
       >
         {text}
       </span>
@@ -115,9 +114,9 @@ function CopiedButton({ text, onApply }: { text: string; onApply?: (s: string) =
         onClick={handleApply}
         className="shrink-0 flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg font-semibold transition-all"
         style={{
-          background: onApply ? ACCENT : "oklch(0.93 0.01 70)",
-          color: onApply ? "oklch(0.98 0.01 75)" : "oklch(0.40 0.04 50)",
-          border: onApply ? "none" : "1px solid oklch(0.85 0.02 70)",
+          background: onApply ? accent : hairlineColor,
+          color: onApply ? "oklch(0.98 0.01 75)" : inkMuted,
+          border: onApply ? "none" : hairline,
         }}
         title={onApply ? "Add to Constraints block" : "Copy to clipboard"}
       >
@@ -137,18 +136,18 @@ function CritiqueSkeleton() {
           <div
             key={i}
             className="h-8 rounded-lg"
-            style={{ width: "90px", background: "oklch(0.91 0.01 70)" }}
+            style={{ width: "90px", background: hairlineColor }}
           />
         ))}
       </div>
-      <div className="h-8 rounded-lg" style={{ background: "oklch(0.91 0.01 70)", width: "180px" }} />
+      <div className="h-8 rounded-lg" style={{ background: hairlineColor, width:"180px" }} />
       <div className="space-y-2">
-        <div className="h-4 rounded" style={{ background: "oklch(0.91 0.01 70)", width: "70%" }} />
-        <div className="h-4 rounded" style={{ background: "oklch(0.91 0.01 70)", width: "55%" }} />
+        <div className="h-4 rounded" style={{ background: hairlineColor, width:"70%" }} />
+        <div className="h-4 rounded" style={{ background: hairlineColor, width:"55%" }} />
       </div>
       <div className="space-y-2">
-        <div className="h-12 rounded-lg" style={{ background: "oklch(0.91 0.01 70)" }} />
-        <div className="h-12 rounded-lg" style={{ background: "oklch(0.91 0.01 70)" }} />
+        <div className="h-12 rounded-lg" style={{ background: hairlineColor }} />
+        <div className="h-12 rounded-lg" style={{ background: hairlineColor }} />
       </div>
     </div>
   );
@@ -158,7 +157,7 @@ function CritiqueSkeleton() {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div>
-      <p className="text-xs font-bold uppercase tracking-wider mb-2.5" style={{ color: "oklch(0.48 0.04 50)" }}>
+      <p className="text-xs font-bold uppercase tracking-wider mb-2.5" style={{ color: inkMuted }}>
         {title}
       </p>
       {children}
@@ -252,14 +251,14 @@ export default function CritiquePanel({ prompt, onApplySuggestion }: CritiquePan
       transition={{ duration: 0.22, ease: "easeOut" }}
       className="rounded-xl overflow-hidden"
       style={{
-        border: "1px solid oklch(0.88 0.02 220)",
-        background: "oklch(0.998 0.002 70)",
+        border: hairline,
+        background: surface,
       }}
     >
       {/* Header */}
       <div
         className="flex items-center justify-between px-5 py-3"
-        style={{ background: ACCENT }}
+        style={{ background: accent }}
       >
         <h4 className="font-bold text-sm flex items-center gap-2" style={{ color: "oklch(0.98 0.01 75)" }}>
           <ShieldCheck className="w-4 h-4" />
@@ -281,8 +280,8 @@ export default function CritiquePanel({ prompt, onApplySuggestion }: CritiquePan
             disabled={!hasPrompt || loading}
             className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg font-bold transition-all"
             style={{
-              background: hasPrompt && !loading ? "oklch(0.98 0.01 75)" : "oklch(0.70 0.04 220)",
-              color: hasPrompt && !loading ? ACCENT : "oklch(0.75 0.04 220)",
+              background: hasPrompt && !loading ? "oklch(0.98 0.01 75)" : withAlpha(accent, 0.4),
+              color: hasPrompt && !loading ? accent : inkMuted,
               cursor: hasPrompt && !loading ? "pointer" : "not-allowed",
               opacity: hasPrompt && !loading ? 1 : 0.6,
             }}
@@ -297,10 +296,10 @@ export default function CritiquePanel({ prompt, onApplySuggestion }: CritiquePan
       </div>
 
       {/* Body */}
-      <div className="px-5 py-4" style={{ background: "oklch(0.975 0.008 220 / 0.25)" }}>
+      <div className="px-5 py-4" style={{ background: withAlpha(accentSoft, 0.25) }}>
         {/* Empty state */}
         {!loading && !result && !error && !breakerOpen && (
-          <p className="text-sm text-center py-4" style={{ color: "oklch(0.55 0.04 50)" }}>
+          <p className="text-sm text-center py-4" style={{ color: inkMuted }}>
             {hasPrompt
               ? "Click Analyze to get a structured critique of your prompt."
               : "Build your prompt above, then analyze it here."}
@@ -316,20 +315,20 @@ export default function CritiquePanel({ prompt, onApplySuggestion }: CritiquePan
             initial={{ opacity: 0, y: 4 }}
             animate={{ opacity: 1, y: 0 }}
             className="flex items-start gap-3 rounded-xl p-4"
-            style={{ background: "oklch(0.96 0.03 75)", border: "1px solid oklch(0.75 0.14 75)" }}
+            style={{ background: withAlpha(accentSoft, 0.6), border: hairline }}
           >
-            <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" style={{ color: "oklch(0.55 0.16 75)" }} />
+            <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" style={{ color: accent }} />
             <div>
-              <p className="text-sm font-semibold" style={{ color: "oklch(0.38 0.10 75)" }}>
+              <p className="text-sm font-semibold" style={{ color: ink }}>
                 Critique service is temporarily unavailable
               </p>
-              <p className="text-xs mt-1" style={{ color: "oklch(0.50 0.08 75)" }}>
+              <p className="text-xs mt-1" style={{ color: inkMuted }}>
                 The circuit breaker is open. Try again in a moment.
               </p>
               <button
                 onClick={handleRetry}
                 className="flex items-center gap-1.5 text-xs mt-2 px-3 py-1.5 rounded-lg font-semibold"
-                style={{ background: "oklch(0.75 0.14 75)", color: "oklch(0.98 0.01 75)" }}
+                style={{ background: accent, color: "oklch(0.98 0.01 75)" }}
               >
                 <RotateCcw className="w-3 h-3" /> Retry
               </button>
@@ -343,20 +342,20 @@ export default function CritiquePanel({ prompt, onApplySuggestion }: CritiquePan
             initial={{ opacity: 0, y: 4 }}
             animate={{ opacity: 1, y: 0 }}
             className="flex items-start gap-3 rounded-xl p-4"
-            style={{ background: "oklch(0.96 0.02 25)", border: "1px solid oklch(0.70 0.14 25)" }}
+            style={{ background: withAlpha(accentSoft, 0.6), border: hairline }}
           >
-            <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" style={{ color: "oklch(0.52 0.18 25)" }} />
+            <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" style={{ color: accent }} />
             <div className="flex-1">
-              <p className="text-sm font-semibold" style={{ color: "oklch(0.38 0.12 25)" }}>
+              <p className="text-sm font-semibold" style={{ color: ink }}>
                 Analysis failed
               </p>
-              <p className="text-xs mt-1" style={{ color: "oklch(0.50 0.08 25)" }}>
+              <p className="text-xs mt-1" style={{ color: inkMuted }}>
                 {error}
               </p>
               <button
                 onClick={handleRetry}
                 className="flex items-center gap-1.5 text-xs mt-2 px-3 py-1.5 rounded-lg font-semibold"
-                style={{ background: "oklch(0.52 0.18 25)", color: "oklch(0.98 0.01 75)" }}
+                style={{ background: accent, color: "oklch(0.98 0.01 75)" }}
               >
                 <RotateCcw className="w-3 h-3" /> Retry
               </button>
@@ -391,13 +390,9 @@ export default function CritiquePanel({ prompt, onApplySuggestion }: CritiquePan
                 <div
                   className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold w-fit"
                   style={{
-                    background: result.anti_hallucination_clause
-                      ? "oklch(0.94 0.04 155)"
-                      : "oklch(0.95 0.04 25)",
-                    border: `1.5px solid ${result.anti_hallucination_clause ? "oklch(0.42 0.14 155)" : "oklch(0.52 0.18 25)"}`,
-                    color: result.anti_hallucination_clause
-                      ? "oklch(0.32 0.12 155)"
-                      : "oklch(0.40 0.14 25)",
+                    background: result.anti_hallucination_clause ? accentSoft : surface,
+                    border: `1.5px solid ${accent}`,
+                    color: ink,
                   }}
                 >
                   {result.anti_hallucination_clause ? (
@@ -414,10 +409,10 @@ export default function CritiquePanel({ prompt, onApplySuggestion }: CritiquePan
                 <Section title="Specificity Issues">
                   <ul className="space-y-1.5">
                     {result.specificity_issues.map((issue, i) => (
-                      <li key={i} className="flex items-start gap-2 text-sm" style={{ color: "oklch(0.40 0.08 25)" }}>
+                      <li key={i} className="flex items-start gap-2 text-sm" style={{ color: ink }}>
                         <span
                           className="shrink-0 mt-1.5 w-1.5 h-1.5 rounded-full"
-                          style={{ background: "oklch(0.52 0.18 25)" }}
+                          style={{ background: accent }}
                         />
                         {issue}
                       </li>
@@ -428,7 +423,7 @@ export default function CritiquePanel({ prompt, onApplySuggestion }: CritiquePan
 
               {result.specificity_issues.length === 0 && (
                 <Section title="Specificity Issues">
-                  <p className="text-sm" style={{ color: "oklch(0.42 0.14 155)" }}>
+                  <p className="text-sm" style={{ color: inkMuted }}>
                     No specificity issues found.
                   </p>
                 </Section>
@@ -452,9 +447,9 @@ export default function CritiquePanel({ prompt, onApplySuggestion }: CritiquePan
                         key={ch}
                         className="px-2.5 py-1 rounded-full text-xs font-semibold"
                         style={{
-                          background: "oklch(0.93 0.03 220)",
-                          border: "1px solid oklch(0.78 0.08 220)",
-                          color: "oklch(0.38 0.10 220)",
+                          background: accentSoft,
+                          border: `1px solid ${hairlineColor}`,
+                          color: accent,
                         }}
                       >
                         Ch. {ch}

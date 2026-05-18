@@ -21,6 +21,7 @@ import type { LucideIcon } from "lucide-react";
 import { diffWordsWithSpace } from "diff";
 import { toast } from "sonner";
 import { apiUrl } from "@/lib/apiUrl";
+import { accent, accentSoft, surface, ink, inkMuted, hairline, hairlineColor, withAlpha } from "@/builder-theme";
 
 // ─── Refine technique cards ───────────────────────────────────────────────────
 // Server contract: keys must match server/lib/technique-map.ts (TechniqueKey).
@@ -90,10 +91,11 @@ interface RefineDiffProps {
   prompt: string;
 }
 
-// ─── Color constants (Refine green accent — matches existing v1 styling) ─────
-const ACCENT = "oklch(0.42 0.14 155)";
-const ACCENT_BG = "oklch(0.96 0.03 155)";
-const ACCENT_BORDER = "oklch(0.80 0.06 155)";
+// ─── Color aliases for builder-theme tokens ───────────────────────────────────
+// These names are used throughout; they now delegate to the instrument palette.
+const ACCENT = accent;
+const ACCENT_BG = accentSoft;
+const ACCENT_BORDER = hairlineColor;
 
 // ─── Loading skeleton ──────────────────────────────────────────────────────────
 function RefineSkeleton() {
@@ -101,15 +103,15 @@ function RefineSkeleton() {
     <div className="space-y-3 animate-pulse">
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <div className="h-4 rounded" style={{ background: "oklch(0.91 0.01 70)", width: "40%" }} />
-          <div className="h-24 rounded-lg" style={{ background: "oklch(0.91 0.01 70)" }} />
+          <div className="h-4 rounded" style={{ background: hairlineColor, width: "40%" }} />
+          <div className="h-24 rounded-lg" style={{ background: hairlineColor }} />
         </div>
         <div className="space-y-2">
-          <div className="h-4 rounded" style={{ background: "oklch(0.91 0.01 70)", width: "40%" }} />
-          <div className="h-24 rounded-lg" style={{ background: "oklch(0.91 0.01 70)" }} />
+          <div className="h-4 rounded" style={{ background: hairlineColor, width: "40%" }} />
+          <div className="h-24 rounded-lg" style={{ background: hairlineColor }} />
         </div>
       </div>
-      <div className="h-4 rounded" style={{ background: "oklch(0.91 0.01 70)", width: "65%" }} />
+      <div className="h-4 rounded" style={{ background: hairlineColor, width: "65%" }} />
     </div>
   );
 }
@@ -127,16 +129,16 @@ function DiffView({ original, rewritten }: { original: string; rewritten: string
       <div>
         <p
           className="text-xs font-bold uppercase tracking-wider mb-2"
-          style={{ color: "oklch(0.48 0.04 50)" }}
+          style={{ color: inkMuted }}
         >
           Original
         </p>
         <div
           className="rounded-lg p-3 text-sm leading-relaxed min-h-[80px]"
           style={{
-            background: "oklch(0.97 0.01 25)",
-            border: "1px solid oklch(0.88 0.04 25)",
-            color: "oklch(0.28 0.025 38)",
+            background: surface,
+            border: hairline,
+            color: ink,
           }}
         >
           {leftTokens.map((chunk, i) =>
@@ -144,8 +146,8 @@ function DiffView({ original, rewritten }: { original: string; rewritten: string
               <span
                 key={i}
                 style={{
-                  background: "oklch(0.93 0.05 25)",
-                  color: "oklch(0.42 0.18 25)",
+                  background: withAlpha(accent, 0.12),
+                  color: inkMuted,
                   textDecoration: "line-through",
                   borderRadius: "2px",
                   padding: "0 1px",
@@ -164,7 +166,7 @@ function DiffView({ original, rewritten }: { original: string; rewritten: string
       <div>
         <p
           className="text-xs font-bold uppercase tracking-wider mb-2"
-          style={{ color: "oklch(0.48 0.04 50)" }}
+          style={{ color: inkMuted }}
         >
           Rewritten
         </p>
@@ -173,7 +175,7 @@ function DiffView({ original, rewritten }: { original: string; rewritten: string
           style={{
             background: ACCENT_BG,
             border: `1px solid ${ACCENT_BORDER}`,
-            color: "oklch(0.28 0.025 38)",
+            color: ink,
           }}
         >
           {rightTokens.map((chunk, i) =>
@@ -181,8 +183,8 @@ function DiffView({ original, rewritten }: { original: string; rewritten: string
               <span
                 key={i}
                 style={{
-                  background: "oklch(0.88 0.06 155)",
-                  color: "oklch(0.32 0.14 155)",
+                  background: accentSoft,
+                  color: accent,
                   fontWeight: 700,
                   borderRadius: "2px",
                   padding: "0 1px",
@@ -240,7 +242,7 @@ function AcceptModal({
           transition={{ duration: 0.18 }}
           className="relative rounded-xl overflow-hidden w-full max-w-2xl mx-4"
           style={{
-            background: "oklch(0.998 0.002 70)",
+            background: surface,
             border: `1px solid ${ACCENT_BORDER}`,
             boxShadow: "0 8px 32px oklch(0.10 0.02 220 / 0.18)",
           }}
@@ -270,7 +272,7 @@ function AcceptModal({
 
           {/* Modal body */}
           <div className="px-5 py-4 space-y-4">
-            <p className="text-xs" style={{ color: "oklch(0.50 0.04 50)" }}>
+            <p className="text-xs" style={{ color: inkMuted }}>
               The refined prompt is ready. Copy it, then paste it into your tool
               of choice — or replace your current draft by clearing the blocks
               and pasting into the Task block.
@@ -282,9 +284,9 @@ function AcceptModal({
               rows={10}
               className="w-full text-sm rounded-lg p-3 resize-none focus:outline-none"
               style={{
-                background: "oklch(0.97 0.012 155)",
+                background: accentSoft,
                 border: `1px solid ${ACCENT_BORDER}`,
-                color: "oklch(0.28 0.025 38)",
+                color: ink,
                 fontFamily: "inherit",
               }}
             />
@@ -294,9 +296,9 @@ function AcceptModal({
                 onClick={onClose}
                 className="text-xs px-3 py-1.5 rounded-lg font-semibold transition-opacity hover:opacity-80"
                 style={{
-                  background: "oklch(0.93 0.01 70)",
-                  color: "oklch(0.40 0.04 50)",
-                  border: "1px solid oklch(0.85 0.02 70)",
+                  background: surface,
+                  color: inkMuted,
+                  border: hairline,
                 }}
               >
                 Close
@@ -428,7 +430,7 @@ export default function RefineDiff({ prompt }: RefineDiffProps) {
         className="rounded-xl overflow-hidden"
         style={{
           border: `1px solid ${ACCENT_BORDER}`,
-          background: "oklch(0.998 0.002 70)",
+          background: surface,
         }}
       >
         {/* Header */}
@@ -462,11 +464,11 @@ export default function RefineDiff({ prompt }: RefineDiffProps) {
         </div>
 
         {/* Body */}
-        <div className="px-5 py-4" style={{ background: "oklch(0.985 0.006 155 / 0.35)" }}>
+        <div className="px-5 py-4" style={{ background: withAlpha(accentSoft, 0.35) }}>
           {/* Card grid — always visible, even when a result is showing */}
           <p
             className="text-xs font-bold uppercase tracking-wider mb-3"
-            style={{ color: "oklch(0.48 0.04 50)" }}
+            style={{ color: inkMuted }}
           >
             {result ? "Try another improvement" : "Pick a way to improve your prompt"}
           </p>
@@ -498,11 +500,11 @@ export default function RefineDiff({ prompt }: RefineDiffProps) {
                   style={{
                     background: isActive
                       ? ACCENT_BG
-                      : "oklch(0.998 0.002 70)",
+                      : surface,
                     border: isActive
                       ? `1.5px solid ${ACCENT}`
                       : `1.5px solid ${ACCENT_BORDER}`,
-                    color: "oklch(0.28 0.025 38)",
+                    color: ink,
                     cursor: disabled ? "not-allowed" : "pointer",
                     opacity: isDimmed ? 0.45 : 1,
                     boxShadow: isActive
@@ -524,14 +526,14 @@ export default function RefineDiff({ prompt }: RefineDiffProps) {
                     </span>
                     <span
                       className="font-bold text-sm leading-tight"
-                      style={{ color: "oklch(0.22 0.04 40)" }}
+                      style={{ color: ink }}
                     >
                       {card.title}
                     </span>
                   </div>
                   <p
                     className="text-xs leading-snug"
-                    style={{ color: "oklch(0.48 0.04 50)" }}
+                    style={{ color: inkMuted }}
                   >
                     {card.description}
                   </p>
@@ -542,7 +544,7 @@ export default function RefineDiff({ prompt }: RefineDiffProps) {
 
           {/* Empty hint */}
           {!hasPrompt && !loading && !result && !error && !breakerOpen && (
-            <p className="text-sm text-center py-2" style={{ color: "oklch(0.55 0.04 50)" }}>
+            <p className="text-sm text-center py-2" style={{ color: inkMuted }}>
               Build your prompt above, then pick a card to refine it.
             </p>
           )}
@@ -557,25 +559,25 @@ export default function RefineDiff({ prompt }: RefineDiffProps) {
               animate={{ opacity: 1, y: 0 }}
               className="flex items-start gap-3 rounded-xl p-4"
               style={{
-                background: "oklch(0.96 0.03 75)",
-                border: "1px solid oklch(0.75 0.14 75)",
+                background: withAlpha(accentSoft, 0.6),
+                border: hairline,
               }}
             >
               <AlertTriangle
                 className="w-4 h-4 mt-0.5 shrink-0"
-                style={{ color: "oklch(0.55 0.16 75)" }}
+                style={{ color: accent }}
               />
               <div>
-                <p className="text-sm font-semibold" style={{ color: "oklch(0.38 0.10 75)" }}>
+                <p className="text-sm font-semibold" style={{ color: ink }}>
                   Refine service is temporarily unavailable
                 </p>
-                <p className="text-xs mt-1" style={{ color: "oklch(0.50 0.08 75)" }}>
+                <p className="text-xs mt-1" style={{ color: inkMuted }}>
                   The circuit breaker is open. Try again in a moment.
                 </p>
                 <button
                   onClick={handleRetry}
                   className="flex items-center gap-1.5 text-xs mt-2 px-3 py-1.5 rounded-lg font-semibold"
-                  style={{ background: "oklch(0.75 0.14 75)", color: "oklch(0.98 0.01 75)" }}
+                  style={{ background: accent, color: "oklch(0.98 0.01 75)" }}
                 >
                   <RotateCcw className="w-3 h-3" /> Retry
                 </button>
@@ -590,25 +592,25 @@ export default function RefineDiff({ prompt }: RefineDiffProps) {
               animate={{ opacity: 1, y: 0 }}
               className="flex items-start gap-3 rounded-xl p-4"
               style={{
-                background: "oklch(0.96 0.02 25)",
-                border: "1px solid oklch(0.70 0.14 25)",
+                background: withAlpha(accentSoft, 0.6),
+                border: hairline,
               }}
             >
               <AlertTriangle
                 className="w-4 h-4 mt-0.5 shrink-0"
-                style={{ color: "oklch(0.52 0.18 25)" }}
+                style={{ color: accent }}
               />
               <div className="flex-1">
-                <p className="text-sm font-semibold" style={{ color: "oklch(0.38 0.12 25)" }}>
+                <p className="text-sm font-semibold" style={{ color: ink }}>
                   Refine failed
                 </p>
-                <p className="text-xs mt-1" style={{ color: "oklch(0.50 0.08 25)" }}>
+                <p className="text-xs mt-1" style={{ color: inkMuted }}>
                   {error}
                 </p>
                 <button
                   onClick={handleRetry}
                   className="flex items-center gap-1.5 text-xs mt-2 px-3 py-1.5 rounded-lg font-semibold"
-                  style={{ background: "oklch(0.52 0.18 25)", color: "oklch(0.98 0.01 75)" }}
+                  style={{ background: accent, color: "oklch(0.98 0.01 75)" }}
                 >
                   <RotateCcw className="w-3 h-3" /> Retry
                 </button>
@@ -635,11 +637,11 @@ export default function RefineDiff({ prompt }: RefineDiffProps) {
                   <div>
                     <p
                       className="text-xs font-bold uppercase tracking-wider mb-1.5"
-                      style={{ color: "oklch(0.48 0.04 50)" }}
+                      style={{ color: inkMuted }}
                     >
                       What changed
                     </p>
-                    <p className="text-sm leading-relaxed" style={{ color: "oklch(0.38 0.04 50)" }}>
+                    <p className="text-sm leading-relaxed" style={{ color: inkMuted }}>
                       {result.notes}
                     </p>
                   </div>
@@ -658,9 +660,9 @@ export default function RefineDiff({ prompt }: RefineDiffProps) {
                     onClick={handleReject}
                     className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg font-semibold transition-all"
                     style={{
-                      background: "oklch(0.93 0.01 70)",
-                      color: "oklch(0.40 0.04 50)",
-                      border: "1px solid oklch(0.85 0.02 70)",
+                      background: surface,
+                      color: inkMuted,
+                      border: hairline,
                     }}
                   >
                     <X className="w-3 h-3" /> Reject
