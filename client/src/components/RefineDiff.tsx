@@ -502,8 +502,8 @@ export default function RefineDiff({ prompt }: RefineDiffProps) {
                     cursor: disabled ? "not-allowed" : "pointer",
                     opacity: isDimmed ? 0.45 : 1,
                     boxShadow: isActive
-                      ? `0 2px 12px ${accent}33`
-                      : "0 1px 2px oklch(0.18 0.02 38 / 0.04)",
+                      ? `0 2px 12px ${withAlpha(accent, 0.2)}`
+                      : "0 1px 2px oklch(0.18 0.02 250 / 0.04)",
                     minHeight: "92px",
                   }}
                 >
