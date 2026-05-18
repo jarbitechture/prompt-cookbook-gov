@@ -978,29 +978,6 @@ export default function ChapterDetail({ chapter, onBack }: ChapterDetailProps) {
         />
       </motion.div>
 
-      {/* Try in Prompt Builder link */}
-      <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={delayedTransition(0.48)}
-        className="mb-12 flex justify-center"
-      >
-        <button
-          onClick={() => {
-            localStorage.setItem("cookbook-builder-import", chapter.tryItTemplate);
-            setLocation("/builder");
-          }}
-          className="inline-flex items-center gap-2.5 px-6 py-3 rounded-xl text-sm font-semibold transition-all hover:shadow-md active:scale-[0.98]"
-          style={{
-            background: theme.accent,
-            color: "oklch(0.98 0.008 70)",
-            boxShadow: `0 4px 16px oklch(0.18 0.02 38 / 0.12)`,
-          }}
-        >
-          <Wrench className="w-4 h-4" />
-          Remix in Prompt Builder
-        </button>
-      </motion.div>
 
       {/* ─── PREV / NEXT NAVIGATION ─── */}
       <motion.nav

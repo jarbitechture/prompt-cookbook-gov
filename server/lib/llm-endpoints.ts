@@ -51,7 +51,22 @@ import {
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const PROMPTS_DIR = path.resolve(__dirname, "..", "prompts");
+
+// Resolve the prompts directory robustly across runtime layouts:
+//  - dev (tsx, this file at server/lib/)   -> server/prompts   via ../prompts
+//  - prod bundle (dist/index.js)           -> dist/prompts      via ./prompts
+//    (the build copies server/prompts -> dist/prompts)
+// Pick the first candidate that actually contains the templates; fall back
+// to the dev path so a genuinely-missing dir still fails with a clear ENOENT.
+const PROMPTS_DIR =
+  [
+    path.resolve(__dirname, "..", "prompts"),
+    path.resolve(__dirname, "prompts"),
+    path.resolve(__dirname, "..", "..", "server", "prompts"),
+    path.resolve(process.cwd(), "dist", "prompts"),
+    path.resolve(process.cwd(), "server", "prompts"),
+  ].find((d) => fs.existsSync(path.join(d, "critique.md"))) ??
+  path.resolve(__dirname, "..", "prompts");
 
 function loadPrompt(mode: "critique" | "refine" | "preview"): string {
   return fs.readFileSync(path.join(PROMPTS_DIR, `${mode}.md`), "utf-8");
