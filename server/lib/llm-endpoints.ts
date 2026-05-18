@@ -190,14 +190,59 @@ async function callAndParse(
     return { ok: false, breakerOpen: false, error: "Unexpected non-string response from civic-ai" };
   }
 
-  // Strip markdown code fences if present.
+  // Fast path: whole response is JSON, optionally wrapped in a single
+  // markdown code fence.
   const stripped = raw.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "").trim();
 
-  try {
-    return { ok: true, data: JSON.parse(stripped) };
-  } catch {
-    return { ok: false, breakerOpen: false, error: `JSON parse failure: ${raw.slice(0, 200)}` };
+  // Fallback: weaker models (esp. the dev gemma3:4b stand-in) often wrap the
+  // JSON in preamble/trailing prose ("Sure! Here's the JSON: { ... }"), which
+  // the start/end fence-strip can't handle. Extract the first balanced JSON
+  // value from the raw text. Pure-JSON responses (prod Qwen) parse on the
+  // fast path unchanged, so this only adds resilience.
+  const candidates = [stripped];
+  const extracted = extractBalancedJson(raw);
+  if (extracted && extracted !== stripped) candidates.push(extracted);
+
+  for (const candidate of candidates) {
+    try {
+      return { ok: true, data: JSON.parse(candidate) };
+    } catch {
+      /* try the next candidate */
+    }
   }
+  return { ok: false, breakerOpen: false, error: `JSON parse failure: ${raw.slice(0, 200)}` };
+}
+
+/**
+ * Extract the first balanced JSON object/array substring from arbitrary text,
+ * tolerating preamble/trailing prose and fences anywhere. String literals and
+ * escapes are respected so braces inside strings don't break balancing.
+ * Returns null if no balanced value is found.
+ */
+function extractBalancedJson(s: string): string | null {
+  const start = s.search(/[{[]/);
+  if (start < 0) return null;
+  const open = s[start];
+  const close = open === "{" ? "}" : "]";
+  let depth = 0;
+  let inStr = false;
+  let esc = false;
+  for (let i = start; i < s.length; i++) {
+    const c = s[i];
+    if (inStr) {
+      if (esc) esc = false;
+      else if (c === "\\") esc = true;
+      else if (c === '"') inStr = false;
+    } else if (c === '"') {
+      inStr = true;
+    } else if (c === open) {
+      depth++;
+    } else if (c === close) {
+      depth--;
+      if (depth === 0) return s.slice(start, i + 1);
+    }
+  }
+  return null;
 }
 
 // ─── Per-mode endpoint handlers ───────────────────────────────────────────────
