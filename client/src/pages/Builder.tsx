@@ -42,20 +42,23 @@ import { accent as ACCENT, accentSoft as ACCENT_LIGHT, bg as BG, surface as SURF
 
 /* ─── Color System ─── */
 
+// Desaturated cool-arc palette — hues 210/240/270/295/315, chroma 0.04–0.08.
+// All five remain visually distinct with no warm hues.
 const BLOCK_COLORS: Record<string, { border: string; text: string; bg: string }> = {
-  role:        { border: "oklch(0.45 0.14 250)", text: "oklch(0.55 0.14 250)", bg: "oklch(0.95 0.03 250)" },
-  task:        { border: "oklch(0.42 0.14 155)", text: "oklch(0.50 0.14 155)", bg: "oklch(0.95 0.03 155)" },
-  context:     { border: "oklch(0.50 0.14 75)",  text: "oklch(0.58 0.14 75)",  bg: "oklch(0.96 0.03 75)" },
-  output:      { border: "oklch(0.45 0.12 310)", text: "oklch(0.55 0.12 310)", bg: "oklch(0.95 0.03 310)" },
-  constraints: { border: "oklch(0.50 0.16 25)",  text: "oklch(0.58 0.16 25)",  bg: "oklch(0.96 0.03 25)" },
+  role:        { border: "oklch(0.48 0.08 210)", text: "oklch(0.52 0.07 210)", bg: "oklch(0.96 0.02 210)" },
+  task:        { border: "oklch(0.46 0.08 240)", text: "oklch(0.52 0.07 240)", bg: "oklch(0.96 0.02 240)" },
+  context:     { border: "oklch(0.48 0.07 270)", text: "oklch(0.54 0.06 270)", bg: "oklch(0.96 0.02 270)" },
+  output:      { border: "oklch(0.48 0.08 295)", text: "oklch(0.54 0.07 295)", bg: "oklch(0.96 0.02 295)" },
+  constraints: { border: "oklch(0.50 0.07 315)", text: "oklch(0.56 0.06 315)", bg: "oklch(0.96 0.02 315)" },
 };
 
+// Labels rendered into the dark pane (bg oklch(0.14…)) — L ≥ 0.65 for legibility.
 const PREVIEW_LABEL_COLORS: Record<string, string> = {
-  role: "oklch(0.65 0.14 250)",
-  task: "oklch(0.60 0.14 155)",
-  context: "oklch(0.68 0.14 75)",
-  output: "oklch(0.65 0.12 310)",
-  constraints: "oklch(0.68 0.16 25)",
+  role:        "oklch(0.72 0.08 210)",
+  task:        "oklch(0.70 0.08 240)",
+  context:     "oklch(0.72 0.07 270)",
+  output:      "oklch(0.70 0.08 295)",
+  constraints: "oklch(0.72 0.07 315)",
 };
 
 /* ─── Block Definitions ─── */
@@ -788,15 +791,14 @@ function BuildMode() {
                 exit={{ opacity: 0, y: -8 }}
                 className="rounded-xl overflow-hidden"
                 style={{
-                  background: "oklch(1 0 0)",
-                  border: `1px solid oklch(0.90 0.01 70)`,
+                  background: SURFACE,
+                  border: `1px solid oklch(0.90 0.01 250)`,
                   borderLeft: `4px solid ${colors?.border || ACCENT}`,
-                  boxShadow: "0 1px 4px oklch(0.18 0.02 38 / 0.04)",
                 }}
               >
                 {/* Block header */}
-                <div className="flex items-center gap-2 px-4 py-2.5">
-                  <GripVertical className="w-3.5 h-3.5 cursor-grab" style={{ color: "oklch(0.75 0.02 70)" }} />
+                <div className="flex items-center gap-2 px-3 py-2">
+                  <GripVertical className="w-3.5 h-3.5 cursor-grab" style={{ color: INK_MUTED }} />
                   <div
                     className="flex items-center justify-center w-6 h-6 rounded-md text-xs font-bold"
                     style={{ background: colors?.bg || ACCENT_LIGHT, color: colors?.border || ACCENT }}
@@ -804,11 +806,19 @@ function BuildMode() {
                     {block.label[0]}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="text-sm font-bold" style={{ color: hasContent ? colors?.border || ACCENT : "oklch(0.38 0.04 45)" }}>
+                    <div
+                      className="text-xs font-bold"
+                      style={{
+                        color: INK,
+                        fontFamily: "ui-monospace, monospace",
+                        textTransform: "uppercase",
+                        letterSpacing: "0.08em",
+                      }}
+                    >
                       {block.label}
                     </div>
                     {block.subLabel && (
-                      <div className="text-[10px] mt-0.5 leading-tight" style={{ color: "oklch(0.58 0.04 55)" }}>
+                      <div className="text-[10px] mt-0.5 leading-tight" style={{ color: INK_MUTED }}>
                         {block.subLabel}
                       </div>
                     )}
@@ -819,9 +829,9 @@ function BuildMode() {
                     title={hidden ? "Show in preview" : "Hide from preview"}
                   >
                     {hidden ? (
-                      <EyeOff className="w-3.5 h-3.5" style={{ color: "oklch(0.65 0.03 55)" }} />
+                      <EyeOff className="w-3.5 h-3.5" style={{ color: INK_MUTED }} />
                     ) : (
-                      <Eye className="w-3.5 h-3.5" style={{ color: "oklch(0.50 0.04 50)" }} />
+                      <Eye className="w-3.5 h-3.5" style={{ color: INK_MUTED }} />
                     )}
                   </button>
                   <button
@@ -831,7 +841,7 @@ function BuildMode() {
                     <ChevronDown
                       className="w-4 h-4 transition-transform duration-200"
                       style={{
-                        color: "oklch(0.55 0.03 55)",
+                        color: INK_MUTED,
                         transform: collapsed ? "rotate(-90deg)" : "rotate(0deg)",
                       }}
                     />
@@ -848,9 +858,9 @@ function BuildMode() {
                       transition={{ duration: 0.2 }}
                       className="overflow-hidden"
                     >
-                      <div className="px-4 pb-3">
+                      <div className="px-3 pb-3">
                         {block.helpText && !hasContent && (
-                          <p className="text-[11px] mb-2 italic" style={{ color: "oklch(0.55 0.04 50)" }}>
+                          <p className="text-[11px] mb-2 italic" style={{ color: INK_MUTED }}>
                             {block.helpText}
                           </p>
                         )}
@@ -862,18 +872,17 @@ function BuildMode() {
                             rows={block.rows || 3}
                             className="w-full px-3 py-2.5 rounded-lg text-sm transition-all resize-none"
                             style={{
-                              background: "oklch(0.985 0.005 70)",
-                              border: hasContent ? `1.5px solid ${colors?.text || "oklch(0.88 0.015 75)"}` : "1.5px solid oklch(0.90 0.01 70)",
-                              color: "oklch(0.22 0.03 40)",
+                              background: SURFACE,
+                              border: "1.5px solid oklch(0.90 0.01 250)",
+                              color: INK,
                               outline: "none",
                             }}
                             onFocus={(e) => {
-                              e.currentTarget.style.borderColor = colors?.border || ACCENT;
-                              e.currentTarget.style.boxShadow = `0 0 0 3px ${colors?.border || ACCENT}18`;
+                              e.currentTarget.style.borderColor = ACCENT;
+                              e.currentTarget.style.boxShadow = `0 0 0 3px ${withAlpha(ACCENT, 0.18)}`;
                             }}
                             onBlur={(e) => {
-                              const active = (blockValues[block.id] || "").trim();
-                              e.currentTarget.style.borderColor = active ? (colors?.text || "oklch(0.88 0.015 75)") : "oklch(0.90 0.01 70)";
+                              e.currentTarget.style.borderColor = "oklch(0.90 0.01 250)";
                               e.currentTarget.style.boxShadow = "none";
                             }}
                           />
@@ -885,18 +894,17 @@ function BuildMode() {
                             placeholder={block.placeholder}
                             className="w-full px-3 py-2.5 rounded-lg text-sm transition-all"
                             style={{
-                              background: "oklch(0.985 0.005 70)",
-                              border: hasContent ? `1.5px solid ${colors?.text || "oklch(0.88 0.015 75)"}` : "1.5px solid oklch(0.90 0.01 70)",
-                              color: "oklch(0.22 0.03 40)",
+                              background: SURFACE,
+                              border: "1.5px solid oklch(0.90 0.01 250)",
+                              color: INK,
                               outline: "none",
                             }}
                             onFocus={(e) => {
-                              e.currentTarget.style.borderColor = colors?.border || ACCENT;
-                              e.currentTarget.style.boxShadow = `0 0 0 3px ${colors?.border || ACCENT}18`;
+                              e.currentTarget.style.borderColor = ACCENT;
+                              e.currentTarget.style.boxShadow = `0 0 0 3px ${withAlpha(ACCENT, 0.18)}`;
                             }}
                             onBlur={(e) => {
-                              const active = (blockValues[block.id] || "").trim();
-                              e.currentTarget.style.borderColor = active ? (colors?.text || "oklch(0.88 0.015 75)") : "oklch(0.90 0.01 70)";
+                              e.currentTarget.style.borderColor = "oklch(0.90 0.01 250)";
                               e.currentTarget.style.boxShadow = "none";
                             }}
                           />
