@@ -38,10 +38,9 @@ import { getWelcomeSeen, setWelcomeSeen } from "@/lib/welcomeStorage";
 import CritiquePanel from "@/components/CritiquePanel";
 import RefineDiff from "@/components/RefineDiff";
 import PreviewPanel from "@/components/PreviewPanel";
+import { accent as ACCENT, accentSoft as ACCENT_LIGHT } from "@/builder-theme";
 
 /* ─── Color System ─── */
-const ACCENT = "oklch(0.48 0.12 220)";
-const ACCENT_LIGHT = "oklch(0.94 0.03 220)";
 
 const BLOCK_COLORS: Record<string, { border: string; text: string; bg: string }> = {
   role:        { border: "oklch(0.45 0.14 250)", text: "oklch(0.55 0.14 250)", bg: "oklch(0.95 0.03 250)" },
