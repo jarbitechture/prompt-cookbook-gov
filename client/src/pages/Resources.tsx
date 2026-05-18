@@ -290,6 +290,9 @@ export default function Resources() {
           )}
         </AnimatePresence>
 
+        {/* Featured: Request AI Training — lifted out of the Internal tab */}
+        <TrainingRequest />
+
         {/* Footer */}
         <footer className="pt-8 pb-8 mt-10 text-center" style={{ borderTop: `1px solid oklch(0.90 0.02 75)` }}>
           <p className="text-xs" style={{ color: TEXT_MUTED }}>
@@ -651,9 +654,9 @@ function RecipesTab() {
 // addressed to TRAINING_RECIPIENT. The user reviews and clicks Send in their mail app.
 const TRAINING_RECIPIENT = "elliot.jarbe@mymanatee.org";
 
-function InternalTab() {
-  const [expanded, setExpanded] = useState<number | null>(null);
-  const [formOpen, setFormOpen] = useState(false);
+// Featured, page-level training request — lifted out of the Internal tab so
+// it is the first thing staff see and use on /resources (centered card).
+function TrainingRequest() {
   const [formData, setFormData] = useState({ name: "", email: "", department: "", format: "1-hour workshop", topic: "", teamSize: "", preferredDates: "", notes: "" });
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -693,6 +696,103 @@ function InternalTab() {
     fontSize: "13px",
     width: "100%",
   };
+
+  return (
+    <motion.section
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.25 }}
+      className="max-w-2xl mx-auto mt-12 rounded-2xl overflow-hidden"
+      style={{ background: CARD_BG, border: `1px solid ${CARD_BORDER}`, boxShadow: "0 6px 28px oklch(0.18 0.02 38 / 0.10)" }}
+    >
+      <div className="px-6 py-5 text-center" style={{ borderBottom: `1px solid ${CARD_BORDER}` }}>
+        <span className="text-3xl block mb-1">🎓</span>
+        <h2 className="font-serif text-xl font-bold" style={{ color: TEXT_PRIMARY }}>Request AI Training</h2>
+        <p className="text-xs mt-1" style={{ color: TEXT_SECONDARY }}>Get a session tailored to your team — led by the AI Working Group.</p>
+      </div>
+      <div className="px-6 pb-6 pt-5">
+        {submitted ? (
+          <div className="rounded-lg p-6 text-center" style={{ background: "oklch(0.96 0.02 145)" }}>
+            <span className="text-3xl block mb-2">✅</span>
+            <p className="text-sm font-bold" style={{ color: "oklch(0.30 0.10 145)" }}>Email prepared in your mail client</p>
+            <p className="text-xs mt-1" style={{ color: TEXT_SECONDARY }}>Review the prefilled email and click <strong>Send</strong>. The AI Working Group follows up within 5 business days.</p>
+            <p className="text-xs mt-2" style={{ color: TEXT_SECONDARY }}>Mail app didn't open? Copy the full request and email it to <strong>{TRAINING_RECIPIENT}</strong>:</p>
+            <button
+              type="button"
+              onClick={() => {
+                navigator.clipboard.writeText(requestText).then(() => {
+                  setCopied(true);
+                  setTimeout(() => setCopied(false), 2000);
+                });
+              }}
+              className="mt-2 text-xs font-bold px-4 py-2 rounded-lg"
+              style={{ background: "oklch(0.45 0.12 145)", color: "oklch(0.98 0.01 70)" }}
+            >
+              {copied ? "Copied ✓" : "Copy request"}
+            </button>
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="text-[11px] font-bold block mb-1" style={{ color: TEXT_SECONDARY }}>Your Name *</label>
+                <input required value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} style={inputStyle} placeholder="Jane Smith" />
+              </div>
+              <div>
+                <label className="text-[11px] font-bold block mb-1" style={{ color: TEXT_SECONDARY }}>Email *</label>
+                <input required type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} style={inputStyle} placeholder="jane.smith@mymanatee.org" />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="text-[11px] font-bold block mb-1" style={{ color: TEXT_SECONDARY }}>Department *</label>
+                <input required value={formData.department} onChange={(e) => setFormData({ ...formData, department: e.target.value })} style={inputStyle} placeholder="e.g. Public Works" />
+              </div>
+              <div>
+                <label className="text-[11px] font-bold block mb-1" style={{ color: TEXT_SECONDARY }}>Team Size *</label>
+                <input required value={formData.teamSize} onChange={(e) => setFormData({ ...formData, teamSize: e.target.value })} style={inputStyle} placeholder="e.g. 12 people" />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="text-[11px] font-bold block mb-1" style={{ color: TEXT_SECONDARY }}>Format</label>
+                <select value={formData.format} onChange={(e) => setFormData({ ...formData, format: e.target.value })} style={inputStyle}>
+                  <option>30-min lunch-and-learn</option>
+                  <option>1-hour workshop</option>
+                  <option>Half-day deep dive</option>
+                </select>
+              </div>
+              <div>
+                <label className="text-[11px] font-bold block mb-1" style={{ color: TEXT_SECONDARY }}>Preferred Dates</label>
+                <input value={formData.preferredDates} onChange={(e) => setFormData({ ...formData, preferredDates: e.target.value })} style={inputStyle} placeholder="e.g. Week of April 14" />
+              </div>
+            </div>
+            <div>
+              <label className="text-[11px] font-bold block mb-1" style={{ color: TEXT_SECONDARY }}>Topics of Interest</label>
+              <input value={formData.topic} onChange={(e) => setFormData({ ...formData, topic: e.target.value })} style={inputStyle} placeholder="e.g. Prompt basics, department-specific use cases" />
+            </div>
+            <div>
+              <label className="text-[11px] font-bold block mb-1" style={{ color: TEXT_SECONDARY }}>Additional Notes</label>
+              <textarea value={formData.notes} onChange={(e) => setFormData({ ...formData, notes: e.target.value })} rows={2} style={{ ...inputStyle, resize: "vertical" as const }} placeholder="Any other details..." />
+            </div>
+            <button
+              type="submit"
+              disabled={submitting}
+              className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-bold transition-all mx-auto"
+              style={{ background: ACCENT, color: "white", opacity: submitting ? 0.6 : 1 }}
+            >
+              {submitting ? "Submitting..." : "Submit Training Request"}
+              <ArrowRight className="w-4 h-4" />
+            </button>
+          </form>
+        )}
+      </div>
+    </motion.section>
+  );
+}
+
+function InternalTab() {
+  const [expanded, setExpanded] = useState<number | null>(null);
 
   return (
     <motion.div initial="hidden" animate="visible" variants={staggerContainer} className="space-y-4">
@@ -736,101 +836,6 @@ function InternalTab() {
           </AnimatePresence>
         </motion.div>
       ))}
-
-      {/* Training Request Form */}
-      <motion.div variants={fadeUp} className="rounded-xl overflow-hidden" style={{ background: CARD_BG, border: `1px solid ${CARD_BORDER}` }}>
-        <button onClick={() => setFormOpen(!formOpen)} className="w-full flex items-center gap-4 px-5 py-4 text-left">
-          <span className="text-2xl flex-shrink-0">🎓</span>
-          <div className="flex-1 min-w-0">
-            <h4 className="font-bold text-sm" style={{ color: TEXT_PRIMARY }}>Request AI Training</h4>
-            <p className="text-xs leading-relaxed mt-0.5" style={{ color: TEXT_SECONDARY }}>Fill out this form to request a training session for your team</p>
-          </div>
-          <ChevronRight className="w-4 h-4 flex-shrink-0 transition-transform duration-200" style={{ color: TEXT_MUTED, transform: formOpen ? "rotate(90deg)" : "rotate(0deg)" }} />
-        </button>
-        <AnimatePresence>
-          {formOpen && (
-            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }} className="overflow-hidden">
-              <div className="px-5 pb-5 pt-0">
-                {submitted ? (
-                  <div className="rounded-lg p-6 text-center" style={{ background: "oklch(0.96 0.02 145)" }}>
-                    <span className="text-3xl block mb-2">✅</span>
-                    <p className="text-sm font-bold" style={{ color: "oklch(0.30 0.10 145)" }}>Email prepared in your mail client</p>
-                    <p className="text-xs mt-1" style={{ color: TEXT_SECONDARY }}>Review the prefilled email and click <strong>Send</strong>. The AI Working Group follows up within 5 business days.</p>
-                    <p className="text-xs mt-2" style={{ color: TEXT_SECONDARY }}>Mail app didn't open? Copy the full request and email it to <strong>{TRAINING_RECIPIENT}</strong>:</p>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        navigator.clipboard.writeText(requestText).then(() => {
-                          setCopied(true);
-                          setTimeout(() => setCopied(false), 2000);
-                        });
-                      }}
-                      className="mt-2 text-xs font-bold px-4 py-2 rounded-lg"
-                      style={{ background: "oklch(0.45 0.12 145)", color: "oklch(0.98 0.01 70)" }}
-                    >
-                      {copied ? "Copied ✓" : "Copy request"}
-                    </button>
-                  </div>
-                ) : (
-                  <form onSubmit={handleSubmit} className="space-y-3">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div>
-                        <label className="text-[11px] font-bold block mb-1" style={{ color: TEXT_SECONDARY }}>Your Name *</label>
-                        <input required value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} style={inputStyle} placeholder="Jane Smith" />
-                      </div>
-                      <div>
-                        <label className="text-[11px] font-bold block mb-1" style={{ color: TEXT_SECONDARY }}>Email *</label>
-                        <input required type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} style={inputStyle} placeholder="jane.smith@mymanatee.org" />
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div>
-                        <label className="text-[11px] font-bold block mb-1" style={{ color: TEXT_SECONDARY }}>Department *</label>
-                        <input required value={formData.department} onChange={(e) => setFormData({ ...formData, department: e.target.value })} style={inputStyle} placeholder="e.g. Public Works" />
-                      </div>
-                      <div>
-                        <label className="text-[11px] font-bold block mb-1" style={{ color: TEXT_SECONDARY }}>Team Size *</label>
-                        <input required value={formData.teamSize} onChange={(e) => setFormData({ ...formData, teamSize: e.target.value })} style={inputStyle} placeholder="e.g. 12 people" />
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div>
-                        <label className="text-[11px] font-bold block mb-1" style={{ color: TEXT_SECONDARY }}>Format</label>
-                        <select value={formData.format} onChange={(e) => setFormData({ ...formData, format: e.target.value })} style={inputStyle}>
-                          <option>30-min lunch-and-learn</option>
-                          <option>1-hour workshop</option>
-                          <option>Half-day deep dive</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label className="text-[11px] font-bold block mb-1" style={{ color: TEXT_SECONDARY }}>Preferred Dates</label>
-                        <input value={formData.preferredDates} onChange={(e) => setFormData({ ...formData, preferredDates: e.target.value })} style={inputStyle} placeholder="e.g. Week of April 14" />
-                      </div>
-                    </div>
-                    <div>
-                      <label className="text-[11px] font-bold block mb-1" style={{ color: TEXT_SECONDARY }}>Topics of Interest</label>
-                      <input value={formData.topic} onChange={(e) => setFormData({ ...formData, topic: e.target.value })} style={inputStyle} placeholder="e.g. Prompt basics, department-specific use cases" />
-                    </div>
-                    <div>
-                      <label className="text-[11px] font-bold block mb-1" style={{ color: TEXT_SECONDARY }}>Additional Notes</label>
-                      <textarea value={formData.notes} onChange={(e) => setFormData({ ...formData, notes: e.target.value })} rows={2} style={{ ...inputStyle, resize: "vertical" as const }} placeholder="Any other details..." />
-                    </div>
-                    <button
-                      type="submit"
-                      disabled={submitting}
-                      className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-bold transition-all"
-                      style={{ background: ACCENT, color: "white", opacity: submitting ? 0.6 : 1 }}
-                    >
-                      {submitting ? "Submitting..." : "Submit Training Request"}
-                      <ArrowRight className="w-4 h-4" />
-                    </button>
-                  </form>
-                )}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </motion.div>
     </motion.div>
   );
 }
