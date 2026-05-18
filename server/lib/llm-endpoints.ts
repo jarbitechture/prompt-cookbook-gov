@@ -30,7 +30,7 @@ import { breaker } from "./breaker.js";
 import type { CivicAiMessage, CivicAiOptions } from "./civic-ai-client.js";
 import { retrieveContext } from "./chapter-retrieval.js";
 import { filterOutput } from "./output-filter.js";
-import type { FilterMode } from "./output-filter.js";
+import type { FilterMode, FilterFlag } from "./output-filter.js";
 import { chapters } from "../../client/src/lib/cookbookData.js";
 import { CritiqueSchema } from "../schemas/critique.js";
 import type { Critique } from "../schemas/critique.js";
@@ -243,6 +243,25 @@ function extractBalancedJson(s: string): string | null {
     }
   }
   return null;
+}
+
+/**
+ * Flags whose matched text does NOT appear verbatim in the user's submitted
+ * prompt — i.e. content the model *introduced*, not echoed from input.
+ *
+ * Refine rewrites the user's own prompt by design, so a county-fact pattern
+ * (e.g. a dollar amount) that the user themselves wrote is not a model
+ * hallucination and must not hard-reject their refinement. The shared
+ * filterOutput() is unchanged — it still detects and records every flag for
+ * audit; this only narrows Refine's *reject* decision to model-introduced
+ * content. Conservative by design: if the model rephrases flagged content so
+ * it no longer matches the input verbatim, it still rejects.
+ */
+function modelIntroducedFlags(
+  flags: FilterFlag[],
+  userPrompt: string
+): FilterFlag[] {
+  return flags.filter((f) => !userPrompt.includes(f.match));
 }
 
 // ─── Per-mode endpoint handlers ───────────────────────────────────────────────
@@ -524,8 +543,11 @@ export async function handleRefine(
 
   // Output filter — refine mode: clean unchanged, reject=true if flags fire
   const filtered = filterOutput<Refine>(validated, "refine" as FilterMode);
+  // Input-aware: only model-introduced flagged content rejects (Option A).
+  // Echoed user input is expected — Refine rewrites the user's own prompt.
+  const introduced = modelIntroducedFlags(filtered.flags, prompt);
 
-  if (filtered.reject) {
+  if (introduced.length > 0) {
     // One retry on filter rejection
     const retryMessages: CivicAiMessage[] = [
       {
@@ -562,7 +584,8 @@ export async function handleRefine(
     }
 
     const retryFiltered = filterOutput<Refine>(retryZod.data, "refine" as FilterMode);
-    if (retryFiltered.reject) {
+    const retryIntroduced = modelIntroducedFlags(retryFiltered.flags, prompt);
+    if (retryIntroduced.length > 0) {
       emitPromptEvent(req, "refine", false, startTs, traceId);
       res.status(502).json({
         error: "Coach returned content that could not be verified safe. Try again.",
