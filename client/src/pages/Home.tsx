@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
+import type { ComponentProps } from "react";
 import { Menu } from "lucide-react";
 import { chapters, parts } from "@/lib/cookbookData";
 import type { Difficulty } from "@/lib/cookbookData";
@@ -37,6 +38,54 @@ function SectionDivider({ partId, label: overrideLabel }: { partId: string; labe
         {displayLabel}
       </span>
       <div className="flex-1 h-px ml-2" style={{ background: "oklch(0.91 0.010 70)" }} />
+    </div>
+  );
+}
+
+/** A cookbook Part rendered as a collapsible pick-list section, so the
+ *  chapter browser doesn't run the full length of the page. */
+function CollapsiblePart({
+  partId,
+  chapters,
+  isOpen,
+  onToggle,
+  onSelectChapter,
+}: {
+  partId: string;
+  chapters: ComponentProps<typeof RecipeCard>["chapter"][];
+  isOpen: boolean;
+  onToggle: () => void;
+  onSelectChapter: (id: string) => void;
+}) {
+  return (
+    <div>
+      <button
+        onClick={onToggle}
+        aria-expanded={isOpen}
+        className="w-full flex items-center gap-2 text-left"
+      >
+        <div className="flex-1">
+          <SectionDivider partId={partId} />
+        </div>
+        <span
+          className="text-xs font-bold flex-shrink-0"
+          style={{ color: "oklch(0.50 0.04 55)" }}
+        >
+          {isOpen ? "▾" : "▸"}
+        </span>
+      </button>
+      {isOpen && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 justify-items-center">
+          {chapters.map((ch, i) => (
+            <RecipeCard
+              key={ch.id}
+              chapter={ch}
+              onClick={() => onSelectChapter(ch.id)}
+              index={i}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -107,6 +156,15 @@ export default function Home() {
   const [difficultyFilter, setDifficultyFilter] = useState<Difficulty | "all">("all");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showAllChapters, setShowAllChapters] = useState(false);
+  const [openParts, setOpenParts] = useState<Set<string>>(() => new Set(["part1"]));
+  const togglePart = useCallback((pid: string) => {
+    setOpenParts((prev) => {
+      const next = new Set(prev);
+      if (next.has(pid)) next.delete(pid);
+      else next.add(pid);
+      return next;
+    });
+  }, []);
   const [selectedDept, setSelectedDeptState] = useState<Category | null>(() => {
     try {
       const stored = localStorage.getItem("cookbook-department");
@@ -391,19 +449,14 @@ export default function Home() {
 
               {/* Recipe Grid — matching sections */}
               {matchingGroups.map((group) => (
-                <div key={group.partId}>
-                  <SectionDivider partId={group.partId} />
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 justify-items-center">
-                    {group.chapters.map((ch, i) => (
-                      <RecipeCard
-                        key={ch.id}
-                        chapter={ch}
-                        onClick={() => handleSelectChapter(ch.id)}
-                        index={i}
-                      />
-                    ))}
-                  </div>
-                </div>
+                <CollapsiblePart
+                  key={group.partId}
+                  partId={group.partId}
+                  chapters={group.chapters}
+                  isOpen={openParts.has(group.partId)}
+                  onToggle={() => togglePart(group.partId)}
+                  onSelectChapter={handleSelectChapter}
+                />
               ))}
 
               {/* Non-matching sections (dimmed when persona active) */}
@@ -424,19 +477,14 @@ export default function Home() {
                       </div>
                       <div style={{ opacity: 0.5 }}>
                         {nonMatchingGroups.map((group) => (
-                          <div key={group.partId}>
-                            <SectionDivider partId={group.partId} />
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 justify-items-center">
-                              {group.chapters.map((ch, i) => (
-                                <RecipeCard
-                                  key={ch.id}
-                                  chapter={ch}
-                                  onClick={() => handleSelectChapter(ch.id)}
-                                  index={i}
-                                />
-                              ))}
-                            </div>
-                          </div>
+                          <CollapsiblePart
+                            key={group.partId}
+                            partId={group.partId}
+                            chapters={group.chapters}
+                            isOpen={openParts.has(group.partId)}
+                            onToggle={() => togglePart(group.partId)}
+                            onSelectChapter={handleSelectChapter}
+                          />
                         ))}
                       </div>
                     </>
@@ -458,19 +506,14 @@ export default function Home() {
 
               {/* No persona — show non-matching normally */}
               {nonMatchingGroups.length > 0 && !persona && nonMatchingGroups.map((group) => (
-                <div key={group.partId}>
-                  <SectionDivider partId={group.partId} />
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 justify-items-center">
-                    {group.chapters.map((ch, i) => (
-                      <RecipeCard
-                        key={ch.id}
-                        chapter={ch}
-                        onClick={() => handleSelectChapter(ch.id)}
-                        index={i}
-                      />
-                    ))}
-                  </div>
-                </div>
+                <CollapsiblePart
+                  key={group.partId}
+                  partId={group.partId}
+                  chapters={group.chapters}
+                  isOpen={openParts.has(group.partId)}
+                  onToggle={() => togglePart(group.partId)}
+                  onSelectChapter={handleSelectChapter}
+                />
               ))}
 
               {matchingGroups.length === 0 && nonMatchingGroups.length === 0 && (
