@@ -50,10 +50,10 @@ const RTCO_STATUS_STYLES: Record<RtcoStatus, { bg: string; border: string; text:
 };
 
 const RTCO_FIELD_COLORS: Record<keyof Critique["rtco"], string> = {
-  role: accent,
-  task: accent,
-  context: inkMuted,
-  output: accent,
+  role:    "oklch(0.52 0.07 210)",
+  task:    "oklch(0.52 0.07 240)",
+  context: "oklch(0.52 0.07 270)",
+  output:  "oklch(0.52 0.07 295)",
 };
 
 // ─── Sub-components ────────────────────────────────────────────────────────────

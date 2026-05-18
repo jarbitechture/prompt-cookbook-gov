@@ -91,12 +91,6 @@ interface RefineDiffProps {
   prompt: string;
 }
 
-// ─── Color aliases for builder-theme tokens ───────────────────────────────────
-// These names are used throughout; they now delegate to the instrument palette.
-const ACCENT = accent;
-const ACCENT_BG = accentSoft;
-const ACCENT_BORDER = hairlineColor;
-
 // ─── Loading skeleton ──────────────────────────────────────────────────────────
 function RefineSkeleton() {
   return (
@@ -173,8 +167,8 @@ function DiffView({ original, rewritten }: { original: string; rewritten: string
         <div
           className="rounded-lg p-3 text-sm leading-relaxed min-h-[80px]"
           style={{
-            background: ACCENT_BG,
-            border: `1px solid ${ACCENT_BORDER}`,
+            background: accentSoft,
+            border: `1px solid ${hairlineColor}`,
             color: ink,
           }}
         >
@@ -243,7 +237,7 @@ function AcceptModal({
           className="relative rounded-xl overflow-hidden w-full max-w-2xl mx-4"
           style={{
             background: surface,
-            border: `1px solid ${ACCENT_BORDER}`,
+            border: `1px solid ${hairlineColor}`,
             boxShadow: "0 8px 32px oklch(0.10 0.02 220 / 0.18)",
           }}
           onClick={(e) => e.stopPropagation()}
@@ -251,7 +245,7 @@ function AcceptModal({
           {/* Modal header */}
           <div
             className="flex items-center justify-between px-5 py-3"
-            style={{ background: ACCENT }}
+            style={{ background: accent }}
           >
             <h4
               className="font-bold text-sm flex items-center gap-2"
@@ -285,7 +279,7 @@ function AcceptModal({
               className="w-full text-sm rounded-lg p-3 resize-none focus:outline-none"
               style={{
                 background: accentSoft,
-                border: `1px solid ${ACCENT_BORDER}`,
+                border: `1px solid ${hairlineColor}`,
                 color: ink,
                 fontFamily: "inherit",
               }}
@@ -307,7 +301,7 @@ function AcceptModal({
                 onClick={handleCopy}
                 className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg font-bold transition-all"
                 style={{
-                  background: ACCENT,
+                  background: accent,
                   color: "oklch(0.98 0.01 75)",
                 }}
               >
@@ -429,14 +423,14 @@ export default function RefineDiff({ prompt }: RefineDiffProps) {
         transition={{ duration: 0.22, ease: "easeOut" }}
         className="rounded-xl overflow-hidden"
         style={{
-          border: `1px solid ${ACCENT_BORDER}`,
+          border: `1px solid ${hairlineColor}`,
           background: surface,
         }}
       >
         {/* Header */}
         <div
           className="flex items-center justify-between px-5 py-3 gap-3"
-          style={{ background: ACCENT }}
+          style={{ background: accent }}
         >
           <h4
             className="font-bold text-sm flex items-center gap-2 shrink-0"
@@ -499,16 +493,16 @@ export default function RefineDiff({ prompt }: RefineDiffProps) {
                   className="flex flex-col items-start gap-2 rounded-xl p-4 text-left transition-all focus:outline-none focus-visible:ring-2"
                   style={{
                     background: isActive
-                      ? ACCENT_BG
+                      ? accentSoft
                       : surface,
                     border: isActive
-                      ? `1.5px solid ${ACCENT}`
-                      : `1.5px solid ${ACCENT_BORDER}`,
+                      ? `1.5px solid ${accent}`
+                      : `1.5px solid ${hairlineColor}`,
                     color: ink,
                     cursor: disabled ? "not-allowed" : "pointer",
                     opacity: isDimmed ? 0.45 : 1,
                     boxShadow: isActive
-                      ? `0 2px 12px ${ACCENT}33`
+                      ? `0 2px 12px ${accent}33`
                       : "0 1px 2px oklch(0.18 0.02 38 / 0.04)",
                     minHeight: "92px",
                   }}
@@ -516,7 +510,7 @@ export default function RefineDiff({ prompt }: RefineDiffProps) {
                   <div className="flex items-center gap-2 w-full">
                     <span
                       className="flex items-center justify-center w-7 h-7 rounded-lg shrink-0"
-                      style={{ background: ACCENT_BG, color: ACCENT }}
+                      style={{ background: accentSoft, color: accent }}
                     >
                       {isLoadingThis ? (
                         <Loader2 className="w-4 h-4 animate-spin" />
@@ -652,7 +646,7 @@ export default function RefineDiff({ prompt }: RefineDiffProps) {
                   <button
                     onClick={() => setShowAcceptModal(true)}
                     className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg font-bold transition-all"
-                    style={{ background: ACCENT, color: "oklch(0.98 0.01 75)" }}
+                    style={{ background: accent, color: "oklch(0.98 0.01 75)" }}
                   >
                     <Check className="w-3 h-3" /> Accept &amp; Copy
                   </button>

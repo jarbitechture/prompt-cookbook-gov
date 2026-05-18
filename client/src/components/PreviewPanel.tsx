@@ -16,9 +16,6 @@ interface PreviewPanelProps {
   prompt: string;
 }
 
-// ─── Color alias ──────────────────────────────────────────────────────────────
-const ACCENT = accent;
-
 // ─── Loading skeleton ──────────────────────────────────────────────────────────
 function PreviewSkeleton() {
   return (
@@ -139,7 +136,7 @@ export default function PreviewPanel({ prompt }: PreviewPanelProps) {
       {/* Header */}
       <div
         className="flex items-center justify-between px-5 py-3"
-        style={{ background: ACCENT }}
+        style={{ background: accent }}
       >
         <h4 className="font-bold text-sm flex items-center gap-2" style={{ color: "oklch(0.98 0.01 75)" }}>
           <Eye className="w-4 h-4" />
@@ -162,7 +159,7 @@ export default function PreviewPanel({ prompt }: PreviewPanelProps) {
             className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg font-bold transition-all"
             style={{
               background: hasPrompt && !loading ? "oklch(0.98 0.01 75)" : withAlpha(accent, 0.4),
-              color: hasPrompt && !loading ? ACCENT : inkMuted,
+              color: hasPrompt && !loading ? accent : inkMuted,
               cursor: hasPrompt && !loading ? "pointer" : "not-allowed",
               opacity: hasPrompt && !loading ? 1 : 0.6,
             }}
