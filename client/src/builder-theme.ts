@@ -11,3 +11,12 @@ export const hairline   = "1px solid oklch(0.90 0.01 250)";
 
 export const builderTheme = { bg, surface, ink, inkMuted, accent, accentSoft, hairline } as const;
 export type BuilderTheme = typeof builderTheme;
+
+/**
+ * Inject an alpha channel into a bare `oklch(L C H)` token.
+ * Assumes the token has no existing alpha component — true for all current
+ * builder-theme tokens.  Returns `oklch(L C H / a)`.
+ */
+export function withAlpha(oklchToken: string, a: number): string {
+  return oklchToken.replace(/\)$/, ` / ${a})`);
+}

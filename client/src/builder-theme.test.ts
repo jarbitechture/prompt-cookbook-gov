@@ -8,6 +8,7 @@ import {
   inkMuted,
   hairline,
   builderTheme,
+  withAlpha,
 } from "./builder-theme";
 
 describe("builder-theme tokens", () => {
@@ -35,5 +36,19 @@ describe("builder-theme tokens", () => {
     expect(accent).toBe(builderTheme.accent);
     expect(accentSoft).toBe(builderTheme.accentSoft);
     expect(hairline).toBe(builderTheme.hairline);
+  });
+});
+
+describe("withAlpha", () => {
+  it("injects alpha into accent token", () => {
+    expect(withAlpha(accent, 0.4)).toBe("oklch(0.48 0.12 220 / 0.4)");
+  });
+
+  it("injects alpha = 0 (transparent end of pulse)", () => {
+    expect(withAlpha(accent, 0)).toBe("oklch(0.48 0.12 220 / 0)");
+  });
+
+  it("works on inkMuted token", () => {
+    expect(withAlpha(inkMuted, 0.6)).toBe("oklch(0.45 0.02 250 / 0.6)");
   });
 });

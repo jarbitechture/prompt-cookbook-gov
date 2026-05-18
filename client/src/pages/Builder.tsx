@@ -38,7 +38,7 @@ import { getWelcomeSeen, setWelcomeSeen } from "@/lib/welcomeStorage";
 import CritiquePanel from "@/components/CritiquePanel";
 import RefineDiff from "@/components/RefineDiff";
 import PreviewPanel from "@/components/PreviewPanel";
-import { accent as ACCENT, accentSoft as ACCENT_LIGHT, bg as BG, surface as SURFACE, ink as INK, inkMuted as INK_MUTED, hairline as HAIRLINE } from "@/builder-theme";
+import { accent as ACCENT, accentSoft as ACCENT_LIGHT, bg as BG, surface as SURFACE, ink as INK, inkMuted as INK_MUTED, hairline as HAIRLINE, withAlpha } from "@/builder-theme";
 
 /* ─── Color System ─── */
 
@@ -667,7 +667,7 @@ function BuildMode() {
         </button>
         <motion.button
           animate={assembledPrompt.trim() && !copilotSent ? {
-            boxShadow: [`0 0 0 0px ${ACCENT}66`, `0 0 0 6px ${ACCENT}00`, `0 0 0 0px ${ACCENT}00`]
+            boxShadow: [`0 0 0 0px ${withAlpha(ACCENT, 0.4)}`, `0 0 0 6px ${withAlpha(ACCENT, 0)}`, `0 0 0 0px ${withAlpha(ACCENT, 0)}`]
           } : {}}
           transition={{ duration: 2, repeat: Infinity, ease: "easeOut" }}
           onClick={() => handleSendToTarget("copilot")}
