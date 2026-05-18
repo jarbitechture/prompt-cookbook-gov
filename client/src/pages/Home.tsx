@@ -1,8 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { Menu, ChevronDown, ChevronRight as ChevronRightIcon, FlaskConical, Wrench, BookOpen, ChefHat, ArrowRight } from "lucide-react";
-import { useLocation } from "wouter";
-import { AnimatePresence, motion } from "framer-motion";
-import { ACCENT_BUILDER } from "@/lib/theme";
+import { Menu } from "lucide-react";
 import { chapters, parts } from "@/lib/cookbookData";
 import type { Difficulty } from "@/lib/cookbookData";
 import { personas } from "@/lib/personas";
@@ -16,12 +13,6 @@ import DifficultyFilter from "@/components/DifficultyFilter";
 import RecipeCard from "@/components/RecipeCard";
 import ChapterDetail from "@/components/ChapterDetail";
 import RecentlyViewed from "@/components/RecentlyViewed";
-
-const quickActions = [
-  { label: "Prompt Lab", desc: "Practice improving prompts with 10 real scenarios", icon: FlaskConical, href: "/game", color: "oklch(0.50 0.14 155)", bg: "linear-gradient(135deg, oklch(0.18 0.06 155), oklch(0.22 0.04 145))", border: "oklch(0.30 0.08 155)" },
-  { label: "Prompt Builder", desc: "Assemble prompts from department templates", icon: Wrench, href: "/builder", color: "oklch(0.55 0.12 220)", bg: "linear-gradient(135deg, oklch(0.18 0.06 220), oklch(0.22 0.04 240))", border: "oklch(0.30 0.08 220)" },
-  { label: "Resources", desc: "Curated tools, trainings, and references", icon: BookOpen, href: "/resources", color: "oklch(0.55 0.14 280)", bg: "linear-gradient(135deg, oklch(0.18 0.06 280), oklch(0.22 0.04 300))", border: "oklch(0.30 0.08 280)" },
-];
 
 const sectionDividerConfig: Record<string, { label: string; accent: string }> = {
   part1: { label: "START HERE", accent: "oklch(0.38 0.14 245)" },
@@ -90,22 +81,19 @@ function OnboardingBanner({ onSelectChapter: _onSelectChapter }: { onSelectChapt
           }}
         >
           <p style={{ color: "oklch(0.30 0.04 40)" }}>
-            <strong>1. Pick your department</strong> — Use the dropdown to personalize everything: hero message, recommended chapters, prompt templates, and the Prompt of the Week all adapt to your team's workflows.
+            <strong>1. Pick your department</strong> — Use the dropdown to personalize everything: hero message, recommended chapters, and prompt templates all adapt to your team's workflows.
           </p>
           <p style={{ color: "oklch(0.30 0.04 40)" }}>
             <strong>2. Browse recipes</strong> — 30 chapters organized by skill level. Each recipe teaches one prompt technique with Manatee County examples you can use in Copilot or ChatGPT.
           </p>
           <p style={{ color: "oklch(0.30 0.04 40)" }}>
-            <strong>3. Build prompts</strong> — The Prompt Builder assembles structured prompts block by block using the RTCO framework. Pre-loaded with your department's template when you select one.
+            <strong>3. Practice</strong> — The Prompt Lab has real county scenarios: blind arena comparisons, technique identification, and a 9-step capstone blueprint.
           </p>
           <p style={{ color: "oklch(0.30 0.04 40)" }}>
-            <strong>4. Practice</strong> — The Prompt Lab has real county scenarios: blind arena comparisons, technique identification, and a 9-step capstone blueprint.
+            <strong>4. Stay compliant</strong> — All prompts follow the AI Governance Handbook (v1.0). See Resources → Internal for the full policy, risk classification, and approved tools list.
           </p>
           <p style={{ color: "oklch(0.30 0.04 40)" }}>
-            <strong>5. Stay compliant</strong> — All prompts follow the AI Governance Handbook (v1.0). See Resources → Internal for the full policy, risk classification, and approved tools list.
-          </p>
-          <p style={{ color: "oklch(0.30 0.04 40)" }}>
-            <strong>6. Get help</strong> — Open the Prompt Builder from the hero CTA to coach a prompt block-by-block. Contact ITS at itservices@mymanatee.org for policy questions.
+            <strong>5. Get help</strong> — Contact ITS at itservices@mymanatee.org for policy questions.
           </p>
         </div>
       )}
@@ -113,139 +101,8 @@ function OnboardingBanner({ onSelectChapter: _onSelectChapter }: { onSelectChapt
   );
 }
 
-/** Prompt of the Week — featured prompt, department-aware */
-function PromptOfTheWeek({ department }: { department?: Category | null }) {
-  const [, navigate] = useLocation();
-  const [expanded, setExpanded] = useState(false);
-
-  const defaultPrompt = {
-    week: "",
-    title: "Meeting Transcript Summarizer",
-    description: "Take a Microsoft Stream or Teams recording transcript and turn it into a concise summary with action items, decisions, and next steps.",
-    template: `You are a meeting analyst for Manatee County Government.
-
-I will paste a transcript from a Microsoft Teams or Stream recording.
-
-Produce a structured summary with these sections:
-1. **Meeting Overview** — date, attendees, purpose (1-2 sentences)
-2. **Key Discussion Points** — bulleted list of topics covered
-3. **Decisions Made** — numbered list with owner if mentioned
-4. **Action Items** — table with columns: Action, Owner, Due Date
-5. **Next Steps** — what happens after this meeting
-
-Rules:
-- Keep the total summary under 400 words
-- Use direct, factual language
-- If a speaker is unclear, note it as [unclear]
-- Do not add information not in the transcript`,
-    technique: "RTCO + Constraints",
-    chapter: "ch04",
-    chapterTitle: "Meeting Notes Summarizer",
-  };
-
-  const deptPrompt = department?.personalization.promptOfTheWeek;
-  const prompt = deptPrompt
-    ? { ...deptPrompt, week: "" }
-    : defaultPrompt;
-
-  return (
-    <div
-      className="rounded-xl overflow-hidden mb-8"
-      style={{
-        background: "linear-gradient(135deg, oklch(0.16 0.04 245), oklch(0.20 0.05 260))",
-        border: "1px solid oklch(0.28 0.06 250)",
-      }}
-    >
-      <div className="px-5 py-4">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <span className="text-lg">🎯</span>
-            <div>
-              <span className="text-xs font-bold uppercase tracking-wider" style={{ color: "oklch(0.65 0.14 250)" }}>
-                Prompt of the Week
-              </span>
-              {prompt.week && (
-                <span className="text-[10px] block" style={{ color: "oklch(0.55 0.05 260)" }}>
-                  {prompt.week}
-                </span>
-              )}
-            </div>
-          </div>
-          <span
-            className="text-[10px] font-bold px-2 py-0.5 rounded-full"
-            style={{ background: "oklch(0.30 0.06 250)", color: "oklch(0.75 0.12 250)" }}
-          >
-            {prompt.technique}
-          </span>
-        </div>
-
-        <h3 className="text-base font-bold mb-1" style={{ color: "oklch(0.95 0.01 70)" }}>
-          {prompt.title}
-        </h3>
-        <p className="text-xs leading-relaxed mb-3" style={{ color: "oklch(0.72 0.03 70)" }}>
-          {prompt.description}
-        </p>
-
-        {expanded && (
-          <div
-            className="rounded-lg px-4 py-3 mb-3 text-xs leading-relaxed whitespace-pre-wrap"
-            style={{
-              background: "oklch(0.12 0.03 240)",
-              border: "1px solid oklch(0.25 0.04 250)",
-              color: "oklch(0.82 0.02 70)",
-              fontFamily: "'Courier New', monospace",
-            }}
-          >
-            {prompt.template}
-          </div>
-        )}
-
-        <div className="flex flex-wrap items-center gap-2">
-          <button
-            onClick={() => setExpanded(!expanded)}
-            className="text-xs font-bold px-3 py-1.5 rounded-lg transition-all"
-            style={{
-              background: "oklch(0.45 0.14 250)",
-              color: "oklch(0.98 0.01 70)",
-            }}
-          >
-            {expanded ? "Hide Prompt" : "View Full Prompt"}
-          </button>
-          <button
-            onClick={() => {
-              navigator.clipboard.writeText(prompt.template);
-            }}
-            className="text-xs font-bold px-3 py-1.5 rounded-lg transition-all"
-            style={{
-              background: "oklch(0.28 0.05 250)",
-              color: "oklch(0.78 0.08 250)",
-              border: "1px solid oklch(0.35 0.06 250)",
-            }}
-          >
-            Copy
-          </button>
-          <button
-            onClick={() => {
-              localStorage.setItem("cookbook-builder-import", prompt.template);
-              window.location.href = "/builder/"; // cross-bundle: full navigation
-            }}
-            className="text-xs font-bold px-3 py-1.5 rounded-lg transition-all"
-            style={{
-              background: "oklch(0.28 0.05 250)",
-              color: "oklch(0.78 0.08 250)",
-              border: "1px solid oklch(0.35 0.06 250)",
-            }}
-          >
-            Open in Builder
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 export default function Home() {
-  const [, navigate] = useLocation();
   const [activeChapter, setActiveChapter] = useState<string | null>(null);
   const [difficultyFilter, setDifficultyFilter] = useState<Difficulty | "all">("all");
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -454,92 +311,6 @@ export default function Home() {
 
               {/* Hero */}
               <HeroSection greeting={selectedDept?.personalization.heroGreeting || persona?.greeting} />
-
-              {/* Prompt Builder CTA — prominent tool link in hero area */}
-              <motion.button
-                onClick={() => { window.location.href = "/builder/"; }} // cross-bundle: full navigation
-                className="w-full flex items-center justify-between gap-4 rounded-2xl px-6 py-4 mb-5 text-left"
-                style={{
-                  background: `linear-gradient(135deg, oklch(0.14 0.06 220), oklch(0.18 0.07 235))`,
-                  border: `1.5px solid ${ACCENT_BUILDER}`,
-                  boxShadow: `0 2px 14px oklch(0.48 0.12 220 / 0.18)`,
-                }}
-                whileHover={{
-                  scale: 1.012,
-                  boxShadow: `0 8px 28px oklch(0.48 0.12 220 / 0.32)`,
-                }}
-                whileTap={{ scale: 0.995 }}
-                transition={{ type: "spring", stiffness: 340, damping: 26 }}
-              >
-                <div className="flex items-center gap-3 min-w-0">
-                  <span className="text-2xl flex-shrink-0" aria-hidden="true">🛠️</span>
-                  <div className="min-w-0">
-                    <p className="text-sm font-bold leading-tight" style={{ color: "oklch(0.95 0.01 70)" }}>
-                      Open Prompt Builder ↗
-                    </p>
-                    <p className="text-xs mt-0.5" style={{ color: "oklch(0.68 0.06 220)" }}>
-                      Build a Copilot-ready prompt in 2 minutes
-                    </p>
-                  </div>
-                </div>
-                <ArrowRight className="w-5 h-5 flex-shrink-0" style={{ color: ACCENT_BUILDER }} />
-              </motion.button>
-
-              {/* Quick Action Cards */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-8">
-                {quickActions.map((action) => {
-                  const Icon = action.icon;
-                  // Department-specific descriptions
-                  const deptDesc = selectedDept?.personalization.quickActions;
-                  const desc = deptDesc
-                    ? (action.href === "/game" ? deptDesc.lab : action.href === "/builder" ? deptDesc.builder : deptDesc.resources)
-                    : action.desc;
-                  return (
-                    <button
-                      key={action.href}
-                      onClick={() => {
-                        // /builder is cross-bundle; /game and /resources are intra-bundle
-                        if (action.href === "/builder") {
-                          window.location.href = "/builder/";
-                        } else {
-                          navigate(action.href);
-                        }
-                      }}
-                      className="group flex flex-col gap-3 p-5 rounded-xl text-left transition-all"
-                      style={{
-                        background: action.bg,
-                        border: `1px solid ${action.border}`,
-                        boxShadow: "0 2px 8px oklch(0.10 0.02 38 / 0.20)",
-                      }}
-                      onMouseEnter={(e) => {
-                        (e.currentTarget as HTMLElement).style.boxShadow = "0 10px 30px oklch(0.08 0.02 38 / 0.30)";
-                        (e.currentTarget as HTMLElement).style.transform = "translateY(-3px)";
-                      }}
-                      onMouseLeave={(e) => {
-                        (e.currentTarget as HTMLElement).style.boxShadow = "0 2px 8px oklch(0.10 0.02 38 / 0.20)";
-                        (e.currentTarget as HTMLElement).style.transform = "translateY(0)";
-                      }}
-                    >
-                      <Icon className="w-7 h-7" style={{ color: action.color }} />
-                      <div className="flex-1">
-                        <p className="text-sm font-bold mb-0.5" style={{ color: "oklch(0.95 0.01 70)" }}>
-                          {action.label}
-                        </p>
-                        <p className="text-xs leading-relaxed" style={{ color: "oklch(0.68 0.03 70)" }}>
-                          {desc}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-1 text-xs font-bold" style={{ color: action.color }}>
-                        Go
-                        <ArrowRight className="w-3.5 h-3.5" />
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-
-              {/* Prompt of the Week */}
-              <PromptOfTheWeek department={selectedDept} />
 
               {/* Recently Viewed */}
               <RecentlyViewed

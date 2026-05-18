@@ -97,6 +97,42 @@ interface Template {
   constraints: string;
 }
 
+/**
+ * Parse a labeled RTCO template string into per-block values.
+ * Department templates and imported prompts arrive as one string like
+ * "Role: ...\nTask: ...\nConstraints: ...\nOutput: ..." — without this they
+ * were dumped whole into the Task block. Lines after a recognized label
+ * (continuation lines) append to that section. If NO label is recognized the
+ * whole string falls back to Task, preserving behavior for free-form imports.
+ */
+function parseRtcoTemplate(raw: string): Record<string, string> {
+  const LABELS: Record<string, string> = {
+    role: "role",
+    task: "task",
+    context: "context",
+    output: "output",
+    "output format": "output",
+    constraints: "constraints",
+  };
+  const out: Record<string, string> = {};
+  let current: string | null = null;
+  let matched = false;
+  for (const line of raw.split("\n")) {
+    const m = line.match(/^\s*([A-Za-z][A-Za-z ]*?)\s*:\s*(.*)$/);
+    const key = m ? LABELS[m[1].trim().toLowerCase()] : undefined;
+    if (m && key) {
+      matched = true;
+      current = key;
+      out[key] = out[key] ? `${out[key]}\n${m[2]}` : m[2];
+    } else if (current) {
+      out[current] = out[current] ? `${out[current]}\n${line}` : line;
+    }
+  }
+  if (!matched) return { task: raw };
+  for (const k of Object.keys(out)) out[k] = out[k].trim();
+  return out;
+}
+
 interface CategoryGroup {
   name: string;
   icon: typeof Building2;
@@ -428,7 +464,7 @@ function BuildMode() {
     if (imported) {
       localStorage.removeItem("cookbook-builder-import");
       setShowWelcome(false);
-      setBlockValues((prev) => ({ ...prev, task: imported }));
+      setBlockValues((prev) => ({ ...prev, ...parseRtcoTemplate(imported) }));
       toast.success("Prompt imported! Edit the blocks to refine it.");
     } else {
       // Pre-fill with department template if no import and blocks are empty
@@ -440,7 +476,7 @@ function BuildMode() {
             setBlockValues((prev) => {
               if (!prev.task && !prev.role) {
                 setShowWelcome(false);
-                return { ...prev, task: dept.personalization.builderTemplate };
+                return { ...prev, ...parseRtcoTemplate(dept.personalization.builderTemplate) };
               }
               return prev;
             });
