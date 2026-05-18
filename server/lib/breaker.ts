@@ -31,7 +31,11 @@ const breaker = new CircuitBreaker(
     callCivicAi(messages, options),
   {
     name: "civic-ai",
-    timeout: 10_000,
+    // Default 10s is tuned for prod (SGLang + Qwen2.5-7B-FP8 on infer01).
+    // Dev/local uses Ollama gemma3:4b which needs ~15s for a structured
+    // generation; the dev stack-up script sets BREAKER_TIMEOUT_MS=30000.
+    // Prod leaves it unset → 10_000 unchanged.
+    timeout: Number(process.env.BREAKER_TIMEOUT_MS) || 10_000,
     errorThresholdPercentage: 50,
     volumeThreshold: 5,
     resetTimeout: 30_000,
