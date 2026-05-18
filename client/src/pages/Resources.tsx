@@ -4,8 +4,6 @@ import {
   BookOpen,
   ChevronRight,
   GraduationCap,
-  Wrench,
-  FlaskConical,
   ExternalLink,
   Globe,
   Building2,
@@ -82,6 +80,7 @@ const internalResources = [
   {
     title: "AI Working Group",
     description: "The MCG AI Working Group coordinates AI adoption across all county departments, develops training, and maintains the AI Governance Handbook.",
+    url: "https://mymanatee.sharepoint.com/sites/AIWorkingGroup/SitePages/TrainingHome.aspx",
     details: [
       "Meets bi-weekly on Teams — open to all county employees",
       "Managed by the Information Technology Services (ITS) Department",
@@ -91,15 +90,12 @@ const internalResources = [
     icon: "🤝",
   },
   {
-    title: "AI Governance Handbook (v1.0)",
-    description: "The official Manatee County AI Governance Handbook (March 2026) governs all county AI use. Aligned with NIST AI RMF, GovAI Coalition, and Florida state policy.",
+    title: "AI Governance — Key Policies",
+    description: "Quick policy reference for county AI use, aligned with NIST AI RMF and Florida state policy. The full Governance Handbook is being finalized; this note keeps the essentials visible in the meantime.",
     details: [
-      "AI Review required for all new technology procurements involving AI systems",
-      "AI Risk Classification: Minimal, Limited, High, Unacceptable — determines review level",
-      "Approved tools: Microsoft Copilot (county license), ChatGPT (non-confidential use only)",
-      "Prohibited: uploading PII, HIPAA data, law enforcement records, or Sunshine Law-covered deliberations to any AI tool",
+      "Approved tools: Microsoft Copilot (county license) and ChatGPT (non-confidential use only)",
+      "Never put PII, HIPAA data, law enforcement records, or Sunshine Law-covered deliberations into any AI tool",
       "All AI-generated content must be human-reviewed before external distribution",
-      "County systems include: GIS platform, Zendesk (constituent services), OpenGov (budget), RapidDeploy 911",
       "Report concerns to your department director or ITS (itservices@mymanatee.org)",
     ],
     icon: "📋",
@@ -219,50 +215,6 @@ export default function Resources() {
 
         </motion.section>
 
-        {/* Quick Action CTAs — always visible */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
-          {/* Cross-bundle nav: plain <a> so IIS routes to /builder/ Application */}
-          <a href="/builder/" className="block" style={{ textDecoration: "none" }}>
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              whileHover={{ y: -3, boxShadow: "0 8px 24px oklch(0.18 0.02 38 / 0.10)" }}
-              className="rounded-xl p-5 flex items-center gap-4 cursor-pointer"
-              style={{
-                background: "oklch(0.18 0.04 220)",
-                border: "1px solid oklch(0.28 0.04 220)",
-              }}
-            >
-              <Wrench className="w-8 h-8 shrink-0" style={{ color: "oklch(0.70 0.12 220)" }} />
-              <div>
-                <h3 className="font-bold text-sm" style={{ color: "oklch(0.95 0.01 70)" }}>Build a Custom Prompt</h3>
-                <p className="text-xs mt-0.5" style={{ color: "oklch(0.70 0.03 70)" }}>Pick a template, fill in your details, copy into Copilot or ChatGPT</p>
-              </div>
-              <ArrowRight className="w-5 h-5 shrink-0" style={{ color: "oklch(0.65 0.08 220)" }} />
-            </motion.div>
-          </a>
-          <Link href="/game" className="block">
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.25 }}
-              whileHover={{ y: -3, boxShadow: "0 8px 24px oklch(0.18 0.02 38 / 0.10)" }}
-              className="rounded-xl p-5 flex items-center gap-4 cursor-pointer"
-              style={{
-                background: "oklch(0.18 0.04 155)",
-                border: "1px solid oklch(0.28 0.04 155)",
-              }}
-            >
-              <FlaskConical className="w-8 h-8 shrink-0" style={{ color: "oklch(0.65 0.14 155)" }} />
-              <div>
-                <h3 className="font-bold text-sm" style={{ color: "oklch(0.95 0.01 70)" }}>Test Your Skills</h3>
-                <p className="text-xs mt-0.5" style={{ color: "oklch(0.70 0.03 70)" }}>Real county scenarios — can you spot what makes a prompt work?</p>
-              </div>
-              <ArrowRight className="w-5 h-5 shrink-0" style={{ color: "oklch(0.65 0.08 155)" }} />
-            </motion.div>
-          </Link>
-        </div>
 
         {/* Tab navigation */}
         <div
@@ -763,6 +715,17 @@ function InternalTab() {
                         <p className="text-xs leading-relaxed" style={{ color: TEXT_SECONDARY }}>{detail}</p>
                       </div>
                     ))}
+                    {(res as { url?: string }).url && (
+                      <a
+                        href={(res as { url?: string }).url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-xs font-bold pt-1"
+                        style={{ color: ACCENT }}
+                      >
+                        Open in SharePoint →
+                      </a>
+                    )}
                   </div>
                 </div>
               </motion.div>

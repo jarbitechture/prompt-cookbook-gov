@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { BookOpen, Wrench, Shield, Clock } from "lucide-react";
+import { BookOpen, Wrench, Shield, FlaskConical, Library } from "lucide-react";
 import {
   PAGE_BG,
   CARD_BG,
@@ -145,25 +145,62 @@ export default function Portal() {
                 </div>
               </motion.div>
             </a>
-          </div>
 
-          {/* Coming soon placeholder */}
-          <div
-            className="rounded-xl border border-dashed px-6 py-5 text-center"
-            style={{ borderColor: CARD_BORDER }}
-          >
-            <div className="flex items-center justify-center gap-2 mb-1">
-              <Clock size={15} style={{ color: TEXT_MUTED }} aria-hidden="true" />
-              <span
-                className="text-xs font-semibold uppercase tracking-widest"
-                style={{ color: TEXT_MUTED }}
+            {/* Prompt Lab card */}
+            {/* Cross-bundle nav: plain <a> so IIS routes correctly when mounted as a sub-app */}
+            <a href="/game/" style={{ display: "block", textDecoration: "none" }}>
+              <motion.div
+                className="rounded-xl border p-6 text-left cursor-pointer"
+                style={{ background: CARD_BG, borderColor: CARD_BORDER }}
+                whileHover={{ y: -2, boxShadow: CARD_HOVER_SHADOW, borderColor: "oklch(0.50 0.14 155)" }}
+                transition={{ duration: 0.18 }}
               >
-                Coming soon
-              </span>
-            </div>
-            <p className="text-sm" style={{ color: TEXT_MUTED }}>
-              Additional tools are under development and will appear here.
-            </p>
+                <div
+                  className="inline-flex items-center justify-center w-10 h-10 rounded-lg mb-4"
+                  style={{ background: "oklch(0.95 0.05 155)" }}
+                >
+                  <FlaskConical size={20} style={{ color: "oklch(0.50 0.14 155)" }} aria-hidden="true" />
+                </div>
+                <h2 className="font-serif font-bold text-lg mb-1" style={{ color: TEXT_PRIMARY }}>
+                  Prompt Lab
+                </h2>
+                <p className="text-sm leading-relaxed" style={{ color: TEXT_SECONDARY }}>
+                  Practice improving real county prompts — blind comparisons,
+                  technique spotting, and a guided capstone.
+                </p>
+                <div className="mt-4 text-sm font-medium" style={{ color: "oklch(0.50 0.14 155)" }}>
+                  Open lab →
+                </div>
+              </motion.div>
+            </a>
+
+            {/* Resources card */}
+            {/* Cross-bundle nav: plain <a> so IIS routes correctly when mounted as a sub-app */}
+            <a href="/resources/" style={{ display: "block", textDecoration: "none" }}>
+              <motion.div
+                className="rounded-xl border p-6 text-left cursor-pointer"
+                style={{ background: CARD_BG, borderColor: CARD_BORDER }}
+                whileHover={{ y: -2, boxShadow: CARD_HOVER_SHADOW, borderColor: "oklch(0.55 0.14 280)" }}
+                transition={{ duration: 0.18 }}
+              >
+                <div
+                  className="inline-flex items-center justify-center w-10 h-10 rounded-lg mb-4"
+                  style={{ background: "oklch(0.95 0.04 280)" }}
+                >
+                  <Library size={20} style={{ color: "oklch(0.55 0.14 280)" }} aria-hidden="true" />
+                </div>
+                <h2 className="font-serif font-bold text-lg mb-1" style={{ color: TEXT_PRIMARY }}>
+                  Resources
+                </h2>
+                <p className="text-sm leading-relaxed" style={{ color: TEXT_SECONDARY }}>
+                  Courses, tools, county policy references, and the AI Working
+                  Group.
+                </p>
+                <div className="mt-4 text-sm font-medium" style={{ color: "oklch(0.55 0.14 280)" }}>
+                  Open resources →
+                </div>
+              </motion.div>
+            </a>
           </div>
         </motion.div>
       </main>
