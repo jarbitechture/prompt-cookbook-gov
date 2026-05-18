@@ -306,8 +306,18 @@ export default function Resources() {
 
 /* ─── Courses Tab ────────────────────────────────────────────────────────── */
 
+// Group the 14 foundation lessons into themed collapsible pick-lists so the
+// page is short by default — pick a theme, then a lesson.
+const FOUNDATION_GROUPS: { label: string; blurb: string; icon: string; idxs: number[] }[] = [
+  { label: "Start Here — the Basics", blurb: "Mindset + the RTCO formula", icon: "🚀", idxs: [0, 1] },
+  { label: "Core Techniques", blurb: "Persona, examples, reasoning, guardrails", icon: "🧩", idxs: [2, 3, 4, 7] },
+  { label: "Shaping & Refining Output", blurb: "Formatting, iteration, task chaining", icon: "🪄", idxs: [5, 6, 8] },
+  { label: "Apply, Test & Master", blurb: "Templates, images, testing, the capstone", icon: "🏆", idxs: [9, 10, 11, 12, 13] },
+];
+
 function CoursesTab() {
   const [expandedLesson, setExpandedLesson] = useState<number | null>(null);
+  const [openGroup, setOpenGroup] = useState<number | null>(0);
 
   return (
     <>
@@ -328,15 +338,51 @@ function CoursesTab() {
           </div>
         </div>
 
-        <motion.div
-          initial="hidden"
-          animate="visible"
-          variants={staggerContainer}
-          className="space-y-2"
-        >
-          {jumpstartChapters.map((ch, i) => {
-            const isOpen = expandedLesson === i;
+        <div className="space-y-2.5">
+          {FOUNDATION_GROUPS.map((group, gi) => {
+            const groupOpen = openGroup === gi;
             return (
+              <div
+                key={group.label}
+                className="rounded-xl overflow-hidden"
+                style={{
+                  background: CARD_BG,
+                  border: `1px solid ${groupOpen ? ACCENT : CARD_BORDER}`,
+                  transition: "border-color 0.2s",
+                }}
+              >
+                <button
+                  onClick={() => setOpenGroup(groupOpen ? null : gi)}
+                  className="w-full flex items-center gap-3 px-4 py-3 text-left"
+                >
+                  <span className="text-lg flex-shrink-0">{group.icon}</span>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-bold text-sm" style={{ color: TEXT_PRIMARY }}>
+                      {group.label}
+                    </h3>
+                    <p className="text-[11px]" style={{ color: TEXT_SECONDARY }}>
+                      {group.blurb} · {group.idxs.length} lessons
+                    </p>
+                  </div>
+                  <ChevronRight
+                    className="w-4 h-4 flex-shrink-0 transition-transform duration-200"
+                    style={{ color: TEXT_MUTED, transform: groupOpen ? "rotate(90deg)" : "rotate(0deg)" }}
+                  />
+                </button>
+                <AnimatePresence>
+                  {groupOpen && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="overflow-hidden"
+                    >
+                      <div className="px-2 pb-2 space-y-2">
+                        {group.idxs.map((i) => {
+                          const ch = jumpstartChapters[i];
+                          const isOpen = expandedLesson === i;
+                          return (
               <motion.div
                 key={ch.title}
                 variants={fadeUp}
@@ -455,9 +501,16 @@ function CoursesTab() {
                   )}
                 </AnimatePresence>
               </motion.div>
+                          );
+                        })}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
             );
           })}
-        </motion.div>
+        </div>
       </section>
     </>
   );
