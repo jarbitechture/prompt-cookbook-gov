@@ -7,9 +7,10 @@ export const ink        = "#1B2230";
 export const inkMuted   = "oklch(0.45 0.02 250)";
 export const accent     = "oklch(0.48 0.12 220)";
 export const accentSoft = "oklch(0.94 0.03 220)";
-export const hairline   = "1px solid oklch(0.90 0.01 250)";
+export const hairlineColor = "oklch(0.90 0.01 250)";
+export const hairline   = `1px solid ${hairlineColor}`;
 
-export const builderTheme = { bg, surface, ink, inkMuted, accent, accentSoft, hairline } as const;
+export const builderTheme = { bg, surface, ink, inkMuted, accent, accentSoft, hairlineColor, hairline } as const;
 export type BuilderTheme = typeof builderTheme;
 
 /**

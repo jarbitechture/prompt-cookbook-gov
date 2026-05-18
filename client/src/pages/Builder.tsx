@@ -38,7 +38,7 @@ import { getWelcomeSeen, setWelcomeSeen } from "@/lib/welcomeStorage";
 import CritiquePanel from "@/components/CritiquePanel";
 import RefineDiff from "@/components/RefineDiff";
 import PreviewPanel from "@/components/PreviewPanel";
-import { accent as ACCENT, accentSoft as ACCENT_LIGHT, bg as BG, surface as SURFACE, ink as INK, inkMuted as INK_MUTED, hairline as HAIRLINE, withAlpha } from "@/builder-theme";
+import { accent as ACCENT, accentSoft as ACCENT_LIGHT, bg as BG, surface as SURFACE, ink as INK, inkMuted as INK_MUTED, hairline as HAIRLINE, hairlineColor as HAIRLINE_COLOR, withAlpha } from "@/builder-theme";
 
 /* ─── Color System ─── */
 
@@ -792,7 +792,7 @@ function BuildMode() {
                 className="rounded-xl overflow-hidden"
                 style={{
                   background: SURFACE,
-                  border: `1px solid oklch(0.90 0.01 250)`,
+                  border: HAIRLINE,
                   borderLeft: `4px solid ${colors?.border || ACCENT}`,
                 }}
               >
@@ -873,7 +873,7 @@ function BuildMode() {
                             className="w-full px-3 py-2.5 rounded-lg text-sm transition-all resize-none"
                             style={{
                               background: SURFACE,
-                              border: "1.5px solid oklch(0.90 0.01 250)",
+                              border: `1.5px solid ${HAIRLINE_COLOR}`,
                               color: INK,
                               outline: "none",
                             }}
@@ -882,7 +882,7 @@ function BuildMode() {
                               e.currentTarget.style.boxShadow = `0 0 0 3px ${withAlpha(ACCENT, 0.18)}`;
                             }}
                             onBlur={(e) => {
-                              e.currentTarget.style.borderColor = "oklch(0.90 0.01 250)";
+                              e.currentTarget.style.borderColor = HAIRLINE_COLOR;
                               e.currentTarget.style.boxShadow = "none";
                             }}
                           />
@@ -895,7 +895,7 @@ function BuildMode() {
                             className="w-full px-3 py-2.5 rounded-lg text-sm transition-all"
                             style={{
                               background: SURFACE,
-                              border: "1.5px solid oklch(0.90 0.01 250)",
+                              border: `1.5px solid ${HAIRLINE_COLOR}`,
                               color: INK,
                               outline: "none",
                             }}
@@ -904,7 +904,7 @@ function BuildMode() {
                               e.currentTarget.style.boxShadow = `0 0 0 3px ${withAlpha(ACCENT, 0.18)}`;
                             }}
                             onBlur={(e) => {
-                              e.currentTarget.style.borderColor = "oklch(0.90 0.01 250)";
+                              e.currentTarget.style.borderColor = HAIRLINE_COLOR;
                               e.currentTarget.style.boxShadow = "none";
                             }}
                           />
