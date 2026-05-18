@@ -21,7 +21,7 @@ import type { LucideIcon } from "lucide-react";
 import { diffWordsWithSpace } from "diff";
 import { toast } from "sonner";
 import { apiUrl } from "@/lib/apiUrl";
-import { accent, accentSoft, surface, ink, inkMuted, hairline, hairlineColor, withAlpha } from "@/builder-theme";
+import { accent, accentSoft, surface, ink, inkMuted, hairline, hairlineColor, onAccent, withAlpha } from "@/builder-theme";
 
 // ─── Refine technique cards ───────────────────────────────────────────────────
 // Server contract: keys must match server/lib/technique-map.ts (TechniqueKey).
@@ -249,7 +249,7 @@ function AcceptModal({
           >
             <h4
               className="font-bold text-sm flex items-center gap-2"
-              style={{ color: "oklch(0.98 0.01 75)" }}
+              style={{ color: onAccent }}
             >
               <Wand2 className="w-4 h-4" />
               Refined Prompt — Ready to Copy
@@ -257,7 +257,7 @@ function AcceptModal({
             <button
               onClick={onClose}
               className="rounded p-1 transition-opacity hover:opacity-70"
-              style={{ color: "oklch(0.92 0.02 75)" }}
+              style={{ color: withAlpha(onAccent, 0.85) }}
               aria-label="Close"
             >
               <X className="w-4 h-4" />
@@ -302,7 +302,7 @@ function AcceptModal({
                 className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg font-bold transition-all"
                 style={{
                   background: accent,
-                  color: "oklch(0.98 0.01 75)",
+                  color: onAccent,
                 }}
               >
                 {copied ? (
@@ -434,7 +434,7 @@ export default function RefineDiff({ prompt }: RefineDiffProps) {
         >
           <h4
             className="font-bold text-sm flex items-center gap-2 shrink-0"
-            style={{ color: "oklch(0.98 0.01 75)" }}
+            style={{ color: onAccent }}
           >
             <Wand2 className="w-4 h-4" />
             Refine your prompt
@@ -445,7 +445,7 @@ export default function RefineDiff({ prompt }: RefineDiffProps) {
             <button
               onClick={() => setCollapsed((c) => !c)}
               className="flex items-center gap-1 text-xs px-2 py-1 rounded transition-opacity hover:opacity-80 shrink-0"
-              style={{ color: "oklch(0.92 0.02 75)" }}
+              style={{ color: withAlpha(onAccent, 0.85) }}
               aria-label={collapsed ? "Expand refine output" : "Collapse refine output"}
             >
               {collapsed ? (
@@ -571,7 +571,7 @@ export default function RefineDiff({ prompt }: RefineDiffProps) {
                 <button
                   onClick={handleRetry}
                   className="flex items-center gap-1.5 text-xs mt-2 px-3 py-1.5 rounded-lg font-semibold"
-                  style={{ background: accent, color: "oklch(0.98 0.01 75)" }}
+                  style={{ background: accent, color: onAccent }}
                 >
                   <RotateCcw className="w-3 h-3" /> Retry
                 </button>
@@ -604,7 +604,7 @@ export default function RefineDiff({ prompt }: RefineDiffProps) {
                 <button
                   onClick={handleRetry}
                   className="flex items-center gap-1.5 text-xs mt-2 px-3 py-1.5 rounded-lg font-semibold"
-                  style={{ background: accent, color: "oklch(0.98 0.01 75)" }}
+                  style={{ background: accent, color: onAccent }}
                 >
                   <RotateCcw className="w-3 h-3" /> Retry
                 </button>
@@ -646,7 +646,7 @@ export default function RefineDiff({ prompt }: RefineDiffProps) {
                   <button
                     onClick={() => setShowAcceptModal(true)}
                     className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg font-bold transition-all"
-                    style={{ background: accent, color: "oklch(0.98 0.01 75)" }}
+                    style={{ background: accent, color: onAccent }}
                   >
                     <Check className="w-3 h-3" /> Accept &amp; Copy
                   </button>

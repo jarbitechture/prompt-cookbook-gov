@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Copy, Check, AlertTriangle, RotateCcw, Loader2, ShieldCheck, ShieldOff, ChevronDown, ChevronUp } from "lucide-react";
 import { toast } from "sonner";
 import { apiUrl } from "@/lib/apiUrl";
-import { accent, accentSoft, surface, ink, inkMuted, hairline, hairlineColor, withAlpha } from "@/builder-theme";
+import { accent, accentSoft, surface, ink, inkMuted, hairline, hairlineColor, onAccent, withAlpha } from "@/builder-theme";
 
 // ─── Local type mirror of server/schemas/critique.ts ──────────────────────────
 type RtcoStatus = "present" | "weak" | "missing";
@@ -70,7 +70,7 @@ function RtcoPill({ field, status }: { field: keyof Critique["rtco"]; status: Rt
       <span style={{ color: fieldColor }}>{label}</span>
       <span
         className="px-1.5 py-0.5 rounded-full text-xs font-bold"
-        style={{ background: styles.border, color: "oklch(0.98 0.01 75)" }}
+        style={{ background: styles.border, color: onAccent }}
       >
         {styles.label}
       </span>
@@ -115,7 +115,7 @@ function CopiedButton({ text, onApply }: { text: string; onApply?: (s: string) =
         className="shrink-0 flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg font-semibold transition-all"
         style={{
           background: onApply ? accent : hairlineColor,
-          color: onApply ? "oklch(0.98 0.01 75)" : inkMuted,
+          color: onApply ? onAccent : inkMuted,
           border: onApply ? "none" : hairline,
         }}
         title={onApply ? "Add to Constraints block" : "Copy to clipboard"}
@@ -260,7 +260,7 @@ export default function CritiquePanel({ prompt, onApplySuggestion }: CritiquePan
         className="flex items-center justify-between px-5 py-3"
         style={{ background: accent }}
       >
-        <h4 className="font-bold text-sm flex items-center gap-2" style={{ color: "oklch(0.98 0.01 75)" }}>
+        <h4 className="font-bold text-sm flex items-center gap-2" style={{ color: onAccent }}>
           <ShieldCheck className="w-4 h-4" />
           Critique My Prompt
         </h4>
@@ -269,7 +269,7 @@ export default function CritiquePanel({ prompt, onApplySuggestion }: CritiquePan
             <button
               onClick={() => setCollapsed((c) => !c)}
               className="flex items-center gap-1 text-xs px-2 py-1 rounded transition-opacity hover:opacity-80"
-              style={{ color: "oklch(0.92 0.02 75)" }}
+              style={{ color: withAlpha(onAccent, 0.85) }}
             >
               {collapsed ? <ChevronDown className="w-3 h-3" /> : <ChevronUp className="w-3 h-3" />}
               {collapsed ? "Expand" : "Collapse"}
@@ -280,7 +280,7 @@ export default function CritiquePanel({ prompt, onApplySuggestion }: CritiquePan
             disabled={!hasPrompt || loading}
             className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg font-bold transition-all"
             style={{
-              background: hasPrompt && !loading ? "oklch(0.98 0.01 75)" : withAlpha(accent, 0.4),
+              background: hasPrompt && !loading ? onAccent : withAlpha(accent, 0.4),
               color: hasPrompt && !loading ? accent : inkMuted,
               cursor: hasPrompt && !loading ? "pointer" : "not-allowed",
               opacity: hasPrompt && !loading ? 1 : 0.6,
@@ -328,7 +328,7 @@ export default function CritiquePanel({ prompt, onApplySuggestion }: CritiquePan
               <button
                 onClick={handleRetry}
                 className="flex items-center gap-1.5 text-xs mt-2 px-3 py-1.5 rounded-lg font-semibold"
-                style={{ background: accent, color: "oklch(0.98 0.01 75)" }}
+                style={{ background: accent, color: onAccent }}
               >
                 <RotateCcw className="w-3 h-3" /> Retry
               </button>
@@ -355,7 +355,7 @@ export default function CritiquePanel({ prompt, onApplySuggestion }: CritiquePan
               <button
                 onClick={handleRetry}
                 className="flex items-center gap-1.5 text-xs mt-2 px-3 py-1.5 rounded-lg font-semibold"
-                style={{ background: accent, color: "oklch(0.98 0.01 75)" }}
+                style={{ background: accent, color: onAccent }}
               >
                 <RotateCcw className="w-3 h-3" /> Retry
               </button>

@@ -2,7 +2,7 @@ import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Eye, AlertTriangle, RotateCcw, Loader2, ChevronDown, ChevronUp } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
-import { accent, accentSoft, surface, ink, inkMuted, hairline, hairlineColor, withAlpha } from "@/builder-theme";
+import { accent, accentSoft, surface, ink, inkMuted, hairline, hairlineColor, onAccent, withAlpha } from "@/builder-theme";
 
 // ─── Local type mirror of server/schemas/preview.ts ───────────────────────────
 interface Preview {
@@ -138,7 +138,7 @@ export default function PreviewPanel({ prompt }: PreviewPanelProps) {
         className="flex items-center justify-between px-5 py-3"
         style={{ background: accent }}
       >
-        <h4 className="font-bold text-sm flex items-center gap-2" style={{ color: "oklch(0.98 0.01 75)" }}>
+        <h4 className="font-bold text-sm flex items-center gap-2" style={{ color: onAccent }}>
           <Eye className="w-4 h-4" />
           Preview How This Lands
         </h4>
@@ -147,7 +147,7 @@ export default function PreviewPanel({ prompt }: PreviewPanelProps) {
             <button
               onClick={() => setCollapsed((c) => !c)}
               className="flex items-center gap-1 text-xs px-2 py-1 rounded transition-opacity hover:opacity-80"
-              style={{ color: "oklch(0.92 0.02 75)" }}
+              style={{ color: withAlpha(onAccent, 0.85) }}
             >
               {collapsed ? <ChevronDown className="w-3 h-3" /> : <ChevronUp className="w-3 h-3" />}
               {collapsed ? "Expand" : "Collapse"}
@@ -158,7 +158,7 @@ export default function PreviewPanel({ prompt }: PreviewPanelProps) {
             disabled={!hasPrompt || loading}
             className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg font-bold transition-all"
             style={{
-              background: hasPrompt && !loading ? "oklch(0.98 0.01 75)" : withAlpha(accent, 0.4),
+              background: hasPrompt && !loading ? onAccent : withAlpha(accent, 0.4),
               color: hasPrompt && !loading ? accent : inkMuted,
               cursor: hasPrompt && !loading ? "pointer" : "not-allowed",
               opacity: hasPrompt && !loading ? 1 : 0.6,
@@ -221,7 +221,7 @@ export default function PreviewPanel({ prompt }: PreviewPanelProps) {
               <button
                 onClick={handleRetry}
                 className="flex items-center gap-1.5 text-xs mt-2 px-3 py-1.5 rounded-lg font-semibold"
-                style={{ background: accent, color: "oklch(0.98 0.01 75)" }}
+                style={{ background: accent, color: onAccent }}
               >
                 <RotateCcw className="w-3 h-3" /> Retry
               </button>
@@ -248,7 +248,7 @@ export default function PreviewPanel({ prompt }: PreviewPanelProps) {
               <button
                 onClick={handleRetry}
                 className="flex items-center gap-1.5 text-xs mt-2 px-3 py-1.5 rounded-lg font-semibold"
-                style={{ background: accent, color: "oklch(0.98 0.01 75)" }}
+                style={{ background: accent, color: onAccent }}
               >
                 <RotateCcw className="w-3 h-3" /> Retry
               </button>

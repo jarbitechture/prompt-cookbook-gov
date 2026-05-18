@@ -38,7 +38,7 @@ import { getWelcomeSeen, setWelcomeSeen } from "@/lib/welcomeStorage";
 import CritiquePanel from "@/components/CritiquePanel";
 import RefineDiff from "@/components/RefineDiff";
 import PreviewPanel from "@/components/PreviewPanel";
-import { accent as ACCENT, accentSoft as ACCENT_LIGHT, bg as BG, surface as SURFACE, ink as INK, inkMuted as INK_MUTED, hairline as HAIRLINE, hairlineColor as HAIRLINE_COLOR, withAlpha } from "@/builder-theme";
+import { accent as ACCENT, accentSoft as ACCENT_LIGHT, bg as BG, surface as SURFACE, ink as INK, inkMuted as INK_MUTED, hairline as HAIRLINE, hairlineColor as HAIRLINE_COLOR, onAccent as ON_ACCENT, withAlpha } from "@/builder-theme";
 
 /* ─── Color System ─── */
 
@@ -356,29 +356,29 @@ function RecentPrompts({ onLoad }: { onLoad: (prompt: string) => void }) {
         onClick={() => setOpen((p) => !p)}
         className="flex items-center gap-2 text-xs font-bold px-3 py-2 rounded-lg w-full text-left transition-colors"
         style={{
-          background: "oklch(0.998 0.002 70)",
-          border: "1px solid oklch(0.90 0.01 70)",
-          color: "oklch(0.40 0.04 45)",
+          background: SURFACE,
+          border: `1px solid ${HAIRLINE_COLOR}`,
+          color: INK,
         }}
       >
         <Clock className="w-3.5 h-3.5" style={{ color: ACCENT }} />
         Recent Prompts ({history.length})
         <ChevronDown
           className="w-3.5 h-3.5 ml-auto transition-transform duration-200"
-          style={{ transform: open ? "rotate(180deg)" : "rotate(0deg)", color: "oklch(0.55 0.03 55)" }}
+          style={{ transform: open ? "rotate(180deg)" : "rotate(0deg)", color: INK_MUTED }}
         />
       </button>
       {open && (
-        <div className="mt-1 rounded-b-xl overflow-hidden" style={{ border: "1px solid oklch(0.90 0.01 70)", borderTop: "none" }}>
+        <div className="mt-1 rounded-b-xl overflow-hidden" style={{ border: `1px solid ${HAIRLINE_COLOR}`, borderTop: "none" }}>
           {history.map((item, i) => (
             <button
               key={i}
               onClick={() => { onLoad(item.prompt); toast.success("Prompt loaded!"); }}
-              className="flex items-center justify-between w-full px-4 py-2.5 text-left text-xs transition-colors hover:bg-[oklch(0.96_0.01_70)]"
-              style={{ borderTop: i > 0 ? "1px solid oklch(0.94 0.01 70)" : "none", color: "oklch(0.35 0.04 45)" }}
+              className="flex items-center justify-between w-full px-4 py-2.5 text-left text-xs transition-colors hover:bg-[oklch(0.94_0.03_220)]"
+              style={{ borderTop: i > 0 ? `1px solid ${HAIRLINE_COLOR}` : "none", color: INK }}
             >
               <span className="truncate flex-1 mr-3">{item.prompt.slice(0, 80)}...</span>
-              <span className="text-[10px] shrink-0" style={{ color: "oklch(0.55 0.03 55)" }}>{relativeTime(item.timestamp)}</span>
+              <span className="text-[10px] shrink-0" style={{ color: INK_MUTED }}>{relativeTime(item.timestamp)}</span>
             </button>
           ))}
         </div>
@@ -618,8 +618,8 @@ function BuildMode() {
       const val = (blockValues[block.id] || "").trim();
       if (!val) continue;
       const hidden = hiddenBlocks.has(block.id);
-      const color = PREVIEW_LABEL_COLORS[block.id] || "oklch(0.75 0.02 70)";
-      const textColor = hidden ? "oklch(0.40 0.02 240)" : "oklch(0.82 0.02 70)";
+      const color = PREVIEW_LABEL_COLORS[block.id] || "oklch(0.75 0.02 250)";
+      const textColor = hidden ? "oklch(0.40 0.02 240)" : "oklch(0.82 0.02 250)";
       if (parts.length > 0) parts.push(<span key={`sep-${block.id}`}>{"\n\n"}</span>);
       parts.push(
         <span key={block.id} style={{ textDecoration: hidden ? "line-through" : "none", opacity: hidden ? 0.4 : 1 }}>
@@ -660,7 +660,7 @@ function BuildMode() {
           className="flex items-center gap-1.5 text-xs px-4 py-2 rounded-lg font-bold transition-all"
           style={{
             background: assembledPrompt.trim() ? ACCENT : "oklch(0.92 0.005 250)",
-            color: assembledPrompt.trim() ? "oklch(0.98 0.01 75)" : INK_MUTED,
+            color: assembledPrompt.trim() ? ON_ACCENT : INK_MUTED,
             cursor: assembledPrompt.trim() ? "pointer" : "not-allowed",
             opacity: assembledPrompt.trim() ? 1 : 0.7,
           }}
@@ -678,7 +678,7 @@ function BuildMode() {
           className="flex items-center gap-1.5 text-xs px-4 py-2 rounded-lg font-bold transition-all"
           style={{
             background: assembledPrompt.trim() ? ACCENT : "oklch(0.92 0.005 250)",
-            color: assembledPrompt.trim() ? "oklch(0.98 0.01 75)" : INK_MUTED,
+            color: assembledPrompt.trim() ? ON_ACCENT : INK_MUTED,
             cursor: assembledPrompt.trim() ? "pointer" : "not-allowed",
             opacity: assembledPrompt.trim() ? 1 : 0.7,
           }}
@@ -714,16 +714,16 @@ function BuildMode() {
             transition={{ duration: 0.3 }}
             className="mb-8 rounded-2xl px-8 py-10 text-center"
             style={{
-              background: "linear-gradient(135deg, oklch(0.97 0.015 220) 0%, oklch(0.98 0.01 75) 100%)",
+              background: "linear-gradient(135deg, oklch(0.97 0.015 220) 0%, oklch(0.98 0.005 250) 100%)",
               border: `1.5px solid ${ACCENT_LIGHT}`,
-              boxShadow: `0 4px 24px ${ACCENT}18`,
+              boxShadow: `0 4px 24px ${withAlpha(ACCENT, 0.09)}`,
             }}
           >
             <div className="text-5xl mb-4">🥘</div>
-            <h2 className="font-serif font-bold text-2xl mb-2" style={{ color: "oklch(0.22 0.04 40)" }}>
+            <h2 className="font-serif font-bold text-2xl mb-2" style={{ color: "oklch(0.22 0.04 250)" }}>
               Mise en place for your Copilot prompt
             </h2>
-            <p className="text-sm mb-8 max-w-md mx-auto" style={{ color: "oklch(0.48 0.04 50)" }}>
+            <p className="text-sm mb-8 max-w-md mx-auto" style={{ color: "oklch(0.48 0.04 250)" }}>
               Measure your role, task, and context. Coach the draft. Then take it where you cook.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
@@ -734,7 +734,7 @@ function BuildMode() {
                   setTemplatePanelOpen(true);
                 }}
                 className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all hover:opacity-90"
-                style={{ background: ACCENT, color: "oklch(0.98 0.01 75)", boxShadow: `0 2px 12px ${ACCENT}44` }}
+                style={{ background: ACCENT, color: ON_ACCENT, boxShadow: `0 2px 12px ${withAlpha(ACCENT, 0.27)}` }}
               >
                 <FileText className="w-4 h-4" />
                 Start with department template ▼
@@ -743,9 +743,9 @@ function BuildMode() {
                 onClick={() => { setWelcomeSeen(true); setShowWelcome(false); }}
                 className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all hover:opacity-80"
                 style={{
-                  background: "oklch(0.998 0.002 70)",
-                  color: "oklch(0.38 0.04 50)",
-                  border: "1.5px solid oklch(0.88 0.015 75)",
+                  background: SURFACE,
+                  color: INK,
+                  border: `1.5px solid ${HAIRLINE_COLOR}`,
                 }}
               >
                 Start blank →
@@ -923,16 +923,16 @@ function BuildMode() {
               onClick={() => setTemplatePanelOpen((p) => !p)}
               className="flex items-center gap-2 w-full text-left px-4 py-3 rounded-xl text-sm font-bold transition-colors"
               style={{
-                background: templatePanelOpen ? "oklch(0.96 0.01 70)" : "oklch(0.998 0.002 70)",
-                border: "1px solid oklch(0.90 0.01 70)",
-                color: "oklch(0.30 0.04 45)",
+                background: templatePanelOpen ? ACCENT_LIGHT : SURFACE,
+                border: `1px solid ${HAIRLINE_COLOR}`,
+                color: INK,
               }}
             >
               <FileText className="w-4 h-4" style={{ color: ACCENT }} />
               Template Gallery ({templates.length})
               <ChevronDown
                 className="w-4 h-4 ml-auto transition-transform duration-200"
-                style={{ color: "oklch(0.55 0.03 55)", transform: templatePanelOpen ? "rotate(180deg)" : "rotate(0deg)" }}
+                style={{ color: INK_MUTED, transform: templatePanelOpen ? "rotate(180deg)" : "rotate(0deg)" }}
               />
             </button>
             <AnimatePresence initial={false}>
@@ -944,28 +944,28 @@ function BuildMode() {
                   transition={{ duration: 0.25 }}
                   className="overflow-hidden"
                 >
-                  <div className="rounded-b-xl overflow-hidden" style={{ border: "1px solid oklch(0.90 0.01 70)", borderTop: "none" }}>
+                  <div className="rounded-b-xl overflow-hidden" style={{ border: `1px solid ${HAIRLINE_COLOR}`, borderTop: "none" }}>
                     {categoryGroups.map((group, gi) => {
                       const CatIcon = group.icon;
                       const isExpanded = expandedCategories.has(group.name);
                       return (
-                        <div key={group.name} style={{ borderTop: gi > 0 ? "1px solid oklch(0.92 0.01 70)" : "none" }}>
+                        <div key={group.name} style={{ borderTop: gi > 0 ? `1px solid ${HAIRLINE_COLOR}` : "none" }}>
                           <button
                             onClick={() => toggleCategory(group.name)}
                             className="flex items-center gap-2.5 w-full px-4 py-2.5 text-xs font-bold transition-colors"
                             style={{
-                              color: "oklch(0.35 0.04 45)",
-                              background: isExpanded ? "oklch(0.96 0.01 70)" : "oklch(0.998 0.002 70)",
+                              color: INK,
+                              background: isExpanded ? ACCENT_LIGHT : SURFACE,
                             }}
                           >
                             <CatIcon className="w-3.5 h-3.5" style={{ color: ACCENT }} />
                             {group.name}
-                            <span className="text-[10px] font-medium ml-1 px-1.5 py-0.5 rounded-md" style={{ background: "oklch(0.92 0.01 70)", color: "oklch(0.50 0.03 55)" }}>
+                            <span className="text-[10px] font-medium ml-1 px-1.5 py-0.5 rounded-md" style={{ background: HAIRLINE_COLOR, color: INK_MUTED }}>
                               {group.templates.length}
                             </span>
                             <ChevronDown
                               className="w-3.5 h-3.5 ml-auto transition-transform duration-200"
-                              style={{ color: "oklch(0.55 0.03 55)", transform: isExpanded ? "rotate(180deg)" : "rotate(0deg)" }}
+                              style={{ color: INK_MUTED, transform: isExpanded ? "rotate(180deg)" : "rotate(0deg)" }}
                             />
                           </button>
                           <AnimatePresence initial={false}>
@@ -977,7 +977,7 @@ function BuildMode() {
                                 transition={{ duration: 0.15 }}
                                 className="overflow-hidden"
                               >
-                                <div className="flex flex-wrap gap-2 px-4 py-2.5" style={{ background: "oklch(0.98 0.005 70)" }}>
+                                <div className="flex flex-wrap gap-2 px-4 py-2.5" style={{ background: SURFACE }}>
                                   {group.templates.map((t) => {
                                     const TIcon = t.icon;
                                     return (
@@ -986,9 +986,9 @@ function BuildMode() {
                                         onClick={() => loadTemplate(t)}
                                         className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg transition-all"
                                         style={{
-                                          background: selectedTemplate === t.id ? ACCENT : "oklch(0.998 0.002 70)",
-                                          color: selectedTemplate === t.id ? "oklch(0.98 0.01 75)" : "oklch(0.38 0.04 50)",
-                                          border: selectedTemplate === t.id ? `1.5px solid ${ACCENT}` : "1.5px solid oklch(0.88 0.015 75)",
+                                          background: selectedTemplate === t.id ? ACCENT : SURFACE,
+                                          color: selectedTemplate === t.id ? ON_ACCENT : INK,
+                                          border: selectedTemplate === t.id ? `1.5px solid ${ACCENT}` : `1.5px solid ${HAIRLINE_COLOR}`,
                                         }}
                                       >
                                         <TIcon className="w-3 h-3" />
@@ -1016,7 +1016,7 @@ function BuildMode() {
         {/* Right: Live Preview */}
         <div className="space-y-4">
           <div className="flex items-center mb-1">
-            <span className="text-xs font-bold uppercase tracking-wider" style={{ color: "oklch(0.40 0.04 45)" }}>
+            <span className="text-xs font-bold uppercase tracking-wider" style={{ color: INK_MUTED }}>
               Live Preview
             </span>
           </div>
@@ -1030,7 +1030,7 @@ function BuildMode() {
                 className="flex-1 py-1.5 px-2 rounded-lg text-xs font-bold transition-all"
                 style={{
                   background: activeCoachTab === "critique" ? ACCENT : withAlpha(ACCENT, 0.06),
-                  color: activeCoachTab === "critique" ? "oklch(0.98 0.01 75)" : INK_MUTED,
+                  color: activeCoachTab === "critique" ? ON_ACCENT : INK_MUTED,
                   border: activeCoachTab === "critique" ? "none" : HAIRLINE,
                 }}
               >
@@ -1041,7 +1041,7 @@ function BuildMode() {
                 className="flex-1 py-1.5 px-2 rounded-lg text-xs font-bold transition-all"
                 style={{
                   background: activeCoachTab === "refine" ? ACCENT : withAlpha(ACCENT, 0.06),
-                  color: activeCoachTab === "refine" ? "oklch(0.98 0.01 75)" : INK_MUTED,
+                  color: activeCoachTab === "refine" ? ON_ACCENT : INK_MUTED,
                   border: activeCoachTab === "refine" ? "none" : HAIRLINE,
                 }}
               >
@@ -1052,7 +1052,7 @@ function BuildMode() {
                 className="flex-1 py-1.5 px-2 rounded-lg text-xs font-bold transition-all"
                 style={{
                   background: activeCoachTab === "preview" ? ACCENT : withAlpha(ACCENT, 0.06),
-                  color: activeCoachTab === "preview" ? "oklch(0.98 0.01 75)" : INK_MUTED,
+                  color: activeCoachTab === "preview" ? ON_ACCENT : INK_MUTED,
                   border: activeCoachTab === "preview" ? "none" : HAIRLINE,
                 }}
               >
@@ -1086,7 +1086,7 @@ function BuildMode() {
               border: "1px solid oklch(0.25 0.03 240)",
               fontFamily: "'SF Mono', 'Fira Code', 'Consolas', monospace",
               fontSize: "13px",
-              color: "oklch(0.82 0.02 70)",
+              color: "oklch(0.82 0.02 250)",
               boxShadow: "inset 0 2px 8px oklch(0.08 0.01 240 / 0.3)",
             }}
           >
@@ -1095,7 +1095,7 @@ function BuildMode() {
 
           {/* Token count */}
           <div className="flex items-center">
-            <span className="text-xs font-medium" style={{ color: "oklch(0.55 0.03 55)" }}>
+            <span className="text-xs font-medium" style={{ color: INK_MUTED }}>
               ~{tokenCount} tokens
             </span>
           </div>
@@ -1107,7 +1107,7 @@ function BuildMode() {
       <div
         className="mt-10 py-6 text-center rounded-xl"
         style={{
-          borderTop: "1px solid oklch(0.90 0.01 70)",
+          borderTop: `1px solid ${HAIRLINE_COLOR}`,
         }}
       >
         <a

@@ -9,8 +9,11 @@ export const accent     = "oklch(0.48 0.12 220)";
 export const accentSoft = "oklch(0.94 0.03 220)";
 export const hairlineColor = "oklch(0.90 0.01 250)";
 export const hairline   = `1px solid ${hairlineColor}`;
+/** Text/icons rendered ON accent-colored backgrounds (headers, filled buttons).
+ *  Near-white with a neutral cool hue — no warm hue 75 bleed. */
+export const onAccent   = "oklch(0.98 0.005 250)";
 
-export const builderTheme = { bg, surface, ink, inkMuted, accent, accentSoft, hairlineColor, hairline } as const;
+export const builderTheme = { bg, surface, ink, inkMuted, accent, accentSoft, hairlineColor, hairline, onAccent } as const;
 export type BuilderTheme = typeof builderTheme;
 
 /**

@@ -8,6 +8,7 @@ import {
   inkMuted,
   hairline,
   hairlineColor,
+  onAccent,
   builderTheme,
   withAlpha,
 } from "./builder-theme";
@@ -21,13 +22,22 @@ describe("builder-theme tokens", () => {
     expect(accentSoft).toBe("oklch(0.94 0.03 220)");
   });
 
-  it("exports all eight tokens via builderTheme object", () => {
+  it("exports all tokens via builderTheme object", () => {
     expect(builderTheme.bg).toBe("#F7F8FA");
     expect(builderTheme.surface).toBe("#FFFFFF");
     expect(builderTheme.ink).toBe("#1B2230");
     expect(builderTheme.inkMuted).toBe("oklch(0.45 0.02 250)");
     expect(builderTheme.hairlineColor).toBe("oklch(0.90 0.01 250)");
     expect(builderTheme.hairline).toBe("1px solid oklch(0.90 0.01 250)");
+    expect(builderTheme.onAccent).toBe("oklch(0.98 0.005 250)");
+  });
+
+  it("onAccent is near-white with neutral cool hue (no warm hue 75)", () => {
+    expect(onAccent).toBe("oklch(0.98 0.005 250)");
+  });
+
+  it("onAccent individual export matches builderTheme.onAccent", () => {
+    expect(onAccent).toBe(builderTheme.onAccent);
   });
 
   it("hairlineColor is the bare oklch color without border prefix", () => {
@@ -46,10 +56,15 @@ describe("builder-theme tokens", () => {
     expect(accent).toBe(builderTheme.accent);
     expect(accentSoft).toBe(builderTheme.accentSoft);
     expect(hairline).toBe(builderTheme.hairline);
+    expect(onAccent).toBe(builderTheme.onAccent);
   });
 });
 
 describe("withAlpha", () => {
+  it("injects alpha into onAccent token", () => {
+    expect(withAlpha(onAccent, 0.85)).toBe("oklch(0.98 0.005 250 / 0.85)");
+  });
+
   it("injects alpha into accent token", () => {
     expect(withAlpha(accent, 0.4)).toBe("oklch(0.48 0.12 220 / 0.4)");
   });
