@@ -139,7 +139,8 @@ function OnboardingBanner({ onSelectChapter: _onSelectChapter }: { onSelectChapt
             <strong>3. Practice</strong> — The Prompt Lab has real county scenarios: blind arena comparisons, technique identification, and a capstone blueprint.
           </p>
           <p style={{ color: "oklch(0.30 0.04 40)" }}>
-            <strong>4. Stay compliant</strong> — All prompts follow the AI Governance Handbook (v1.0). See Resources → Internal for the full policy, risk classification, and approved tools list.
+            {/* TODO(handbook-version): restore an official Governance Handbook version/status once confirmed by the user — do not invent. */}
+            <strong>4. Stay compliant</strong> — All prompts follow the AI Governance Handbook. See Resources → Internal for the full policy, risk classification, and approved tools list.
           </p>
           <p style={{ color: "oklch(0.30 0.04 40)" }}>
             <strong>5. Get help</strong> — Contact ITS at itservices@mymanatee.org for policy questions.
@@ -535,9 +536,6 @@ export default function Home() {
               <footer className="mt-12 pt-6 pb-8 text-center" style={{ borderTop: "1px solid oklch(0.90 0.02 75)" }}>
                 <p className="text-xs" style={{ color: "oklch(0.50 0.04 50)" }}>
                   AI Working Group Prompt Cookbook — Manatee County Government
-                </p>
-                <p className="text-xs mt-1" style={{ color: "oklch(0.60 0.03 55)" }}>
-                  Sources: GovAI Coalition, City of San Jose, NIST, NJ OIT, MA EOTSS, Georgia GTA, InnovateUS/Maryland DoIT, NACo, National Academies
                 </p>
               </footer>
             </>

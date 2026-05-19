@@ -1,7 +1,6 @@
 // ============================================================
 // Cookbook Data — Manatee County AI Working Group
-// Sources: manatee_county_prompt_manual.docx, AI governance registry,
-// GovAI Coalition, NACo, NIST
+// Sources: manatee_county_prompt_manual.docx, AI governance registry
 // ============================================================
 // FICTIONAL PERSONAS NOTICE
 // All persona names and roles in this file are fictional examples created
@@ -839,7 +838,7 @@ export const chapters: Chapter[] = [
     riskTier: "green",
     qualityScore: null,
     summary: "Chain-of-thought prompting forces AI to reason step-by-step instead of jumping to conclusions. This improves accuracy for logic, math, analysis, and multi-step tasks.",
-    source: "Wei et al. 2022; County AI Working Group",
+    source: "County AI Working Group",
     persona: "Alex Rivera",
     personaRole: "Budget Analyst, Manatee County Finance",
     content: [
@@ -925,7 +924,7 @@ export const chapters: Chapter[] = [
     riskTier: "green",
     qualityScore: null,
     summary: "Persona prompting tells the AI to 'act as' a specific expert. Combined with a scenario, it produces more relevant, contextually appropriate outputs for government work.",
-    source: "White et al. 2023; County AI Working Group",
+    source: "County AI Working Group",
     persona: "Tom Rodriguez",
     personaRole: "Communications Director, Manatee County",
     content: [

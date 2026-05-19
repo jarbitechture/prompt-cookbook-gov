@@ -69,10 +69,10 @@ const jumpstartChapters = [
 ];
 
 const govResources = [
-  { title: "GovAI Coalition", description: "National coalition for responsible AI adoption in government — Manatee County's AI Handbook is aligned with GovAI templates", url: "https://govai.org" },
-  { title: "NACo AI County Compass", description: "National Association of Counties AI toolkit — referenced in Manatee County's governance framework", url: "https://www.naco.org/resources/ai" },
-  { title: "NIST AI Risk Management Framework", description: "Federal AI risk framework (AI RMF 1.0) — the foundation of Manatee County's AI risk classification system", url: "https://www.nist.gov/artificial-intelligence" },
-  { title: "White House AI Bill of Rights", description: "Blueprint for responsible AI use in public services — informs Manatee County's guiding principles", url: "https://www.whitehouse.gov/ostp/ai-bill-of-rights/" },
+  { title: "GovAI Coalition", description: "National coalition for responsible AI adoption in government.", url: "https://govai.org" },
+  { title: "NACo AI County Compass", description: "National Association of Counties AI toolkit for county governments.", url: "https://www.naco.org/resources/ai" },
+  { title: "NIST AI Risk Management Framework", description: "Federal AI risk framework (AI RMF 1.0) — a widely used framework for managing AI risk in organizations.", url: "https://www.nist.gov/artificial-intelligence" },
+  { title: "White House AI Bill of Rights", description: "Blueprint for responsible AI use in public services.", url: "https://www.whitehouse.gov/ostp/ai-bill-of-rights/" },
   { title: "Florida Digital Service", description: "State of Florida AI policy and digital government initiatives", url: "https://digital.fl.gov" },
 ];
 
@@ -91,7 +91,8 @@ const internalResources = [
   },
   {
     title: "AI Governance — Key Policies",
-    description: "Quick policy reference for county AI use, aligned with NIST AI RMF and Florida state policy. The full Governance Handbook is being finalized; this note keeps the essentials visible in the meantime.",
+    // TODO(handbook-version): restore an official Governance Handbook version/status once confirmed by the user — do not invent.
+    description: "Quick policy reference for county AI use, aligned with widely used public-sector frameworks such as NIST AI RMF and Florida state policy.",
     details: [
       "Approved tools: Microsoft Copilot (county license) and ChatGPT (non-confidential use only)",
       "Never put PII, HIPAA data, law enforcement records, or Sunshine Law-covered deliberations into any AI tool",
