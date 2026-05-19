@@ -182,13 +182,17 @@ function scanFileC3(relPath: string): C3Violation[] {
 }
 
 // ─── Class 4 ─────────────────────────────────────────────────────────────────
-// Concrete county figures in Builder template context fields
-// (chatbotContext strings that contain bare dollar amounts, bare percentages
-//  not wrapped in [PLACEHOLDER] brackets, or bare RFP reference numbers).
+// Concrete county figures in Builder template context fields.
 //
-// Scanned file: client/src/lib/departments.ts
+// Scanned file: client/src/pages/Builder.tsx
+// Scanned range: the `const templates: Template[] = [` array (bounded by
+//   start marker "const templates: Template[] = [" and end marker "^];")
 //
-// Patterns (applied only to string literal content, not code structure):
+// For each template entry, the `context: "..."` string value is extracted and
+// checked.  Bracket-wrapped placeholders like $[X] or [85%] are stripped
+// before pattern matching so they never fire.
+//
+// Patterns (applied only to the extracted context value, after bracket-strip):
 //   a) Bare dollar amount:  $\d  (not in [brackets])
 //   b) Bare percentage:     \d{2,3}%  not preceded by [ or followed by ]
 //   c) Bare RFP number:     RFP #\d  (RFP followed by # and digits)
@@ -199,7 +203,7 @@ const C4_PATTERNS: { label: string; re: RegExp }[] = [
   { label: "bare RFP number",      re: /RFP\s*#\s*\d/ },
 ];
 
-const C4_FILE = "client/src/lib/departments.ts";
+const C4_FILE = "client/src/pages/Builder.tsx";
 
 type C4Violation = {
   line: number;
@@ -209,34 +213,43 @@ type C4Violation = {
 
 function scanFileC4(): C4Violation[] {
   const src = readSrc(C4_FILE);
-  // Only scan inside chatbotContext string values — find lines that are
-  // part of a chatbotContext assignment.
   const lines = src.split("\n");
   const violations: C4Violation[] = [];
-  let inChatbotContext = false;
+  let inTemplates = false;
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
-    // Detect start of chatbotContext string value
-    if (/chatbotContext\s*:/.test(line)) {
-      inChatbotContext = true;
+
+    // Enter the templates array
+    if (!inTemplates && /const templates\s*:\s*Template\[\]\s*=\s*\[/.test(line)) {
+      inTemplates = true;
+      continue;
     }
-    if (inChatbotContext) {
-      // Skip lines that are pure [PLACEHOLDER] content
-      const stripped = line.replace(/\[[^\]]*\]/g, "");
-      for (const { label, re } of C4_PATTERNS) {
-        if (re.test(stripped)) {
-          violations.push({
-            line: i + 1,
-            matchedPattern: label,
-            matched: line.trim().slice(0, 120),
-          });
-          break;
-        }
-      }
-      // End of the string value (closing quote + comma or just closing quote)
-      if (/",\s*$/.test(line) || /`\s*,?\s*$/.test(line)) {
-        inChatbotContext = false;
+
+    // Exit the templates array (bare `];` line)
+    if (inTemplates && /^\s*\];\s*$/.test(line)) {
+      inTemplates = false;
+      continue;
+    }
+
+    if (!inTemplates) continue;
+
+    // Extract context: "..." value from the template entry line
+    const ctxMatch = /\bcontext:\s*"([^"]*)"/.exec(line);
+    if (!ctxMatch) continue;
+
+    const contextValue = ctxMatch[1];
+    // Strip bracket-wrapped placeholders before applying patterns
+    const stripped = contextValue.replace(/\[[^\]]*\]/g, "");
+
+    for (const { label, re } of C4_PATTERNS) {
+      if (re.test(stripped)) {
+        violations.push({
+          line: i + 1,
+          matchedPattern: label,
+          matched: contextValue.slice(0, 120),
+        });
+        break;
       }
     }
   }
@@ -319,20 +332,34 @@ describe("Content Integrity Guard", () => {
   // ── Class 4 ──────────────────────────────────────────────────────────────
 
   describe("Class 4 — no bare concrete county figures in Builder context fields", () => {
-    it("no chatbotContext field contains a bare dollar amount, bare percentage, or bare RFP number", () => {
+    it("no Builder template context field contains a bare dollar amount, bare percentage, or bare RFP number", () => {
       const vs = scanFileC4();
       expect(
-        vs.map((v) => `departments.ts:${v.line} [${v.matchedPattern}]: "${v.matched}"`),
+        vs.map((v) => `Builder.tsx:${v.line} [${v.matchedPattern}]: "${v.matched}"`),
       ).toEqual([]);
     });
 
     it("Class 4 does NOT false-positive on [PLACEHOLDER]-bracketed values", () => {
-      // Simulate a chatbotContext line with proper placeholders only
-      const placeholderLine = `chatbotContext: "Budget is [BUDGET_AMOUNT], approval rate [85%], see RFP [RFP_NUMBER].",`;
+      // Simulate a Builder template context value with proper placeholders only
+      const placeholderValue = `Budget is $[X] of $[Y], approval rate [85%], see RFP #[NUMBER].`;
       // Strip placeholders and check no C4 pattern fires
-      const stripped = placeholderLine.replace(/\[[^\]]*\]/g, "");
+      const stripped = placeholderValue.replace(/\[[^\]]*\]/g, "");
       const fired = C4_PATTERNS.some(({ re }) => re.test(stripped));
       expect(fired).toBe(false);
+    });
+
+    it("Class 4 RED-capability: flags bare dollar amounts and passes bracketed equivalents", () => {
+      // Bare figures — must fire
+      const bareValue = `Budget spent: $1.2M of $4.8M`;
+      const bareStripped = bareValue.replace(/\[[^\]]*\]/g, "");
+      const bareFired = C4_PATTERNS.some(({ re }) => re.test(bareStripped));
+      expect(bareFired).toBe(true);
+
+      // Properly bracketed — must NOT fire
+      const bracketedValue = `Budget spent: $[X] of $[Y]`;
+      const bracketedStripped = bracketedValue.replace(/\[[^\]]*\]/g, "");
+      const bracketedFired = C4_PATTERNS.some(({ re }) => re.test(bracketedStripped));
+      expect(bracketedFired).toBe(false);
     });
   });
 
