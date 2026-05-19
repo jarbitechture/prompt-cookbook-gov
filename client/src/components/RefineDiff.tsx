@@ -480,6 +480,10 @@ export default function RefineDiff({ prompt }: RefineDiffProps) {
               const isActive = activeTechnique === card.key && result !== null;
               const disabled = !hasPrompt || loading;
 
+              const restingShadow = isActive
+                ? `0 2px 12px ${withAlpha(accent, 0.2)}`
+                : "0 1px 2px oklch(0.18 0.02 250 / 0.04)";
+
               return (
                 <motion.button
                   key={card.key}
@@ -490,7 +494,15 @@ export default function RefineDiff({ prompt }: RefineDiffProps) {
                   disabled={disabled}
                   aria-label={`${card.title} — ${card.description}`}
                   aria-pressed={isActive}
-                  className="flex flex-col items-start gap-2 rounded-xl p-4 text-left transition-all focus:outline-none focus-visible:ring-2"
+                  className="flex flex-col items-start gap-2 rounded-xl p-4 text-left transition-all focus:outline-none"
+                  onFocus={(e) => {
+                    if (e.currentTarget.matches(":focus-visible")) {
+                      e.currentTarget.style.boxShadow = `0 0 0 3px ${withAlpha(accent, 0.4)}`;
+                    }
+                  }}
+                  onBlur={(e) => {
+                    e.currentTarget.style.boxShadow = restingShadow;
+                  }}
                   style={{
                     background: isActive
                       ? accentSoft
@@ -501,9 +513,7 @@ export default function RefineDiff({ prompt }: RefineDiffProps) {
                     color: ink,
                     cursor: disabled ? "not-allowed" : "pointer",
                     opacity: isDimmed ? 0.45 : 1,
-                    boxShadow: isActive
-                      ? `0 2px 12px ${withAlpha(accent, 0.2)}`
-                      : "0 1px 2px oklch(0.18 0.02 250 / 0.04)",
+                    boxShadow: restingShadow,
                     minHeight: "92px",
                   }}
                 >
