@@ -685,7 +685,8 @@ export const departments: Category[] = [
         resources: "Templates for cybersecurity advisories, AI governance reviews, and IT change communications.",
       },
       builderTemplate: "Role: You are a Manatee County ITS [security analyst / systems administrator / service desk lead].\nTask: Draft a [memo / advisory / KB article] about [SPECIFIC EVENT OR CHANGE].\nConstraints: Cite Cherwell ticket numbers. State scope, timeline, and risk tier. Reference the AI Governance Handbook where AI tools are involved. Plain language for a non-technical reader.\nOutput: [Memo / advisory / KB article] ready for review.",
-      chatbotContext: "Information Technology Services covers Manatee County's M365 environment, network, cybersecurity, GIS platform, application portfolio (Accela, Cherwell, OpenGov, RapidDeploy 911, CityWorks), and the help desk. ITS staff write incident response narratives, security advisories, AI tool evaluation memos, change-management requests, knowledge-base articles, and audit responses. The AI Governance Handbook (March 2026) governs AI tool reviews, and Florida Statute 119 governs public-records exposure for IT systems.",
+      // TODO(handbook-version): restore an official version/status once confirmed by the user — do not invent.
+      chatbotContext: "Information Technology Services covers Manatee County's M365 environment, network, cybersecurity, GIS platform, application portfolio (Accela, Cherwell, OpenGov, RapidDeploy 911, CityWorks), and the help desk. ITS staff write incident response narratives, security advisories, AI tool evaluation memos, change-management requests, knowledge-base articles, and audit responses. The AI Governance Handbook governs AI tool reviews, and Florida Statute 119 governs public-records exposure for IT systems.",
       recommendedRecipeCategories: ["Writing", "Analysis", "County Work"],
     },
   },

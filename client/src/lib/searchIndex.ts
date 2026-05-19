@@ -5,6 +5,7 @@
 
 import { chapters } from "./cookbookData";
 import { departments } from "./departments";
+import { JUMPSTART_CHAPTER_COUNT, PROMPT_RECIPE_COUNT } from "./cookbook-resources";
 
 export interface SearchResult {
   type: "chapter" | "recipe" | "department" | "lesson" | "case-study";
@@ -103,8 +104,8 @@ function buildIndex(): IndexEntry[] {
   entries.push(
     { type: "recipe", title: "Prompt Builder", subtitle: "Build structured prompts block by block", icon: "🔨", href: "/builder", searchText: "prompt builder build create assemble template rtco", keywords: ["builder"] },
     { type: "recipe", title: "Prompt Lab", subtitle: "Practice with real county scenarios", icon: "🧪", href: "/game", searchText: "prompt lab game practice test quiz arena challenge capstone", keywords: ["lab", "game"] },
-    { type: "recipe", title: "All Recipes", subtitle: "15 plug-and-play prompt templates", icon: "📖", href: "/resources?tab=recipes", searchText: "recipes templates writing analysis data planning county work", keywords: ["recipes"] },
-    { type: "lesson", title: "Jumpstart Course", subtitle: "14 lessons on prompt engineering", icon: "🎓", href: "/resources", searchText: "jumpstart course lessons training learn tutorial", keywords: ["jumpstart", "course"] },
+    { type: "recipe", title: "All Recipes", subtitle: `${PROMPT_RECIPE_COUNT} plug-and-play prompt templates`, icon: "📖", href: "/resources?tab=recipes", searchText: "recipes templates writing analysis data planning county work", keywords: ["recipes"] },
+    { type: "lesson", title: "Jumpstart Course", subtitle: `${JUMPSTART_CHAPTER_COUNT} lessons on prompt engineering`, icon: "🎓", href: "/resources", searchText: "jumpstart course lessons training learn tutorial", keywords: ["jumpstart", "course"] },
     { type: "recipe", title: "Request AI Training", subtitle: "Book a session for your team", icon: "🎓", href: "/resources?tab=internal", searchText: "training request workshop session team department", keywords: ["training"] },
   );
 
