@@ -123,7 +123,8 @@ export default function PiiWarningModal({
               The prompt you are about to send to a public-cloud AI service
               appears to contain personal data. Sending PII outside county
               systems may violate Manatee County records policy and the AI
-              Governance Handbook (v1.0).
+              {/* TODO(handbook-version): restore an official Governance Handbook version/status once confirmed by the user — do not invent. */}
+              Governance Handbook.
             </p>
 
             <div>
