@@ -334,7 +334,7 @@ function CoursesTab() {
             <h2 className="font-serif text-lg font-bold leading-tight" style={{ color: TEXT_PRIMARY }}>
               Cookbook Foundations
             </h2>
-            <p className="text-xs" style={{ color: TEXT_SECONDARY }}>14 lessons — click any to read</p>
+            <p className="text-xs" style={{ color: TEXT_SECONDARY }}>{jumpstartChapters.length} lessons — click any to read</p>
           </div>
         </div>
 

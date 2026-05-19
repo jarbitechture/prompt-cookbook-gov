@@ -133,10 +133,10 @@ function OnboardingBanner({ onSelectChapter: _onSelectChapter }: { onSelectChapt
             <strong>1. Pick your department</strong> — Use the dropdown to personalize everything: hero message, recommended chapters, and prompt templates all adapt to your team's workflows.
           </p>
           <p style={{ color: "oklch(0.30 0.04 40)" }}>
-            <strong>2. Browse recipes</strong> — 30 chapters organized by skill level. Each recipe teaches one prompt technique with Manatee County examples you can use in Copilot or ChatGPT.
+            <strong>2. Browse recipes</strong> — {chapters.length} chapters organized by skill level. Each recipe teaches one prompt technique with Manatee County examples you can use in Copilot or ChatGPT.
           </p>
           <p style={{ color: "oklch(0.30 0.04 40)" }}>
-            <strong>3. Practice</strong> — The Prompt Lab has real county scenarios: blind arena comparisons, technique identification, and a 9-step capstone blueprint.
+            <strong>3. Practice</strong> — The Prompt Lab has real county scenarios: blind arena comparisons, technique identification, and a capstone blueprint.
           </p>
           <p style={{ color: "oklch(0.30 0.04 40)" }}>
             <strong>4. Stay compliant</strong> — All prompts follow the AI Governance Handbook (v1.0). See Resources → Internal for the full policy, risk classification, and approved tools list.
