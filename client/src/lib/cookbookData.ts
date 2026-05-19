@@ -333,7 +333,7 @@ export const chapters: Chapter[] = [
       "Every document that leaves a county office should be error-free. This template catches spelling, grammar, and punctuation errors while maintaining the original voice and style of the writer.",
       "A key feature: when the template is uncertain about a correction, it marks it with [CHECK: ...] so you can make the final call. It does not rewrite extensively unless grammatically necessary, and it preserves all formatting (bullets, numbers, headings).",
       "The output includes a [NOTES] section at the end listing all significant changes made, so you have a clear audit trail of what was corrected.",
-      "Particularly useful for board memos, press releases, grant applications, and any document that represents the county publicly."
+      "This template is particularly useful for board memos, press releases, grant applications, and any document that represents the county publicly."
     ],
     promptExamples: [
       "You are a professional editor for Manatee County government.\n\nProofread this document for spelling, grammar, and punctuation errors.\n\n**Instructions**:\n1. Fix spelling, grammar, and punctuation\n2. Suggest improvements for unclear sentences\n3. Maintain the original voice and style\n\n**Constraints**:\n- Do not change meaning or facts\n- Do not rewrite extensively unless grammatically necessary\n- Mark uncertain corrections with [CHECK: ...]\n- Preserve formatting (bullets, numbers, headings)\n\n**Output Format**:\nCorrected text with [NOTES] section at end listing significant changes."
@@ -413,7 +413,7 @@ export const chapters: Chapter[] = [
       "Every well-run meeting starts with a clear agenda. This template takes a list of topics and organizes them into a professional agenda with logical ordering, time estimates for each item, and standard sections like Call to Order and Approval of Minutes.",
       "It automatically adds breaks for meetings over 2 hours and ensures all provided topics are included. The total meeting time will not exceed the duration you specify.",
       "The output uses formal agenda language appropriate for county government — suitable for BOCC meetings, department meetings, committee sessions, and working group sessions.",
-      "Particularly useful for the AI Working Group's own meetings, department stand-ups, and cross-department coordination sessions."
+      "This template is particularly useful for the AI Working Group's own meetings, department stand-ups, and cross-department coordination sessions."
     ],
     promptExamples: [
       "You are a meeting coordinator for Manatee County government.\n\nCreate a professional meeting agenda from this topic list.\n\n**Instructions**:\n1. Organize topics into logical order\n2. Add time estimates for each item\n3. Include standard sections (call to order, approval of minutes, etc.)\n4. Format professionally\n\n**Constraints**:\n- Total meeting time should not exceed provided duration\n- All provided topics must be included\n- Use formal agenda language\n- Include breaks for meetings over 2 hours\n\n**Output Format**:\n[Meeting Title]\nDate: [Date] | Time: [Start] - [End]\n1. Call to Order (5 min)\n2. [Agenda Item] (XX min)\n...\nN. Adjournment (5 min)"
@@ -535,7 +535,7 @@ export const chapters: Chapter[] = [
       "Someone sends you an email saying \"Let's meet Tuesday at 2 in the big conference room to talk about the budget.\" This template extracts the event details and formats them into a structured calendar entry you can copy directly into Outlook.",
       "It handles ambiguous dates (\"next Tuesday\"), informal locations (\"the big conference room\" becomes a proper room name if context is provided), and extracts attendees, agenda items, and duration from natural language.",
       "The output includes: Event Title, Date, Time, Duration, Location, Attendees, Agenda/Description, and any preparation notes mentioned in the source text.",
-      "Especially useful for coordinators and assistants who process dozens of meeting requests daily."
+      "This template is especially useful for coordinators and assistants who process dozens of meeting requests daily."
     ],
     promptExamples: [
       "You are a scheduling assistant for Manatee County.\n\nParse this text into a structured calendar event:\n\n**Instructions**:\n1. Extract: title, date, time, duration, location, attendees\n2. Infer reasonable defaults for missing fields\n3. Format for calendar entry\n4. Note any ambiguities\n\n**Constraints**:\n- Flag uncertain dates/times with [CONFIRM]\n- Default duration: 1 hour if not specified\n- Use 12-hour time format\n- Include timezone (ET)\n\n**Output Format**:\nTitle: [Event Name]\nDate: [Day, Month Date, Year]\nTime: [Start] - [End] ET\nLocation: [Place]\nAttendees: [Names]\nDescription: [Agenda/Notes]"

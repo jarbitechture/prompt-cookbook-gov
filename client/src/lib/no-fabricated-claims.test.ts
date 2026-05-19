@@ -11,7 +11,9 @@ import { chapters } from "./cookbookData";
 
 const FABRICATED_PATTERNS: { label: string; re: RegExp }[] = [
   { label: "quality score mention",         re: /quality score/i },
-  { label: "X/10 numeric score",            re: /\b\d(?:\.\d+)?\s*\/\s*10\b/ },
+  // Matches "9/10" or "9.6/10" but NOT "9/10/2026" (date) — the (?!\s*\/) lookahead
+  // ensures the 10 is not followed by another slash (as in M/D/YYYY or fraction chains).
+  { label: "X/10 numeric score",            re: /\b\d(?:\.\d+)?\s*\/\s*10\b(?!\s*\/)/ },
   { label: "percent pass rate claim",       re: /\b\d{2,3}\s*%\s*(?:test\s*)?pass rate/i },
   { label: "accuracy score label",          re: /accuracy score\s*:/i },
   { label: "dimension rubric claim",        re: /\d+-dimension rubric/i },
@@ -80,5 +82,15 @@ describe("T-R1 — no fabricated metric claims in prose", () => {
     expect(
       violations.map((v) => `${v.chapterId}.keyTakeaways [${v.matchedPattern}]: …${v.matchedString}…`),
     ).toEqual([]);
+  });
+
+  it("X/10 regex does NOT false-positive on M/D/YYYY dates or fractions with trailing slash", () => {
+    const scoreRe = FABRICATED_PATTERNS.find((p) => p.label === "X/10 numeric score")!.re;
+    // Must NOT match dates
+    expect(scoreRe.test("9/10/2026")).toBe(false);
+    expect(scoreRe.test("available 9/10/2026")).toBe(false);
+    // Must STILL match genuine score strings
+    expect(scoreRe.test("9.6/10")).toBe(true);
+    expect(scoreRe.test("scored 9/10")).toBe(true);
   });
 });
