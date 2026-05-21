@@ -7,7 +7,7 @@
  *     pattern_types: string[]        // e.g. ["ssn", "us_phone", "email"]
  *     match_count:   number          // total matches across all patterns
  *     action:        "blocked" | "send_anyway" | "redact_and_send"
- *     target_tool?:  "copilot" | "chatgpt_enterprise"
+ *     target_tool?:  "copilot" | "chatgpt_enterprise" | "copy"
  *   }
  *
  * Returns 204 on success, 400 on invalid body.
@@ -33,7 +33,7 @@ const PiiFlaggedBodySchema = z
     ),
     match_count: z.number().int().min(0).max(1000),
     action: z.enum(["blocked", "send_anyway", "redact_and_send"]),
-    target_tool: z.enum(["copilot", "chatgpt_enterprise"]).optional(),
+    target_tool: z.enum(["copilot", "chatgpt_enterprise", "copy"]).optional(),
   })
   .strict();
 

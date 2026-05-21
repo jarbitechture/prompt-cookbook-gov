@@ -5,7 +5,6 @@ import {
   Copy,
   Check,
   Clock,
-  ChevronRight,
   ChevronDown,
   RotateCcw,
   ArrowRight,
@@ -27,9 +26,10 @@ import { apiUrl } from "@/lib/apiUrl";
 import {
   sendToTarget,
   sendRedactedToTarget,
+  emitPiiFlagged,
   PiiDetectedError,
 } from "@/lib/copilot-handoff";
-import type { ScanMatch } from "@/lib/pre-send-scan";
+import { scanForPii, type ScanMatch } from "@/lib/pre-send-scan";
 import PiiWarningModal from "@/components/PiiWarningModal";
 import { personas } from "@/lib/personas";
 import type { Persona } from "@/lib/personas";
@@ -220,11 +220,6 @@ function DepartmentBanner() {
           </span>
         )}
       </div>
-      {!dept && (
-        <a href="/cookbook/" className="text-xs font-bold px-3 py-1 rounded-lg" style={{ color: ACCENT, background: "oklch(0.96 0.03 220)", textDecoration: "none" }}>
-          Set department in Cookbook &rarr;
-        </a>
-      )}
     </div>
   );
 }
@@ -306,18 +301,11 @@ export default function Builder() {
           borderBottom: HAIRLINE,
         }}
       >
-        <div className="flex items-center gap-3">
-          <a href="/cookbook/" className="flex items-center gap-1.5 text-sm font-medium hover:opacity-80 transition-opacity" style={{ color: INK_MUTED, textDecoration: "none" }}>
-            <span>←</span>
-            <span>Cookbook</span>
-          </a>
-          <ChevronRight className="w-3.5 h-3.5" style={{ color: INK_MUTED }} />
-          <div className="flex items-center gap-2">
-            <Wrench className="w-4 h-4" style={{ color: ACCENT }} />
-            <span className="font-sans font-semibold text-sm" style={{ color: INK }}>
-              Prompt Builder
-            </span>
-          </div>
+        <div className="flex items-center gap-2">
+          <Wrench className="w-4 h-4" style={{ color: ACCENT }} />
+          <span className="font-sans font-semibold text-sm" style={{ color: INK }}>
+            Prompt Builder
+          </span>
         </div>
       </header>
 
@@ -403,7 +391,7 @@ function BuildMode() {
   const [piiModal, setPiiModal] = useState<{
     matches: ScanMatch[];
     redacted: string;
-    target: "copilot" | "chatgpt_enterprise";
+    target: "copilot" | "chatgpt_enterprise" | "copy";
   } | null>(null);
   // Welcome hero: lazy init so auto-filled pages never flash the hero then animate it out.
   // Init order: import present → false; welcome-seen → false; dept template → false; else true
@@ -566,6 +554,17 @@ function BuildMode() {
 
   const handleCopy = useCallback(() => {
     if (!assembledPrompt.trim()) return;
+    // P0-A parity: Copy must enforce the same PII gate as Use in Copilot / ChatGPT.
+    const scan = scanForPii(assembledPrompt);
+    if (scan.flagged) {
+      emitPiiFlagged(scan.matches, "blocked", "copy");
+      setPiiModal({
+        matches: scan.matches,
+        redacted: scan.redacted,
+        target: "copy",
+      });
+      return;
+    }
     navigator.clipboard.writeText(assembledPrompt).then(() => {
       setCopied(true);
       toast.success("Prompt copied to clipboard!");
@@ -1103,22 +1102,6 @@ function BuildMode() {
         </div>
       </div>
 
-      {/* Footer cross-link */}
-      <div
-        className="mt-10 py-6 text-center rounded-xl"
-        style={{
-          borderTop: `1px solid ${HAIRLINE_COLOR}`,
-        }}
-      >
-        <a
-          href="/cookbook/"
-          className="text-sm font-medium hover:opacity-80 transition-opacity"
-          style={{ color: ACCENT, textDecoration: "none" }}
-        >
-          Need a refresher? Browse the Cookbook recipes →
-        </a>
-      </div>
-
       {/* P0-A: PII pre-flight warning modal — opens when sendToTarget throws PiiDetectedError */}
       {piiModal && (
         <PiiWarningModal
@@ -1127,7 +1110,17 @@ function BuildMode() {
           onClose={() => setPiiModal(null)}
           onSendAnyway={() => {
             const target = piiModal.target;
+            const matches = piiModal.matches;
             setPiiModal(null);
+            if (target === "copy") {
+              emitPiiFlagged(matches, "send_anyway", "copy");
+              navigator.clipboard.writeText(assembledPrompt).then(() => {
+                setCopied(true);
+                toast.success("Prompt copied to clipboard!");
+                setTimeout(() => setCopied(false), 2000);
+              });
+              return;
+            }
             sendToTarget(assembledPrompt, target, undefined, { skipPiiScan: true })
               .then(() => {
                 if (target === "copilot") {
@@ -1150,6 +1143,15 @@ function BuildMode() {
             const redacted = piiModal.redacted;
             const matches = piiModal.matches;
             setPiiModal(null);
+            if (target === "copy") {
+              emitPiiFlagged(matches, "redact_and_send", "copy");
+              navigator.clipboard.writeText(redacted).then(() => {
+                setCopied(true);
+                toast.success("Redacted prompt copied to clipboard!");
+                setTimeout(() => setCopied(false), 2000);
+              });
+              return;
+            }
             sendRedactedToTarget(redacted, matches, target)
               .then(() => {
                 if (target === "copilot") {

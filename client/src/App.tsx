@@ -14,10 +14,15 @@ function AppRoutes() {
   return (
     <Switch>
       <Route path={"/"} component={Portal} />
+      {/* Production-style trailing-slash hrefs from Portal tiles match the no-slash route too in unified dev mode. */}
       <Route path={"/cookbook"} component={Home} />
+      <Route path={"/cookbook/"} component={Home} />
       <Route path={"/game"} component={Game} />
+      <Route path={"/game/"} component={Game} />
       <Route path={"/builder"} component={Builder} />
+      <Route path={"/builder/"} component={Builder} />
       <Route path={"/resources"} component={Resources} />
+      <Route path={"/resources/"} component={Resources} />
       <Route path={"/404"} component={NotFound} />
       <Route component={NotFound} />
     </Switch>

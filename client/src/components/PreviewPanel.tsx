@@ -93,8 +93,8 @@ export default function PreviewPanel({ prompt }: PreviewPanelProps) {
         return;
       }
 
-      // Light runtime validation — trust server schema but guard critical fields
-      const p = data as Preview;
+      // Server response shape: { result: Preview, flags: [...] }
+      const p = (data as { result?: Preview }).result;
       if (typeof p?.interpretation !== "string" || !Array.isArray(p?.gaps) || !Array.isArray(p?.unclear)) {
         setError("Preview response was malformed.");
         setLoading(false);

@@ -141,7 +141,7 @@ export function emitPiiFlaggedEvent(
   patternTypes: string[],
   matchCount: number,
   action: "blocked" | "send_anyway" | "redact_and_send",
-  targetTool: "copilot" | "chatgpt_enterprise" | undefined,
+  targetTool: "copilot" | "chatgpt_enterprise" | "copy" | undefined,
   startTs: number,
 ): void {
   const { user_id, dept, role_band } = extractContext(req);

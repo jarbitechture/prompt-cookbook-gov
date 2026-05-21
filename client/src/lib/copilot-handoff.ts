@@ -61,10 +61,10 @@ export class PiiDetectedError extends Error {
  * Fire-and-forget POST to /api/roi/pii-flagged. NEVER blocks the
  * caller. Sends pattern types + count only — no raw matches.
  */
-function emitPiiFlagged(
+export function emitPiiFlagged(
   matches: ScanMatch[],
   action: "blocked" | "send_anyway" | "redact_and_send",
-  targetTool: "copilot" | "chatgpt_enterprise",
+  targetTool: "copilot" | "chatgpt_enterprise" | "copy",
 ): void {
   const patternTypes = Array.from(new Set(matches.map((m) => m.pattern)));
   void fetch("/api/roi/pii-flagged", {

@@ -215,8 +215,8 @@ export default function CritiquePanel({ prompt, onApplySuggestion }: CritiquePan
         return;
       }
 
-      // Light runtime validation — trust server schema but guard critical fields
-      const c = data as Critique;
+      // Server response shape: { result: Critique, flags: [...] }
+      const c = (data as { result?: Critique }).result;
       if (!c?.rtco || !Array.isArray(c?.suggestions)) {
         setError("Critique response was malformed.");
         setLoading(false);
@@ -262,7 +262,7 @@ export default function CritiquePanel({ prompt, onApplySuggestion }: CritiquePan
       >
         <h4 className="font-bold text-sm flex items-center gap-2" style={{ color: onAccent }}>
           <ShieldCheck className="w-4 h-4" />
-          Critique My Prompt
+          Critique
         </h4>
         <div className="flex items-center gap-2">
           {result && (
