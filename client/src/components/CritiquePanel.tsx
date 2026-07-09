@@ -1,12 +1,19 @@
 import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Copy, Check, AlertTriangle, RotateCcw, Loader2, ShieldCheck, ShieldOff, ChevronDown, ChevronUp } from "lucide-react";
-import { toast } from "sonner";
+import { AlertTriangle, RotateCcw, Loader2, ShieldCheck, ChevronDown, ChevronUp } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
 import { accent, accentSoft, surface, ink, inkMuted, hairline, hairlineColor, onAccent, withAlpha } from "@/builder-theme";
 
 // ─── Local type mirror of server/schemas/critique.ts ──────────────────────────
 type RtcoStatus = "present" | "weak" | "missing";
+type SuggestionField = "role" | "task" | "context" | "output" | "constraints";
+
+interface Suggestion {
+  /** The RTCO block this suggestion's snippet should be added to. */
+  field: SuggestionField;
+  /** A snippet the user can paste straight into that block. */
+  text: string;
+}
 
 interface Critique {
   rtco: {
@@ -17,14 +24,15 @@ interface Critique {
   };
   anti_hallucination_clause: boolean;
   specificity_issues: string[];
-  suggestions: string[];
+  suggestions: Suggestion[];
   cited_chapters: number[];
 }
 
 // ─── Props ─────────────────────────────────────────────────────────────────────
 interface CritiquePanelProps {
   prompt: string;
-  onApplySuggestion?: (suggestion: string) => void;
+  /** Append a snippet to a specific Builder block. */
+  onApplyToBlock?: (field: SuggestionField, text: string) => void;
 }
 
 // ─── Color helpers ─────────────────────────────────────────────────────────────
@@ -78,55 +86,6 @@ function RtcoPill({ field, status }: { field: keyof Critique["rtco"]; status: Rt
   );
 }
 
-function CopiedButton({ text, onApply }: { text: string; onApply?: (s: string) => void }) {
-  const [copied, setCopied] = useState(false);
-
-  const handleCopy = useCallback(() => {
-    navigator.clipboard.writeText(text).then(() => {
-      setCopied(true);
-      toast.success("Suggestion copied to clipboard");
-      setTimeout(() => setCopied(false), 1800);
-    });
-  }, [text]);
-
-  const handleApply = useCallback(() => {
-    if (onApply) {
-      onApply(text);
-      toast.success("Suggestion added to Constraints block");
-    } else {
-      handleCopy();
-    }
-  }, [text, onApply, handleCopy]);
-
-  return (
-    <div className="flex items-start gap-3">
-      <span
-        className="mt-0.5 shrink-0 w-1.5 h-1.5 rounded-full"
-        style={{ background: accent, marginTop: "6px" }}
-      />
-      <span
-        className="flex-1 text-sm leading-relaxed"
-        style={{ color: ink }}
-      >
-        {text}
-      </span>
-      <button
-        onClick={handleApply}
-        className="shrink-0 flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg font-semibold transition-all"
-        style={{
-          background: onApply ? accent : hairlineColor,
-          color: onApply ? onAccent : inkMuted,
-          border: onApply ? "none" : hairline,
-        }}
-        title={onApply ? "Add to Constraints block" : "Copy to clipboard"}
-      >
-        {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
-        {onApply ? "Apply" : copied ? "Copied" : "Copy"}
-      </button>
-    </div>
-  );
-}
-
 // ─── Loading skeleton ──────────────────────────────────────────────────────────
 function CritiqueSkeleton() {
   return (
@@ -166,7 +125,20 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 }
 
 // ─── Main component ────────────────────────────────────────────────────────────
-export default function CritiquePanel({ prompt, onApplySuggestion }: CritiquePanelProps) {
+const ANTI_HALLUCINATION_CLAUSE =
+  "If any fact is unavailable, say so — do not guess or invent details.";
+
+/**
+ * Detect whether a prompt already carries an anti-hallucination instruction.
+ * Lets the Critique panel reflect reality once the clause is in the prompt —
+ * added via the button or typed by the user — instead of nagging on a stale
+ * (or weak-model) `anti_hallucination_clause: false` score.
+ */
+function promptHasAntiHallucinationLine(p: string): boolean {
+  return /\b(?:do ?not|don't|never)\s+(?:guess|invent|make ?up|fabricate)\b|if (?:you(?:'re| are)? )?unsure|if any (?:fact|data|detail)|only use the (?:document|data|information)|cite (?:your )?sources?/i.test(p);
+}
+
+export default function CritiquePanel({ prompt, onApplyToBlock }: CritiquePanelProps) {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<Critique | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -385,23 +357,36 @@ export default function CritiquePanel({ prompt, onApplySuggestion }: CritiquePan
                 </div>
               </Section>
 
-              {/* Anti-hallucination clause */}
-              <Section title="Anti-Hallucination Clause">
-                <div
-                  className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold w-fit"
-                  style={{
-                    background: result.anti_hallucination_clause ? accentSoft : surface,
-                    border: `1.5px solid ${accent}`,
-                    color: ink,
-                  }}
-                >
-                  {result.anti_hallucination_clause ? (
+              {/* Anti-hallucination line — actionable reframe (item 7) */}
+              <Section title="Anti-Hallucination Line">
+                {(result.anti_hallucination_clause || promptHasAntiHallucinationLine(prompt)) ? (
+                  <div
+                    className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold w-fit"
+                    style={{ background: accentSoft, border: `1.5px solid ${accent}`, color: ink }}
+                  >
                     <ShieldCheck className="w-4 h-4" />
-                  ) : (
-                    <ShieldOff className="w-4 h-4" />
-                  )}
-                  {result.anti_hallucination_clause ? "Clause present" : "Clause missing"}
-                </div>
+                    Included — your prompt tells the AI not to invent facts
+                  </div>
+                ) : (
+                  <div
+                    className="rounded-lg px-3 py-2.5"
+                    style={{ background: withAlpha(accentSoft, 0.5), border: hairline }}
+                  >
+                    <p className="text-sm" style={{ color: ink }}>
+                      Not added yet. A short line telling the AI not to invent facts
+                      keeps county prompts safer — most prompts don't have one.
+                    </p>
+                    {onApplyToBlock && (
+                      <button
+                        onClick={() => onApplyToBlock("constraints", ANTI_HALLUCINATION_CLAUSE)}
+                        className="mt-2 flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg font-semibold transition-opacity hover:opacity-90"
+                        style={{ background: accent, color: onAccent }}
+                      >
+                        <ShieldCheck className="w-3.5 h-3.5" /> Add it to Constraints
+                      </button>
+                    )}
+                  </div>
+                )}
               </Section>
 
               {/* Specificity issues */}
@@ -429,35 +414,36 @@ export default function CritiquePanel({ prompt, onApplySuggestion }: CritiquePan
                 </Section>
               )}
 
-              {/* Suggestions */}
+              {/* Suggestions — each tagged with the block it improves; Apply
+                  routes the snippet to that block, not always Constraints. */}
               <Section title="Suggestions">
-                <div className="space-y-3">
-                  {result.suggestions.map((s, i) => (
-                    <CopiedButton key={i} text={s} onApply={onApplySuggestion} />
-                  ))}
+                <div className="space-y-2.5">
+                  {result.suggestions.map((s, i) => {
+                    const fieldLabel = s.field.charAt(0).toUpperCase() + s.field.slice(1);
+                    return (
+                      <div key={i} className="flex items-start gap-2.5">
+                        <span
+                          className="shrink-0 mt-1.5 w-1.5 h-1.5 rounded-full"
+                          style={{ background: accent }}
+                        />
+                        <span className="flex-1 text-sm leading-relaxed" style={{ color: ink }}>
+                          {s.text}
+                        </span>
+                        {onApplyToBlock && (
+                          <button
+                            onClick={() => onApplyToBlock(s.field, s.text)}
+                            className="shrink-0 text-xs px-2.5 py-1 rounded-lg font-semibold transition-opacity hover:opacity-90"
+                            style={{ background: accent, color: onAccent }}
+                            title={`Add this to the ${fieldLabel} block`}
+                          >
+                            Add to {fieldLabel}
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               </Section>
-
-              {/* Cited chapters */}
-              {result.cited_chapters.length > 0 && (
-                <Section title="Related Chapters">
-                  <div className="flex flex-wrap gap-2">
-                    {result.cited_chapters.map((ch) => (
-                      <span
-                        key={ch}
-                        className="px-2.5 py-1 rounded-full text-xs font-semibold"
-                        style={{
-                          background: accentSoft,
-                          border: `1px solid ${hairlineColor}`,
-                          color: accent,
-                        }}
-                      >
-                        Ch. {ch}
-                      </span>
-                    ))}
-                  </div>
-                </Section>
-              )}
             </motion.div>
           )}
         </AnimatePresence>

@@ -62,13 +62,13 @@ say "3/3 cookbook-node :3030"
 if curl -fs -m 2 http://127.0.0.1:3030/api/health >/dev/null 2>&1; then
   echo "cookbook-node already running"
 else
-  # BREAKER_TIMEOUT_MS=30000: dev gemma3:4b needs ~15s for structured gen;
+  # BREAKER_TIMEOUT_MS=60000: dev gemma3:4b structured gen can take 30-50s;
   # prod (Qwen2.5-7B-FP8/SGLang) leaves this unset → default 10s.
   ( cd "$COOKBOOK_DIR" && PORT=3030 \
       CIVIC_AI_API_KEY="$CIVIC_AI_API_KEY" \
       CIVIC_AI_BASE_URL="http://127.0.0.1:8100/v1" \
       CIVIC_AI_DEFAULT_MODEL="gemma3:4b" \
-      BREAKER_TIMEOUT_MS=30000 \
+      BREAKER_TIMEOUT_MS=60000 \
       nohup npm run start >"$LOG_DIR/cookbook-node.log" 2>&1 & )
   echo "started cookbook-node log=$LOG_DIR/cookbook-node.log"
 fi

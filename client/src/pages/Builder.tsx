@@ -6,6 +6,7 @@ import {
   Check,
   Clock,
   ChevronDown,
+  ChevronRight,
   RotateCcw,
   ArrowRight,
   FileText,
@@ -34,10 +35,10 @@ import PiiWarningModal from "@/components/PiiWarningModal";
 import { personas } from "@/lib/personas";
 import type { Persona } from "@/lib/personas";
 import { getDepartment } from "@/lib/departments";
-import { getWelcomeSeen, setWelcomeSeen } from "@/lib/welcomeStorage";
 import CritiquePanel from "@/components/CritiquePanel";
 import RefineDiff from "@/components/RefineDiff";
 import PreviewPanel from "@/components/PreviewPanel";
+import { parseRefinedRtco } from "@/lib/refined-prompt";
 import { accent as ACCENT, accentSoft as ACCENT_LIGHT, bg as BG, surface as SURFACE, ink as INK, inkMuted as INK_MUTED, hairline as HAIRLINE, hairlineColor as HAIRLINE_COLOR, onAccent as ON_ACCENT, withAlpha } from "@/builder-theme";
 
 /* ─── Color System ─── */
@@ -52,20 +53,11 @@ const BLOCK_COLORS: Record<string, { border: string; text: string; bg: string }>
   constraints: { border: "oklch(0.50 0.07 315)", text: "oklch(0.56 0.06 315)", bg: "oklch(0.96 0.02 315)" },
 };
 
-// Labels rendered into the dark pane (bg oklch(0.14…)) — L ≥ 0.65 for legibility.
-const PREVIEW_LABEL_COLORS: Record<string, string> = {
-  role:        "oklch(0.72 0.08 210)",
-  task:        "oklch(0.70 0.08 240)",
-  context:     "oklch(0.72 0.07 270)",
-  output:      "oklch(0.70 0.08 295)",
-  constraints: "oklch(0.72 0.07 315)",
-};
-
 /* ─── Block Definitions ─── */
 interface BlockDef {
   id: string;
   label: string;
-  subLabel?: string; // kitchen-metaphor sub-label for core RTCO blocks
+  subLabel?: string; // short plain-language descriptor under the block label
   previewLabel: string;
   placeholder: string;
   helpText?: string;
@@ -79,11 +71,11 @@ interface BlockDef {
 // inside the RefineDiff card grid, which speaks plain language and doesn't
 // require the user to learn dev jargon ("Few-Shot", "CoT", "Task Chain").
 const ALL_BLOCKS: BlockDef[] = [
-  { id: "role", label: "Role", subLabel: "🎩 Who should the AI act as? (the chef's hat)", previewLabel: "Role:", placeholder: "e.g. Budget Analyst, IT Help Desk Tech, HR Specialist", helpText: "What role should the AI play? Be specific — 'county budget analyst' beats 'analyst'.", multiline: false },
-  { id: "task", label: "Task", subLabel: "📋 What needs done? (the recipe)", previewLabel: "Task:", placeholder: "What do you need done?", helpText: "What exactly should the AI do? Use action verbs: draft, summarize, analyze, create.", multiline: true, rows: 3 },
-  { id: "context", label: "Context", subLabel: "🥫 Background the AI needs (the pantry)", previewLabel: "Context:", placeholder: "Background information, situation details, relevant data...", helpText: "What does the AI need to know? Department, audience, deadline, data.", multiline: true, rows: 3 },
-  { id: "output", label: "Output Format", subLabel: "🍽️ How should the result look? (the plating)", previewLabel: "Output:", placeholder: "e.g. bullet list, memo, table, structured report", helpText: "How should the result look? Bullet list, memo, table, email, 3 paragraphs.", multiline: false },
-  { id: "constraints", label: "Constraints", subLabel: "🚫 What to avoid (allergies & dietary restrictions)", previewLabel: "Constraints:", placeholder: "Limits, rules, requirements, word counts...", helpText: "What should the AI avoid? Word limits, tone rules, things NOT to include.", multiline: true, rows: 2 },
+  { id: "role", label: "Role", subLabel: "Who the AI should act as", previewLabel: "Role:", placeholder: "e.g. Budget Analyst, IT Help Desk Tech, HR Specialist", helpText: "What role should the AI play? Be specific — 'county budget analyst' beats 'analyst'.", multiline: false },
+  { id: "task", label: "Task", subLabel: "What you need done", previewLabel: "Task:", placeholder: "What do you need done?", helpText: "What exactly should the AI do? Use action verbs: draft, summarize, analyze, create.", multiline: true, rows: 3 },
+  { id: "context", label: "Context", subLabel: "Background the AI needs", previewLabel: "Context:", placeholder: "Background information, situation details, relevant data...", helpText: "What does the AI need to know? Department, audience, deadline, data.", multiline: true, rows: 3 },
+  { id: "output", label: "Output Format", subLabel: "How the result should look", previewLabel: "Output:", placeholder: "e.g. bullet list, memo, table, structured report", helpText: "How should the result look? Bullet list, memo, table, email, 3 paragraphs.", multiline: false },
+  { id: "constraints", label: "Constraints", subLabel: "Limits and rules to follow", previewLabel: "Constraints:", placeholder: "Limits, rules, requirements, word counts...", helpText: "What should the AI avoid? Word limits, tone rules, things NOT to include.", multiline: true, rows: 2 },
 ];
 
 /* ─── Template Data ─── */
@@ -171,6 +163,9 @@ const templates: Template[] = [
   { id: "it-troubleshoot", label: "IT Troubleshooting Guide", category: "IT & Data", icon: Database, role: "IT Help Desk Technician for Manatee County", task: "Create a step-by-step troubleshooting guide for a common issue", context: "Multiple county employees report being unable to [DESCRIBE ISSUE]. Affecting approximately [N] users across [N] departments.", output: "Numbered troubleshooting steps from simplest to most complex, with screenshots placeholders, escalation criteria, and known workarounds", constraints: "Write for non-technical county staff. Include both Windows 10 and Windows 11 instructions. Mark any step that requires admin privileges." },
   { id: "meeting-summarizer", label: "Meeting Summarizer", category: "IT & Data", icon: Database, role: "Meeting Analyst for Manatee County", task: "Summarize a meeting recording transcript into an actionable format", context: "From a Microsoft Teams or Stream recording of a department staff meeting", output: "Structured summary with sections: Overview (2-3 sentences), Key Discussion Points (bullets), Decisions Made, Action Items (with owner and due date), Next Steps", constraints: "Keep under 400 words. Use direct, factual language. Attribute action items to specific individuals mentioned in the transcript." },
   { id: "spreadsheet-gen", label: "Spreadsheet Generator", category: "IT & Data", icon: Database, role: "Data Analyst for Manatee County government", task: "Design a spreadsheet structure for tracking department data", context: "Department needs to track employee training compliance across [N] required courses for [N]+ staff members with quarterly reporting to HR", output: "Column headers with data types, sample formulas for completion percentages, conditional formatting rules, and pivot table structure for quarterly reports", constraints: "Keep formulas simple enough for intermediate Excel users. Include data validation rules to prevent entry errors. Design for both Excel and Google Sheets compatibility." },
+
+  // Business Analysis (BA/BRM)
+  { id: "sbar-draft", label: "SBAR Draft", category: "IT & Data", icon: Database, role: "Business Analyst and Business Relationship Manager on the BA/BRM team in Manatee County IT Services", task: "Take the intake information below and produce a draft SBAR — Situation, Background, Assessment, Recommendation — for the Project Management Office.", context: "The county runs Microsoft 365 with Copilot, SharePoint Online, Entra ID single sign-on, and Halo ticketing. New vendor software requires a security assessment. Relevant policy: IT Policy R-18-159, AI Policy AI-001, and Florida public records law (F.S. Ch. 119). Intake — Department: [DEPARTMENT]. What they use today: [WHAT THEY USE TODAY]. Vendor if named: [VENDOR IF NAMED]. Sensitive data flags: [SENSITIVE DATA FLAGS]. Known constraints: [KNOWN CONSTRAINTS].", output: "Four sections — Situation, Background, Assessment, Recommendation. Bullet points, not paragraphs. Under 2 pages.", constraints: "Mark researched facts [RESEARCHED] and gaps [NEEDS INVESTIGATION]. Do not invent details about what the department wants. If it is a straightforward known-solution upgrade, say so. Write like a county business analyst — direct, no filler." },
 ];
 
 function groupTemplatesByCategory(): CategoryGroup[] {
@@ -192,34 +187,18 @@ function groupTemplatesByCategory(): CategoryGroup[] {
 }
 
 /* ─── Department Banner ─── */
-function DepartmentBanner() {
-  const [dept, setDept] = useState<ReturnType<typeof getDepartment>>(undefined);
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem("cookbook-department");
-      if (stored) setDept(getDepartment(stored));
-    } catch { /* localStorage unavailable */ }
-  }, []);
-
+function DepartmentBanner({ category }: { category: string | null }) {
+  // Shown only after a template is loaded — names the template's category.
+  if (!category) return null;
   return (
     <div
       className="flex items-center gap-3 px-4 py-3 rounded-xl mb-5"
-      style={{
-        background: dept ? ACCENT_LIGHT : SURFACE,
-        border: dept ? `1.5px solid ${dept.color}` : HAIRLINE,
-      }}
+      style={{ background: ACCENT_LIGHT, border: `1.5px solid ${ACCENT}` }}
     >
-      <span className="text-xl">{dept ? dept.icon : "🏛️"}</span>
-      <div className="flex-1">
-        <span className="text-sm font-medium" style={{ color: dept ? ACCENT : INK }}>
-          Building for: <strong>{dept ? dept.name : "All Departments"}</strong>
-        </span>
-        {dept && (
-          <span className="text-xs block mt-0.5" style={{ color: INK_MUTED }}>
-            {dept.description}
-          </span>
-        )}
-      </div>
+      <Building2 className="w-4 h-4" style={{ color: ACCENT }} />
+      <span className="text-sm font-medium" style={{ color: ACCENT }}>
+        Building for: <strong>{category}</strong>
+      </span>
     </div>
   );
 }
@@ -303,7 +282,7 @@ export default function Builder() {
       >
         <div className="flex items-center gap-2">
           <Wrench className="w-4 h-4" style={{ color: ACCENT }} />
-          <span className="font-sans font-semibold text-sm" style={{ color: INK }}>
+          <span className="font-serif font-semibold text-sm" style={{ color: INK }}>
             Prompt Builder
           </span>
         </div>
@@ -393,20 +372,6 @@ function BuildMode() {
     redacted: string;
     target: "copilot" | "chatgpt_enterprise" | "copy";
   } | null>(null);
-  // Welcome hero: lazy init so auto-filled pages never flash the hero then animate it out.
-  // Init order: import present → false; welcome-seen → false; dept template → false; else true
-  const [showWelcome, setShowWelcome] = useState(() => {
-    try {
-      if (localStorage.getItem("cookbook-builder-import")) return false;
-      if (getWelcomeSeen()) return false;
-      const deptId = localStorage.getItem("cookbook-department");
-      if (deptId) {
-        const dept = getDepartment(deptId);
-        if (dept?.personalization.builderTemplate) return false;
-      }
-    } catch { /* localStorage unavailable */ }
-    return true;
-  });
 
   const deptCategoryMap: Record<string, string> = {
     "resident-services": "Resident Services",
@@ -453,7 +418,6 @@ function BuildMode() {
     const imported = localStorage.getItem("cookbook-builder-import");
     if (imported) {
       localStorage.removeItem("cookbook-builder-import");
-      setShowWelcome(false);
       setBlockValues((prev) => ({ ...prev, ...parseRtcoTemplate(imported) }));
       toast.success("Prompt imported! Edit the blocks to refine it.");
     } else {
@@ -465,7 +429,6 @@ function BuildMode() {
           if (dept?.personalization.builderTemplate) {
             setBlockValues((prev) => {
               if (!prev.task && !prev.role) {
-                setShowWelcome(false);
                 return { ...prev, ...parseRtcoTemplate(dept.personalization.builderTemplate) };
               }
               return prev;
@@ -482,7 +445,6 @@ function BuildMode() {
   const visibleBlocks = ALL_BLOCKS;
 
   const setBlockValue = useCallback((id: string, value: string) => {
-    setShowWelcome(false);
     setBlockValues((prev) => ({ ...prev, [id]: value }));
   }, []);
 
@@ -505,7 +467,6 @@ function BuildMode() {
   }, []);
 
   const loadTemplate = useCallback((t: Template) => {
-    setShowWelcome(false);
     setBlockValues({
       role: t.role,
       task: t.task,
@@ -518,12 +479,19 @@ function BuildMode() {
     setCollapsedBlocks(new Set());
   }, []);
 
+  // Replace the draft with an accepted Refine-mode rewrite (best-effort parse).
+  const handleApplyRefined = useCallback((rewritten: string) => {
+    setBlockValues(parseRefinedRtco(rewritten));
+    setSelectedTemplate(null);
+    setHiddenBlocks(new Set());
+    setCollapsedBlocks(new Set());
+  }, []);
+
   const handleReset = useCallback(() => {
     setBlockValues({});
     setSelectedTemplate(null);
     setHiddenBlocks(new Set());
     setCollapsedBlocks(new Set());
-    setShowWelcome(true);
   }, []);
 
   const toggleCategory = useCallback((cat: string) => {
@@ -610,155 +578,99 @@ function BuildMode() {
     [assembledPrompt],
   );
 
-  // Render preview with color-coded labels
+  // Render the assembled prompt as light, color-coded sections (one per block).
   const renderPreview = () => {
-    const parts: React.ReactNode[] = [];
+    const sections: React.ReactNode[] = [];
     for (const block of visibleBlocks) {
       const val = (blockValues[block.id] || "").trim();
       if (!val) continue;
       const hidden = hiddenBlocks.has(block.id);
-      const color = PREVIEW_LABEL_COLORS[block.id] || "oklch(0.75 0.02 250)";
-      const textColor = hidden ? "oklch(0.40 0.02 240)" : "oklch(0.82 0.02 250)";
-      if (parts.length > 0) parts.push(<span key={`sep-${block.id}`}>{"\n\n"}</span>);
-      parts.push(
-        <span key={block.id} style={{ textDecoration: hidden ? "line-through" : "none", opacity: hidden ? 0.4 : 1 }}>
-          <span style={{ color, fontWeight: 700 }}>
-            {block.id === "role" ? "You are a " : `${block.previewLabel} `}
-          </span>
-          <span style={{ color: textColor }}>
-            {block.id === "role" ? `${val}.` : val}
-          </span>
-        </span>
+      const c = BLOCK_COLORS[block.id];
+      const displayVal = block.id === "role" ? `You are a ${val}.` : val;
+      sections.push(
+        <div key={block.id} className="flex gap-3" style={{ opacity: hidden ? 0.45 : 1 }}>
+          <div className="shrink-0 w-20 pt-1.5">
+            <div
+              className="text-[11px] font-bold uppercase tracking-wide"
+              style={{ color: c?.text || INK }}
+            >
+              {block.label}
+            </div>
+            {block.subLabel && (
+              <div className="text-[10px] mt-0.5 leading-tight" style={{ color: INK_MUTED }}>
+                {block.subLabel}
+              </div>
+            )}
+          </div>
+          <div
+            className="flex-1 rounded-lg px-3 py-2 text-sm leading-relaxed"
+            style={{
+              background: c?.bg || ACCENT_LIGHT,
+              border: `1px solid ${c?.border || HAIRLINE_COLOR}`,
+              color: INK,
+              textDecoration: hidden ? "line-through" : "none",
+            }}
+          >
+            {displayVal}
+          </div>
+        </div>
       );
     }
-    if (parts.length === 0) {
-      return <span style={{ color: "oklch(0.45 0.03 240)" }}>Your assembled prompt will appear here as you fill in the blocks...</span>;
+    if (sections.length === 0) {
+      return (
+        <div className="flex flex-col items-center justify-center text-center py-12 gap-2">
+          <Eye className="w-5 h-5" style={{ color: INK_MUTED }} />
+          <p className="text-sm" style={{ color: INK_MUTED }}>
+            Your prompt will appear here, section by section, as you fill in the blocks.
+          </p>
+        </div>
+      );
     }
-    return parts;
+    return sections;
   };
 
   return (
     <div className="max-w-6xl mx-auto p-4 sm:p-6 lg:p-8">
 
-      {/* Sticky CTA bar — fixed below the site nav, always in view */}
+      {/* Directions — orientation stepper; quieter than the cards, flows with the page */}
       <div
-        className="flex items-center justify-end gap-2 py-2 px-4 rounded-xl mb-4"
-        style={{
-          position: "sticky",
-          top: "48px",
-          zIndex: 20,
-          background: SURFACE,
-          backdropFilter: "blur(8px)",
-          WebkitBackdropFilter: "blur(8px)",
-          border: HAIRLINE,
-        }}
+        className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-x-2.5 gap-y-2 rounded-xl px-4 py-2.5 mb-6"
+        style={{ background: ACCENT_LIGHT }}
       >
-        <button
-          onClick={handleCopy}
-          disabled={!assembledPrompt.trim()}
-          className="flex items-center gap-1.5 text-xs px-4 py-2 rounded-lg font-bold transition-all"
-          style={{
-            background: assembledPrompt.trim() ? ACCENT : "oklch(0.92 0.005 250)",
-            color: assembledPrompt.trim() ? ON_ACCENT : INK_MUTED,
-            cursor: assembledPrompt.trim() ? "pointer" : "not-allowed",
-            opacity: assembledPrompt.trim() ? 1 : 0.7,
-          }}
-        >
-          {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-          {copied ? "Copied!" : "Copy Prompt"}
-        </button>
-        <motion.button
-          animate={assembledPrompt.trim() && !copilotSent ? {
-            boxShadow: [`0 0 0 0px ${withAlpha(ACCENT, 0.4)}`, `0 0 0 6px ${withAlpha(ACCENT, 0)}`, `0 0 0 0px ${withAlpha(ACCENT, 0)}`]
-          } : {}}
-          transition={{ duration: 2, repeat: Infinity, ease: "easeOut" }}
-          onClick={() => handleSendToTarget("copilot")}
-          disabled={!assembledPrompt.trim()}
-          className="flex items-center gap-1.5 text-xs px-4 py-2 rounded-lg font-bold transition-all"
-          style={{
-            background: assembledPrompt.trim() ? ACCENT : "oklch(0.92 0.005 250)",
-            color: assembledPrompt.trim() ? ON_ACCENT : INK_MUTED,
-            cursor: assembledPrompt.trim() ? "pointer" : "not-allowed",
-            opacity: assembledPrompt.trim() ? 1 : 0.7,
-          }}
-        >
-          {copilotSent ? <Check className="w-3.5 h-3.5" /> : <ArrowRight className="w-3.5 h-3.5" />}
-          Use in Copilot ↗
-        </motion.button>
-        <button
-          onClick={() => handleSendToTarget("chatgpt_enterprise")}
-          disabled={!assembledPrompt.trim()}
-          className="text-[11px] font-medium transition-opacity hover:opacity-80"
-          style={{
-            color: assembledPrompt.trim() ? INK_MUTED : "oklch(0.68 0.01 250)",
-            cursor: assembledPrompt.trim() ? "pointer" : "not-allowed",
-            textDecoration: "underline",
-            textUnderlineOffset: "2px",
-            background: "none",
-            border: "none",
-            padding: 0,
-          }}
-        >
-          {chatgptSent ? "✓ Copied for ChatGPT" : "or copy for ChatGPT Enterprise"}
-        </button>
+        <span className="font-serif font-semibold text-xs shrink-0 mr-1" style={{ color: ACCENT }}>
+          How to use this
+        </span>
+        {[
+          "Pick a template",
+          "Fill the blocks",
+          "Watch the preview",
+          "Run Critique",
+          "Copy to Copilot",
+        ].map((label, i, arr) => (
+          <div key={i} className="flex items-center gap-2.5">
+            <span className="flex items-center gap-1.5">
+              <span
+                className="flex items-center justify-center shrink-0 w-4 h-4 rounded-full text-[10px] font-bold"
+                style={{ background: ACCENT, color: ON_ACCENT }}
+              >
+                {i + 1}
+              </span>
+              <span className="text-xs whitespace-nowrap" style={{ color: INK }}>
+                {label}
+              </span>
+            </span>
+            {i < arr.length - 1 && (
+              <ChevronRight className="w-3 h-3 hidden sm:block" style={{ color: ACCENT }} />
+            )}
+          </div>
+        ))}
       </div>
-
-      {/* Welcome Hero — shown when no draft exists */}
-      <AnimatePresence>
-        {showWelcome && (
-          <motion.div
-            initial={{ opacity: 0, y: -12 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -12, height: 0, marginBottom: 0 }}
-            transition={{ duration: 0.3 }}
-            className="mb-8 rounded-2xl px-8 py-10 text-center"
-            style={{
-              background: "linear-gradient(135deg, oklch(0.97 0.015 220) 0%, oklch(0.98 0.005 250) 100%)",
-              border: `1.5px solid ${ACCENT_LIGHT}`,
-              boxShadow: `0 4px 24px ${withAlpha(ACCENT, 0.09)}`,
-            }}
-          >
-            <div className="text-5xl mb-4">🥘</div>
-            <h2 className="font-serif font-bold text-2xl mb-2" style={{ color: "oklch(0.22 0.04 250)" }}>
-              Mise en place for your Copilot prompt
-            </h2>
-            <p className="text-sm mb-8 max-w-md mx-auto" style={{ color: "oklch(0.48 0.04 250)" }}>
-              Measure your role, task, and context. Coach the draft. Then take it where you cook.
-            </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-              <button
-                onClick={() => {
-                  setWelcomeSeen(true);
-                  setShowWelcome(false);
-                  setTemplatePanelOpen(true);
-                }}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all hover:opacity-90"
-                style={{ background: ACCENT, color: ON_ACCENT, boxShadow: `0 2px 12px ${withAlpha(ACCENT, 0.27)}` }}
-              >
-                <FileText className="w-4 h-4" />
-                Start with department template ▼
-              </button>
-              <button
-                onClick={() => { setWelcomeSeen(true); setShowWelcome(false); }}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all hover:opacity-80"
-                style={{
-                  background: SURFACE,
-                  color: INK,
-                  border: `1.5px solid ${HAIRLINE_COLOR}`,
-                }}
-              >
-                Start blank →
-              </button>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       {/* Two-column layout */}
       <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr] gap-6">
         {/* Left: Builder */}
         <div className="space-y-3">
-          <DepartmentBanner />
+          <DepartmentBanner category={(selectedTemplate && templates.find((t) => t.id === selectedTemplate)?.category) || null} />
           <div className="flex items-center justify-between mb-1">
             <h3 className="font-bold text-base" style={{ color: INK }}>Prompt Blocks</h3>
             <div className="flex items-center gap-3">
@@ -859,7 +771,7 @@ function BuildMode() {
                     >
                       <div className="px-3 pb-3">
                         {block.helpText && !hasContent && (
-                          <p className="text-[11px] mb-2 italic" style={{ color: INK_MUTED }}>
+                          <p className="text-xs mb-2" style={{ color: INK }}>
                             {block.helpText}
                           </p>
                         )}
@@ -1063,31 +975,25 @@ function BuildMode() {
             <div style={{ display: activeCoachTab === "critique" ? undefined : "none" }}>
               <CritiquePanel
                 prompt={assembledPrompt}
-                onApplySuggestion={(suggestion) => {
-                  const prev = blockValues["constraints"] || "";
-                  setBlockValue("constraints", prev ? `${prev}\n\n${suggestion}` : suggestion);
+                onApplyToBlock={(field, text) => {
+                  const prev = blockValues[field] || "";
+                  setBlockValue(field, prev ? `${prev}\n\n${text}` : text);
+                  toast.success(`Added to the ${field} block`);
                 }}
               />
             </div>
             <div style={{ display: activeCoachTab === "refine" ? undefined : "none" }}>
-              <RefineDiff prompt={assembledPrompt} />
+              <RefineDiff prompt={assembledPrompt} onApply={handleApplyRefined} />
             </div>
             <div style={{ display: activeCoachTab === "preview" ? undefined : "none" }}>
               <PreviewPanel prompt={assembledPrompt} />
             </div>
           </div>
 
-          {/* Dark preview pane */}
+          {/* Live preview — light, sectioned: label left, content right */}
           <div
-            className="rounded-xl p-5 min-h-[320px] text-sm leading-relaxed whitespace-pre-wrap"
-            style={{
-              background: "oklch(0.14 0.02 240)",
-              border: "1px solid oklch(0.25 0.03 240)",
-              fontFamily: "'SF Mono', 'Fira Code', 'Consolas', monospace",
-              fontSize: "13px",
-              color: "oklch(0.82 0.02 250)",
-              boxShadow: "inset 0 2px 8px oklch(0.08 0.01 240 / 0.3)",
-            }}
+            className="rounded-xl p-4 min-h-[320px] space-y-2.5"
+            style={{ background: SURFACE, border: HAIRLINE }}
           >
             {renderPreview()}
           </div>
@@ -1097,6 +1003,62 @@ function BuildMode() {
             <span className="text-xs font-medium" style={{ color: INK_MUTED }}>
               ~{tokenCount} tokens
             </span>
+          </div>
+
+          {/* Actions — assemble-and-send (relocated from the former sticky top bar) */}
+          <div className="pt-3 mt-1" style={{ borderTop: HAIRLINE }}>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleCopy}
+                disabled={!assembledPrompt.trim()}
+                className="flex-1 flex items-center justify-center gap-1.5 text-xs px-4 py-2.5 rounded-lg font-bold transition-all"
+                style={{
+                  background: assembledPrompt.trim() ? ACCENT : "oklch(0.92 0.005 250)",
+                  color: assembledPrompt.trim() ? ON_ACCENT : INK_MUTED,
+                  cursor: assembledPrompt.trim() ? "pointer" : "not-allowed",
+                  opacity: assembledPrompt.trim() ? 1 : 0.7,
+                }}
+              >
+                {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                {copied ? "Copied!" : "Copy Prompt"}
+              </button>
+              <motion.button
+                animate={assembledPrompt.trim() && !copilotSent ? {
+                  boxShadow: [`0 0 0 0px ${withAlpha(ACCENT, 0.4)}`, `0 0 0 6px ${withAlpha(ACCENT, 0)}`, `0 0 0 0px ${withAlpha(ACCENT, 0)}`]
+                } : {}}
+                transition={{ duration: 2, repeat: Infinity, ease: "easeOut" }}
+                onClick={() => handleSendToTarget("copilot")}
+                disabled={!assembledPrompt.trim()}
+                className="flex-1 flex items-center justify-center gap-1.5 text-xs px-4 py-2.5 rounded-lg font-bold transition-all"
+                style={{
+                  background: assembledPrompt.trim() ? ACCENT : "oklch(0.92 0.005 250)",
+                  color: assembledPrompt.trim() ? ON_ACCENT : INK_MUTED,
+                  cursor: assembledPrompt.trim() ? "pointer" : "not-allowed",
+                  opacity: assembledPrompt.trim() ? 1 : 0.7,
+                }}
+              >
+                {copilotSent ? <Check className="w-3.5 h-3.5" /> : <ArrowRight className="w-3.5 h-3.5" />}
+                Use in Copilot ↗
+              </motion.button>
+            </div>
+            <div className="text-center mt-2">
+              <button
+                onClick={() => handleSendToTarget("chatgpt_enterprise")}
+                disabled={!assembledPrompt.trim()}
+                className="text-[11px] font-medium transition-opacity hover:opacity-80"
+                style={{
+                  color: assembledPrompt.trim() ? INK_MUTED : "oklch(0.68 0.01 250)",
+                  cursor: assembledPrompt.trim() ? "pointer" : "not-allowed",
+                  textDecoration: "underline",
+                  textUnderlineOffset: "2px",
+                  background: "none",
+                  border: "none",
+                  padding: 0,
+                }}
+              >
+                {chatgptSent ? "\u2713 Copied for ChatGPT" : "or copy for ChatGPT Enterprise"}
+              </button>
+            </div>
           </div>
 
         </div>

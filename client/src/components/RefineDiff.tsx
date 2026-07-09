@@ -6,7 +6,6 @@ import {
   Loader2,
   Wand2,
   Check,
-  Copy,
   ChevronDown,
   ChevronUp,
   X,
@@ -18,12 +17,11 @@ import {
   Crosshair,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import { diffWordsWithSpace } from "diff";
 import { toast } from "sonner";
 import { apiUrl } from "@/lib/apiUrl";
 import { accent, accentSoft, surface, ink, inkMuted, hairline, hairlineColor, onAccent, withAlpha } from "@/builder-theme";
 
-// ─── Refine technique cards ───────────────────────────────────────────────────
+// Refine technique cards.
 // Server contract: keys must match server/lib/technique-map.ts (TechniqueKey).
 type TechniqueKey =
   | "add-examples"
@@ -79,261 +77,53 @@ const TECHNIQUE_CARDS: readonly TechniqueCard[] = [
   },
 ];
 
-// ─── Local type mirror of server/schemas/refine.ts ────────────────────────────
+// Local type mirror of server/schemas/refine.ts
 interface RefineResult {
   rewritten: string;
   applied_techniques: number[];
   notes: string;
 }
 
-// ─── Props ─────────────────────────────────────────────────────────────────────
 interface RefineDiffProps {
   prompt: string;
+  /** Replace the Builder's blocks with the accepted refinement. */
+  onApply?: (rewritten: string) => void;
 }
 
-// ─── Loading skeleton ──────────────────────────────────────────────────────────
+// Loading state — single column, sets the wait expectation.
 function RefineSkeleton() {
   return (
-    <div className="space-y-3 animate-pulse">
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <div className="h-4 rounded" style={{ background: hairlineColor, width: "40%" }} />
-          <div className="h-24 rounded-lg" style={{ background: hairlineColor }} />
-        </div>
-        <div className="space-y-2">
-          <div className="h-4 rounded" style={{ background: hairlineColor, width: "40%" }} />
-          <div className="h-24 rounded-lg" style={{ background: hairlineColor }} />
-        </div>
-      </div>
-      <div className="h-4 rounded" style={{ background: hairlineColor, width: "65%" }} />
-    </div>
-  );
-}
-
-// ─── Side-by-side diff renderer ────────────────────────────────────────────────
-function DiffView({ original, rewritten }: { original: string; rewritten: string }) {
-  const chunks = diffWordsWithSpace(original, rewritten);
-
-  const leftTokens = chunks.filter((c) => !c.added);
-  const rightTokens = chunks.filter((c) => !c.removed);
-
-  return (
-    <div className="grid grid-cols-2 gap-4">
-      {/* Original — left pane */}
-      <div>
-        <p
-          className="text-xs font-bold uppercase tracking-wider mb-2"
-          style={{ color: inkMuted }}
-        >
-          Original
-        </p>
-        <div
-          className="rounded-lg p-3 text-sm leading-relaxed min-h-[80px]"
-          style={{
-            background: surface,
-            border: hairline,
-            color: ink,
-          }}
-        >
-          {leftTokens.map((chunk, i) =>
-            chunk.removed ? (
-              <span
-                key={i}
-                style={{
-                  background: withAlpha(accent, 0.12),
-                  color: inkMuted,
-                  textDecoration: "line-through",
-                  borderRadius: "2px",
-                  padding: "0 1px",
-                }}
-              >
-                {chunk.value}
-              </span>
-            ) : (
-              <span key={i}>{chunk.value}</span>
-            )
-          )}
-        </div>
-      </div>
-
-      {/* Rewritten — right pane */}
-      <div>
-        <p
-          className="text-xs font-bold uppercase tracking-wider mb-2"
-          style={{ color: inkMuted }}
-        >
-          Rewritten
-        </p>
-        <div
-          className="rounded-lg p-3 text-sm leading-relaxed min-h-[80px]"
-          style={{
-            background: accentSoft,
-            border: `1px solid ${hairlineColor}`,
-            color: ink,
-          }}
-        >
-          {rightTokens.map((chunk, i) =>
-            chunk.added ? (
-              <span
-                key={i}
-                style={{
-                  background: accentSoft,
-                  color: accent,
-                  fontWeight: 700,
-                  borderRadius: "2px",
-                  padding: "0 1px",
-                }}
-              >
-                {chunk.value}
-              </span>
-            ) : (
-              <span key={i}>{chunk.value}</span>
-            )
-          )}
-        </div>
+    <div className="space-y-3">
+      <p className="flex items-center justify-center gap-2 text-sm" style={{ color: inkMuted }}>
+        <Loader2 className="w-4 h-4 animate-spin" />
+        Refining your prompt…
+      </p>
+      <div className="space-y-2 animate-pulse">
+        <div className="h-4 rounded" style={{ background: hairlineColor, width: "55%" }} />
+        <div className="h-20 rounded-lg" style={{ background: hairlineColor }} />
+        <div className="h-4 rounded" style={{ background: hairlineColor, width: "70%" }} />
       </div>
     </div>
   );
 }
 
-// ─── Accept modal ──────────────────────────────────────────────────────────────
-function AcceptModal({
-  rewritten,
-  onClose,
-}: {
-  rewritten: string;
-  onClose: () => void;
-}) {
-  const [copied, setCopied] = useState(false);
-
-  const handleCopy = useCallback(() => {
-    navigator.clipboard.writeText(rewritten).then(() => {
-      setCopied(true);
-      toast.success("Refined prompt copied to clipboard");
-      setTimeout(() => setCopied(false), 1800);
-    });
-  }, [rewritten]);
-
-  return (
-    <AnimatePresence>
-      {/* Backdrop */}
-      <motion.div
-        key="modal-backdrop"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.15 }}
-        className="fixed inset-0 z-40 flex items-center justify-center"
-        style={{ background: "oklch(0.10 0.01 220 / 0.55)" }}
-        onClick={onClose}
-      >
-        {/* Modal card — stop propagation so clicking inside doesn't close */}
-        <motion.div
-          key="modal-card"
-          initial={{ opacity: 0, scale: 0.96, y: 8 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.96, y: 8 }}
-          transition={{ duration: 0.18 }}
-          className="relative rounded-xl overflow-hidden w-full max-w-2xl mx-4"
-          style={{
-            background: surface,
-            border: `1px solid ${hairlineColor}`,
-            boxShadow: "0 8px 32px oklch(0.10 0.02 220 / 0.18)",
-          }}
-          onClick={(e) => e.stopPropagation()}
-        >
-          {/* Modal header */}
-          <div
-            className="flex items-center justify-between px-5 py-3"
-            style={{ background: accent }}
-          >
-            <h4
-              className="font-bold text-sm flex items-center gap-2"
-              style={{ color: onAccent }}
-            >
-              <Wand2 className="w-4 h-4" />
-              Refined Prompt — Ready to Copy
-            </h4>
-            <button
-              onClick={onClose}
-              className="rounded p-1 transition-opacity hover:opacity-70"
-              style={{ color: withAlpha(onAccent, 0.85) }}
-              aria-label="Close"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-
-          {/* Modal body */}
-          <div className="px-5 py-4 space-y-4">
-            <p className="text-xs" style={{ color: inkMuted }}>
-              The refined prompt is ready. Copy it, then paste it into your tool
-              of choice — or replace your current draft by clearing the blocks
-              and pasting into the Task block.
-            </p>
-
-            <textarea
-              readOnly
-              value={rewritten}
-              rows={10}
-              className="w-full text-sm rounded-lg p-3 resize-none focus:outline-none"
-              style={{
-                background: accentSoft,
-                border: `1px solid ${hairlineColor}`,
-                color: ink,
-                fontFamily: "inherit",
-              }}
-            />
-
-            <div className="flex justify-end gap-2">
-              <button
-                onClick={onClose}
-                className="text-xs px-3 py-1.5 rounded-lg font-semibold transition-opacity hover:opacity-80"
-                style={{
-                  background: surface,
-                  color: inkMuted,
-                  border: hairline,
-                }}
-              >
-                Close
-              </button>
-              <button
-                onClick={handleCopy}
-                className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg font-bold transition-all"
-                style={{
-                  background: accent,
-                  color: onAccent,
-                }}
-              >
-                {copied ? (
-                  <><Check className="w-3 h-3" /> Copied!</>
-                ) : (
-                  <><Copy className="w-3 h-3" /> Copy to Clipboard</>
-                )}
-              </button>
-            </div>
-          </div>
-        </motion.div>
-      </motion.div>
-    </AnimatePresence>
-  );
-}
-
-// ─── Main component ────────────────────────────────────────────────────────────
-export default function RefineDiff({ prompt }: RefineDiffProps) {
-  // The single technique that is currently loading, if any. Used to dim
-  // siblings during a refine call.
+// Main component
+export default function RefineDiff({ prompt, onApply }: RefineDiffProps) {
+  // The single technique currently loading, if any.
   const [loadingTechnique, setLoadingTechnique] = useState<TechniqueKey | null>(null);
-  // The technique that produced the current result, for re-apply / context.
+  // The technique that produced the current result.
   const [activeTechnique, setActiveTechnique] = useState<TechniqueKey | null>(null);
   const [result, setResult] = useState<RefineResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [breakerOpen, setBreakerOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
-  const [showAcceptModal, setShowAcceptModal] = useState(false);
+  // When a result exists the technique grid collapses; this re-opens it.
+  const [cardsExpanded, setCardsExpanded] = useState(false);
 
   const hasPrompt = prompt.trim().length > 0;
   const loading = loadingTechnique !== null;
+  const showCards = !result || cardsExpanded;
+  const activeTitle = TECHNIQUE_CARDS.find((c) => c.key === activeTechnique)?.title ?? "updated";
 
   const handleRefine = useCallback(
     async (technique: TechniqueKey) => {
@@ -389,6 +179,7 @@ export default function RefineDiff({ prompt }: RefineDiffProps) {
         setResult(r);
         setActiveTechnique(technique);
         setCollapsed(false);
+        setCardsExpanded(false);
       } catch (err: unknown) {
         if (err instanceof Error) {
           setError(err.message || "Network error. Is the server running?");
@@ -413,278 +204,308 @@ export default function RefineDiff({ prompt }: RefineDiffProps) {
     setResult(null);
     setActiveTechnique(null);
     setCollapsed(false);
+    setCardsExpanded(false);
   }, []);
 
+  // Accept: replace the Builder's blocks with the refinement, copy it, reset.
+  const handleAccept = useCallback(() => {
+    if (!result) return;
+    onApply?.(result.rewritten);
+    navigator.clipboard.writeText(result.rewritten).catch(() => {
+      /* clipboard unavailable — the blocks were still updated */
+    });
+    toast.success("Refined prompt applied to your blocks");
+    setResult(null);
+    setActiveTechnique(null);
+    setCollapsed(false);
+    setCardsExpanded(false);
+  }, [result, onApply]);
+
   return (
-    <>
-      <motion.div
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.22, ease: "easeOut" }}
-        className="rounded-xl overflow-hidden"
-        style={{
-          border: `1px solid ${hairlineColor}`,
-          background: surface,
-        }}
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.22, ease: "easeOut" }}
+      className="rounded-xl overflow-hidden"
+      style={{
+        border: `1px solid ${hairlineColor}`,
+        background: surface,
+      }}
+    >
+      {/* Header */}
+      <div
+        className="flex items-center justify-between px-5 py-3 gap-3"
+        style={{ background: accent }}
       >
-        {/* Header */}
-        <div
-          className="flex items-center justify-between px-5 py-3 gap-3"
-          style={{ background: accent }}
+        <h4
+          className="font-bold text-sm flex items-center gap-2 shrink-0"
+          style={{ color: onAccent }}
         >
-          <h4
-            className="font-bold text-sm flex items-center gap-2 shrink-0"
-            style={{ color: onAccent }}
-          >
-            <Wand2 className="w-4 h-4" />
-            Refine your prompt
-          </h4>
+          <Wand2 className="w-4 h-4" />
+          Refine your prompt
+        </h4>
 
-          {/* Collapse toggle (only when result is present) */}
-          {result && (
+        {result && (
+          <button
+            onClick={() => setCollapsed((c) => !c)}
+            className="flex items-center gap-1 text-xs px-2 py-1 rounded transition-opacity hover:opacity-80 shrink-0"
+            style={{ color: withAlpha(onAccent, 0.85) }}
+            aria-label={collapsed ? "Expand refine output" : "Collapse refine output"}
+          >
+            {collapsed ? (
+              <><ChevronDown className="w-3 h-3" /> Expand</>
+            ) : (
+              <><ChevronUp className="w-3 h-3" /> Collapse</>
+            )}
+          </button>
+        )}
+      </div>
+
+      {/* Body */}
+      <div className="px-5 py-4" style={{ background: withAlpha(accentSoft, 0.35) }}>
+        {/* Result summary row — appears once a refinement exists */}
+        {result && (
+          <div className="flex items-center justify-between gap-2 mb-3">
+            <span className="flex items-center gap-1.5 text-xs font-bold" style={{ color: ink }}>
+              <Check className="w-3.5 h-3.5" style={{ color: accent }} />
+              Refined — {activeTitle}
+            </span>
             <button
-              onClick={() => setCollapsed((c) => !c)}
-              className="flex items-center gap-1 text-xs px-2 py-1 rounded transition-opacity hover:opacity-80 shrink-0"
-              style={{ color: withAlpha(onAccent, 0.85) }}
-              aria-label={collapsed ? "Expand refine output" : "Collapse refine output"}
+              onClick={() => setCardsExpanded((v) => !v)}
+              className="flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded transition-opacity hover:opacity-80"
+              style={{ color: accent }}
             >
-              {collapsed ? (
-                <><ChevronDown className="w-3 h-3" /> Expand</>
-              ) : (
-                <><ChevronUp className="w-3 h-3" /> Collapse</>
-              )}
+              {cardsExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+              Try another improvement
             </button>
-          )}
-        </div>
-
-        {/* Body */}
-        <div className="px-5 py-4" style={{ background: withAlpha(accentSoft, 0.35) }}>
-          {/* Card grid — always visible, even when a result is showing */}
-          <p
-            className="text-xs font-bold uppercase tracking-wider mb-3"
-            style={{ color: inkMuted }}
-          >
-            {result ? "Try another improvement" : "Pick a way to improve your prompt"}
-          </p>
-
-          <div
-            className="grid gap-3 mb-4"
-            style={{ gridTemplateColumns: "repeat(auto-fit, minmax(min(220px, 100%), 1fr))" }}
-            role="group"
-            aria-label="Refine techniques"
-          >
-            {TECHNIQUE_CARDS.map((card) => {
-              const Icon = card.icon;
-              const isLoadingThis = loadingTechnique === card.key;
-              const isDimmed = loading && !isLoadingThis;
-              const isActive = activeTechnique === card.key && result !== null;
-              const disabled = !hasPrompt || loading;
-
-              const restingShadow = isActive
-                ? `0 2px 12px ${withAlpha(accent, 0.2)}`
-                : "0 1px 2px oklch(0.18 0.02 250 / 0.04)";
-
-              return (
-                <motion.button
-                  key={card.key}
-                  type="button"
-                  whileHover={!disabled ? { y: -2 } : undefined}
-                  whileTap={!disabled ? { scale: 0.98 } : undefined}
-                  onClick={() => handleRefine(card.key)}
-                  disabled={disabled}
-                  aria-label={`${card.title} — ${card.description}`}
-                  aria-pressed={isActive}
-                  className="flex flex-col items-start gap-2 rounded-xl p-4 text-left transition-all focus:outline-none"
-                  onFocus={(e) => {
-                    if (e.currentTarget.matches(":focus-visible")) {
-                      e.currentTarget.style.boxShadow = `0 0 0 3px ${withAlpha(accent, 0.4)}`;
-                    }
-                  }}
-                  onBlur={(e) => {
-                    e.currentTarget.style.boxShadow = restingShadow;
-                  }}
-                  style={{
-                    background: isActive
-                      ? accentSoft
-                      : surface,
-                    border: isActive
-                      ? `1.5px solid ${accent}`
-                      : `1.5px solid ${hairlineColor}`,
-                    color: ink,
-                    cursor: disabled ? "not-allowed" : "pointer",
-                    opacity: isDimmed ? 0.45 : 1,
-                    boxShadow: restingShadow,
-                    minHeight: "92px",
-                  }}
-                >
-                  <div className="flex items-center gap-2 w-full">
-                    <span
-                      className="flex items-center justify-center w-7 h-7 rounded-lg shrink-0"
-                      style={{ background: accentSoft, color: accent }}
-                    >
-                      {isLoadingThis ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                      ) : (
-                        <Icon className="w-4 h-4" />
-                      )}
-                    </span>
-                    <span
-                      className="font-bold text-sm leading-tight"
-                      style={{ color: ink }}
-                    >
-                      {card.title}
-                    </span>
-                  </div>
-                  <p
-                    className="text-xs leading-snug"
-                    style={{ color: inkMuted }}
-                  >
-                    {card.description}
-                  </p>
-                </motion.button>
-              );
-            })}
           </div>
+        )}
 
-          {/* Empty hint */}
-          {!hasPrompt && !loading && !result && !error && !breakerOpen && (
-            <p className="text-sm text-center py-2" style={{ color: inkMuted }}>
-              Build your prompt above, then pick a card to refine it.
-            </p>
-          )}
-
-          {/* Loading skeleton */}
-          {loading && <RefineSkeleton />}
-
-          {/* Circuit breaker open */}
-          {breakerOpen && (
-            <motion.div
-              initial={{ opacity: 0, y: 4 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="flex items-start gap-3 rounded-xl p-4"
-              style={{
-                background: withAlpha(accentSoft, 0.6),
-                border: hairline,
-              }}
-            >
-              <AlertTriangle
-                className="w-4 h-4 mt-0.5 shrink-0"
-                style={{ color: accent }}
-              />
-              <div>
-                <p className="text-sm font-semibold" style={{ color: ink }}>
-                  Refine service is temporarily unavailable
-                </p>
-                <p className="text-xs mt-1" style={{ color: inkMuted }}>
-                  The circuit breaker is open. Try again in a moment.
-                </p>
-                <button
-                  onClick={handleRetry}
-                  className="flex items-center gap-1.5 text-xs mt-2 px-3 py-1.5 rounded-lg font-semibold"
-                  style={{ background: accent, color: onAccent }}
-                >
-                  <RotateCcw className="w-3 h-3" /> Retry
-                </button>
-              </div>
-            </motion.div>
-          )}
-
-          {/* Error state */}
-          {error && (
-            <motion.div
-              initial={{ opacity: 0, y: 4 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="flex items-start gap-3 rounded-xl p-4"
-              style={{
-                background: withAlpha(accentSoft, 0.6),
-                border: hairline,
-              }}
-            >
-              <AlertTriangle
-                className="w-4 h-4 mt-0.5 shrink-0"
-                style={{ color: accent }}
-              />
-              <div className="flex-1">
-                <p className="text-sm font-semibold" style={{ color: ink }}>
-                  Refine failed
-                </p>
-                <p className="text-xs mt-1" style={{ color: inkMuted }}>
-                  {error}
-                </p>
-                <button
-                  onClick={handleRetry}
-                  className="flex items-center gap-1.5 text-xs mt-2 px-3 py-1.5 rounded-lg font-semibold"
-                  style={{ background: accent, color: onAccent }}
-                >
-                  <RotateCcw className="w-3 h-3" /> Retry
-                </button>
-              </div>
-            </motion.div>
-          )}
-
-          {/* Results */}
-          <AnimatePresence>
-            {result && !collapsed && (
-              <motion.div
-                key="refine-results"
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                exit={{ opacity: 0, height: 0 }}
-                transition={{ duration: 0.2, ease: "easeOut" }}
-                className="space-y-5 overflow-hidden"
+        {/* Technique picker — full when no result, collapsible once one exists */}
+        {showCards && (
+          <>
+            {!result && (
+              <p
+                className="text-xs font-bold uppercase tracking-wider mb-3"
+                style={{ color: inkMuted }}
               >
-                {/* Side-by-side diff */}
-                <DiffView original={prompt} rewritten={result.rewritten} />
+                Pick a way to improve your prompt
+              </p>
+            )}
 
-                {/* Notes */}
-                {result.notes && (
-                  <div>
-                    <p
-                      className="text-xs font-bold uppercase tracking-wider mb-1.5"
-                      style={{ color: inkMuted }}
-                    >
-                      What changed
-                    </p>
-                    <p className="text-sm leading-relaxed" style={{ color: inkMuted }}>
-                      {result.notes}
-                    </p>
-                  </div>
-                )}
+            <div
+              className="grid gap-2.5 mb-4"
+              style={{ gridTemplateColumns: "repeat(auto-fit, minmax(min(200px, 100%), 1fr))" }}
+              role="group"
+              aria-label="Refine techniques"
+            >
+              {TECHNIQUE_CARDS.map((card) => {
+                const Icon = card.icon;
+                const isLoadingThis = loadingTechnique === card.key;
+                const isDimmed = loading && !isLoadingThis;
+                const isActive = activeTechnique === card.key && result !== null;
+                const disabled = !hasPrompt || loading;
 
-                {/* Accept / Reject */}
-                <div className="flex items-center gap-3 pt-1">
-                  <button
-                    onClick={() => setShowAcceptModal(true)}
-                    className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg font-bold transition-all"
-                    style={{ background: accent, color: onAccent }}
-                  >
-                    <Check className="w-3 h-3" /> Accept &amp; Copy
-                  </button>
-                  <button
-                    onClick={handleReject}
-                    className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg font-semibold transition-all"
+                return (
+                  <motion.button
+                    key={card.key}
+                    type="button"
+                    whileHover={!disabled ? { y: -2 } : undefined}
+                    whileTap={!disabled ? { scale: 0.98 } : undefined}
+                    onClick={() => handleRefine(card.key)}
+                    disabled={disabled}
+                    aria-label={`${card.title} — ${card.description}`}
+                    aria-pressed={isActive}
+                    className="flex flex-col items-start gap-1.5 rounded-xl p-3 text-left transition-all focus:outline-none"
                     style={{
-                      background: surface,
-                      color: inkMuted,
-                      border: hairline,
+                      background: isActive ? accentSoft : surface,
+                      border: isActive
+                        ? `1.5px solid ${accent}`
+                        : `1.5px solid ${hairlineColor}`,
+                      color: ink,
+                      cursor: disabled ? "not-allowed" : "pointer",
+                      opacity: isDimmed ? 0.45 : 1,
                     }}
                   >
-                    <X className="w-3 h-3" /> Reject
-                  </button>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-      </motion.div>
+                    <div className="flex items-center gap-2 w-full">
+                      <span
+                        className="flex items-center justify-center w-6 h-6 rounded-lg shrink-0"
+                        style={{ background: accentSoft, color: accent }}
+                      >
+                        {isLoadingThis ? (
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        ) : (
+                          <Icon className="w-3.5 h-3.5" />
+                        )}
+                      </span>
+                      <span
+                        className="font-bold text-sm leading-tight"
+                        style={{ color: ink }}
+                      >
+                        {card.title}
+                      </span>
+                    </div>
+                    <p
+                      className="text-xs leading-snug"
+                      style={{ color: inkMuted }}
+                    >
+                      {card.description}
+                    </p>
+                  </motion.button>
+                );
+              })}
+            </div>
+          </>
+        )}
 
-      {/* Accept modal — rendered outside the card to escape stacking contexts */}
-      {showAcceptModal && result && (
-        <AcceptModal
-          rewritten={result.rewritten}
-          onClose={() => setShowAcceptModal(false)}
-        />
-      )}
-    </>
+        {/* Empty hint */}
+        {!hasPrompt && !loading && !result && !error && !breakerOpen && (
+          <p className="text-sm text-center py-2" style={{ color: inkMuted }}>
+            Build your prompt above, then pick a card to refine it.
+          </p>
+        )}
+
+        {/* Loading skeleton */}
+        {loading && <RefineSkeleton />}
+
+        {/* Circuit breaker open */}
+        {breakerOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex items-start gap-3 rounded-xl p-4"
+            style={{
+              background: withAlpha(accentSoft, 0.6),
+              border: hairline,
+            }}
+          >
+            <AlertTriangle
+              className="w-4 h-4 mt-0.5 shrink-0"
+              style={{ color: accent }}
+            />
+            <div>
+              <p className="text-sm font-semibold" style={{ color: ink }}>
+                Refine service is temporarily unavailable
+              </p>
+              <p className="text-xs mt-1" style={{ color: inkMuted }}>
+                The circuit breaker is open. Try again in a moment.
+              </p>
+              <button
+                onClick={handleRetry}
+                className="flex items-center gap-1.5 text-xs mt-2 px-3 py-1.5 rounded-lg font-semibold"
+                style={{ background: accent, color: onAccent }}
+              >
+                <RotateCcw className="w-3 h-3" /> Retry
+              </button>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Error state */}
+        {error && (
+          <motion.div
+            initial={{ opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex items-start gap-3 rounded-xl p-4"
+            style={{
+              background: withAlpha(accentSoft, 0.6),
+              border: hairline,
+            }}
+          >
+            <AlertTriangle
+              className="w-4 h-4 mt-0.5 shrink-0"
+              style={{ color: accent }}
+            />
+            <div className="flex-1">
+              <p className="text-sm font-semibold" style={{ color: ink }}>
+                Refine failed
+              </p>
+              <p className="text-xs mt-1" style={{ color: inkMuted }}>
+                {error}
+              </p>
+              <button
+                onClick={handleRetry}
+                className="flex items-center gap-1.5 text-xs mt-2 px-3 py-1.5 rounded-lg font-semibold"
+                style={{ background: accent, color: onAccent }}
+              >
+                <RotateCcw className="w-3 h-3" /> Retry
+              </button>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Result — plain "what changed" first, then the refined prompt in a
+            height-capped scroll box so the panel never runs the page down. */}
+        <AnimatePresence>
+          {result && !collapsed && (
+            <motion.div
+              key="refine-results"
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+              className="space-y-4 overflow-hidden"
+            >
+              {result.notes && (
+                <div
+                  className="rounded-lg px-3 py-2.5"
+                  style={{ background: surface, border: hairline }}
+                >
+                  <p
+                    className="text-xs font-bold uppercase tracking-wider mb-1"
+                    style={{ color: inkMuted }}
+                  >
+                    What changed
+                  </p>
+                  <p className="text-sm leading-relaxed" style={{ color: ink }}>
+                    {result.notes}
+                  </p>
+                </div>
+              )}
+
+              <div>
+                <p
+                  className="text-xs font-bold uppercase tracking-wider mb-1.5"
+                  style={{ color: inkMuted }}
+                >
+                  Refined prompt
+                </p>
+                <div
+                  className="rounded-lg p-3 text-sm leading-relaxed whitespace-pre-wrap max-h-[220px] overflow-y-auto"
+                  style={{
+                    background: accentSoft,
+                    border: `1px solid ${hairlineColor}`,
+                    color: ink,
+                  }}
+                >
+                  {result.rewritten}
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3 pt-1">
+                <button
+                  onClick={handleAccept}
+                  className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg font-bold transition-all"
+                  style={{ background: accent, color: onAccent }}
+                >
+                  <Check className="w-3 h-3" /> Use this prompt
+                </button>
+                <button
+                  onClick={handleReject}
+                  className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg font-semibold transition-all"
+                  style={{
+                    background: surface,
+                    color: inkMuted,
+                    border: hairline,
+                  }}
+                >
+                  <X className="w-3 h-3" /> Discard
+                </button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </motion.div>
   );
 }

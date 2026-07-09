@@ -87,7 +87,7 @@ const VALID_CRITIQUE: Critique = {
   },
   anti_hallucination_clause: true,
   specificity_issues: [],
-  suggestions: ["Add explicit output format specification."],
+  suggestions: [{ field: "output", text: "Add explicit output format specification." }],
   cited_chapters: [3],
 };
 
@@ -102,10 +102,10 @@ const MISSING_RTCO_CRITIQUE: Critique = {
   anti_hallucination_clause: false,
   specificity_issues: ["'help me'", "'something useful'"],
   suggestions: [
-    "Add a role (e.g., 'You are a county records analyst').",
-    "Specify the exact task.",
-    "Provide context about the records request.",
-    "Define the desired output format.",
+    { field: "role", text: "You are a county records analyst." },
+    { field: "task", text: "Review the attached records request and list every responsive document." },
+    { field: "context", text: "The request covers permits and code-enforcement actions from 2020 to present." },
+    { field: "output", text: "Return a cover letter followed by an itemized document list." },
   ],
   cited_chapters: [],
 };
@@ -121,7 +121,7 @@ const HALLUCINATED_CRITIQUE: Critique = {
   anti_hallucination_clause: false,
   specificity_issues: [],
   suggestions: [
-    "The prompt should reference Fla. Stat. § 119.07 for public records obligations.",
+    { field: "context", text: "The prompt should reference Fla. Stat. § 119.07 for public records obligations." },
   ],
   cited_chapters: [5],
 };
@@ -137,7 +137,7 @@ const REFUSAL_CRITIQUE: Critique = {
   anti_hallucination_clause: false,
   specificity_issues: [],
   suggestions: [
-    "This prompt asks for a specific Florida statute lookup — the coach cannot supply that fact. The user should insert the statute citation themselves or source it from official documents.",
+    { field: "task", text: "This prompt asks for a specific Florida statute lookup — the coach cannot supply that fact. The user should insert the statute citation themselves or source it from official documents." },
   ],
   cited_chapters: [],
 };
@@ -162,8 +162,8 @@ describe("handleCritique — eval fixtures", () => {
     await handleCritique(req, res as unknown as express.Response);
     expect(res.statusCode).toBe(200);
     const body = res.body as { result: Critique; flags: unknown[] };
-    const suggestions = body.result.suggestions as string[];
-    expect(suggestions.some((s) => /cannot supply|insert.*yourself|source it/i.test(s))).toBe(true);
+    const suggestions = body.result.suggestions;
+    expect(suggestions.some((s) => /cannot supply|insert.*yourself|source it/i.test(s.text))).toBe(true);
   });
 
   // F2 — well-formed prompt: positive critique returned
@@ -210,9 +210,9 @@ describe("handleCritique — eval fixtures", () => {
     expect(res.statusCode).toBe(200);
     const body = res.body as { result: Critique; flags: unknown[] };
     // Critique mode redacts — suggestion containing the statute must be scrubbed
-    const suggestions = body.result.suggestions as string[];
+    const suggestions = body.result.suggestions;
     expect(
-      suggestions.some((s) => s.includes("[REDACTED:florida_statute]"))
+      suggestions.some((s) => s.text.includes("[REDACTED:florida_statute]"))
     ).toBe(true);
     expect(body.flags).not.toHaveLength(0);
   });

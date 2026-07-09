@@ -46,7 +46,7 @@ The user has submitted a prompt they plan to use in Microsoft 365 Copilot or Cha
 
 **Specificity issues** — List specific vague phrases or ambiguous words in the prompt (e.g., "soon", "relevant", "comprehensive", "a summary"). Be precise: quote the phrase.
 
-**Suggestions** — List concrete, actionable improvements. Each suggestion must be specific enough that the user can act on it without further clarification. Do not suggest adding county-specific facts you cannot supply.
+**Suggestions** — List concrete improvements. Each suggestion is an object with two keys: `field` — the RTCO block it improves, one of `role`, `task`, `context`, `output`, `constraints` — and `text` — a snippet the user can paste straight into that block. Write `text` as the content to add, not as advice about adding it. Do not suggest adding county-specific facts you cannot supply.
 
 **Cited chapters** — List any cookbook chapter numbers that directly support one or more of your suggestions. Only cite chapters present in CHAPTER CONTEXT above.
 
@@ -66,7 +66,7 @@ Your response must be a JSON object matching this structure exactly. No addition
   },
   "anti_hallucination_clause": true | false,
   "specificity_issues": ["string", ...],
-  "suggestions": ["string", ...],
+  "suggestions": [{ "field": "role" | "task" | "context" | "output" | "constraints", "text": "string" }, ...],
   "cited_chapters": [integer, ...]
 }
 ```
@@ -74,5 +74,5 @@ Your response must be a JSON object matching this structure exactly. No addition
 - `rtco`: each field is one of the three string values only.
 - `anti_hallucination_clause`: boolean only.
 - `specificity_issues`: array of strings (empty array if none).
-- `suggestions`: array of strings, at least one entry.
+- `suggestions`: array of objects, each with `field` (one of role/task/context/output/constraints) and a non-empty `text` string. At least one entry.
 - `cited_chapters`: array of integers 1–30 (chapter numbers only, not string IDs). Empty array if no chapter is relevant.
